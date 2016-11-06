@@ -19,6 +19,8 @@ my %bounds = lat => Bounds.new,
              lon => Bounds.new,
              ele => Bounds.new,
              tim => Bounds.new;
+my $title;
+my $date;
 
 for slurp.lines -> $line {
     given $line {
@@ -39,6 +41,12 @@ for slurp.lines -> $line {
 	    my $tim = DateTime.new($0.Str);
 	    @points[@points.elems-1]<tim> = $tim;
 	    %bounds<tim>.add($tim.Instant.Int);
+	}
+	when /'<name>' (.+) '</name>'/ {
+	    $title = $0.Str;
+	}
+	when /'<desc>' (.+) '</desc>'/ {
+	    $date = $0.Str;
 	}
     }
 }
@@ -66,16 +74,26 @@ if $lat_range > $lon_range {
 
 #say $width.Int ~ ' x ' ~ $height.Int;
 
-say '<html><body>';
+say '<html><head><title>' ~ $title ~ '</title></head><body>';
+say '<h2>' ~ $title ~ ' - ' ~ $date ~ '</h2>';
 say '<svg width="' ~ $width.Int + $border*2 ~ '" height="' ~ $height.Int + $border*2 ~ '">';
 
 my $lastx;
 my $lasty;
 my $laste;
 
+my $time_mark_secs = 15 * 60;
+my $time_mark_radius = 5;
+my $last_time_mark = @points[0]<tim>.Instant.Int;
+
 for @points -> $p {
     my ($x, $y) = coords($p<lat>, $p<lon>);
     if $lastx {
+	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
+	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
+	        ' fill="black" style="opacity:0.25;z-index:-1"/>';
+	    $last_time_mark = $p<tim>.Instant.Int;
+	}
 	my $climb = $p<ele> - $laste;
 	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
 	    ' style="stroke:' ~ ($climb > 0 ?? 'red' !! 'blue')  ~ ';stroke-width:1"/>';
