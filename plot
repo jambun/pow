@@ -24,7 +24,7 @@ my %bounds = lat => Bounds.new,
 my $title;
 my $date;
 
-#my %map_data = from-json slurp('data/nsw25k.json');
+my @map_data = from-json slurp('data/nsw25k_12_12.json');
 
 for slurp.lines -> $line {
     given $line {
@@ -101,20 +101,32 @@ say '<svg width="2000px" height="2000px">';
 
 say '<image xlink:href="' ~ $tile ~ '" width="2000px" height="2000px" x="0" y="0" style="z-index:0;opacity:1;"/>';
 
+
 my $lastx;
 my $lasty;
 my $laste;
+my $lastp;
 
 my $time_mark_secs = 15 * 60;
-my $time_mark_radius = 5;
+my $time_mark_radius = 10;
 my $last_time_mark = @points[0]<tim>.Instant.Int;
 
-my $dist_mark_m = 1000;
+constant R = 6371000; # radius of Earth in metres
+my $dist_mark = 1000;
 my $last_dist_mark = 0;
+my $total_dist = 0;
+
+my $tile_x = 2000;
+my $tile_y = 2000;
 
 for @points -> $p {
-    my ($x, $y) = coords($p<lat>, $p<lon>);
-    if $lastx {
+    my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
+    if $lastp {
+	my $dist = calculate_distance($lastp, $p);
+#	say $dist;
+
+	$total_dist += $dist;
+	
 	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
 	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
@@ -122,21 +134,48 @@ for @points -> $p {
 	}
 
 	my $climb = $p<ele> - $laste;
+	my $climb_color = $climb > 0 ?? 'red' !! 'blue';
 	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
-	    ' style="stroke:' ~ ($climb > 0 ?? 'red' !! 'blue')  ~ ';stroke-width:1;z-index:2;"/>';
+	    ' style="stroke:' ~ $climb_color  ~ ';stroke-width:3;z-index:2;"/>';
     }
     $lastx = $x;
     $lasty = $y;
-    $laste = $p<ele>
+    $laste = $p<ele>;
+    $lastp = $p;
 }
 say '</svg>';
 
-
-
+say '<p>' ~ $total_dist/1000 ~ '</p>';
 say '</body></html>';
 
-sub coords($lat, $lon) {
-    my $x = ($lon - %bounds<lon>.min) * $scale;
-    my $y = $height - ($lat - %bounds<lat>.min) * $scale;
-    ($x.Int + $border, $y.Int + $border);
+
+sub coords($lat, $lon, %tile) {
+    my $x_t = (($lon - %tile<topleft><long>) / (%tile<topright><long> - %tile<topleft><long>)) * $tile_x;
+    my $x_b = (($lon - %tile<bottomleft><long>) / (%tile<bottomright><long> - %tile<bottomleft><long>)) * $tile_x;
+    my $y_l = (($lat - %tile<topleft><lat>) / (%tile<bottomleft><lat> - %tile<topleft><lat>)) * $tile_y;
+    my $y_r = (($lat - %tile<topright><lat>) / (%tile<bottomright><lat> - %tile<topright><lat>)) * $tile_y;
+
+    my $x_slope = ($x_b - $x_t) / $tile_y;
+    my $y_slope = ($y_r - $y_l) / $tile_x;
+
+    my $x = ($y_l * $x_slope + $x_t) / (1 - $x_slope * $y_slope);
+    my $y = ($x_t * $y_slope + $y_l) / (1 - $y_slope * $x_slope);
+    
+    ($x.Int, $y.Int);
 }
+
+
+sub calculate_distance($from, $to) {
+    my $from_lat = to_r($from<lat>);
+    my $to_lat = to_r($to<lat>);
+    my $lat_d = to_r($to<lat> - $from<lat>);
+    my $lon_d = to_r($to<lon> - $from<lon>);
+
+    my $a = sin($lat_d/2) ** 2 + cos($from_lat) * cos($to_lat) * sin($lon_d/2) ** 2;
+    my $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+    R * $c;
+}
+
+
+sub to_r($degrees) { $degrees * pi/180 }
