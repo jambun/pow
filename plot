@@ -113,6 +113,7 @@ my $last_time_mark = @points[0]<tim>.Instant.Int;
 
 constant R = 6371000; # radius of Earth in metres
 my $dist_mark = 1000;
+my $dist_mark_radius = 10;
 my $last_dist_mark = 0;
 my $total_dist = 0;
 
@@ -124,8 +125,13 @@ for @points -> $p {
     if $lastp {
 	my $dist = calculate_distance($lastp, $p);
 #	say $dist;
-
 	$total_dist += $dist;
+
+	if $total_dist > $last_dist_mark + $dist_mark {
+	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
+	        ' fill="yellow" style="opacity:0.5;z-index:1;"/>';
+	    $last_dist_mark += $dist_mark;
+	}
 	
 	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
 	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
@@ -133,10 +139,10 @@ for @points -> $p {
 	    $last_time_mark += $time_mark_secs;
 	}
 
-	my $climb = $p<ele> - $laste;
-	my $climb_color = $climb > 0 ?? 'red' !! 'blue';
+	my Rat $climb = $p<ele> - $laste;
+	my $climb_color = $climb > 0.0 ?? 'red' !! 'blue';
 	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
-	    ' style="stroke:' ~ $climb_color  ~ ';stroke-width:3;z-index:2;"/>';
+	    ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
     }
     $lastx = $x;
     $lasty = $y;
