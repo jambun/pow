@@ -177,6 +177,8 @@ my $dist_mark = 1000;
 my $dist_mark_radius = 10;
 my $last_dist_mark = 0;
 my $total_dist = 0;
+my $dist_mark_count = 0;
+my $time_mark_count = 0;
 
 my $tile_x = 2000;
 my $tile_y = 2000;
@@ -189,14 +191,20 @@ for @points -> $p {
 	$total_dist += $dist;
 
 	if $total_dist > $last_dist_mark + $dist_mark {
+	    $dist_mark_count++;
 	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 	        ' fill="yellow" style="opacity:0.5;z-index:1;"/>';
+	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
+	        '" font-size="10">' ~ $dist_mark_count ~ '</text>';
 	    $last_dist_mark += $dist_mark;
 	}
 	
 	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
+	    $time_mark_count++;
 	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
+	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
+	        '" font-size="10">' ~ $time_mark_count ~ '</text>';
 	    $last_time_mark += $time_mark_secs;
 	}
 
