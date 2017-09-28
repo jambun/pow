@@ -6,6 +6,8 @@ use JSON::Tiny;
 # <ele>1283.370</ele>
 # <time>2016-10-28T00:46:10.000Z</time>
 
+my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
+
 class Bounds {
     has $.min;
     has $.max;
@@ -24,7 +26,7 @@ my %bounds = lat => Bounds.new,
 my $title;
 my $date;
 
-my @map_data = from-json slurp('data/nsw25k_12_12.json');
+#my @map_data = (from-json slurp('data/nsw25k_12_12.json'))[0];
 
 for slurp.lines -> $line {
     given $line {
@@ -66,6 +68,56 @@ my $width;
 my $height;
 my $scale;
 
+sub in_range($x, $min, $max) {
+    $x >= $min && $x <= $max;
+}
+
+# find the tiles we will need
+my @map_data;
+my $ban = %bounds<lat>.min;
+my $bax = %bounds<lat>.max;
+my $bon = %bounds<lon>.min;
+my $box = %bounds<lon>.max;
+
+#say "LAT: $ban $bax";
+#say "LON: $bon $box";
+
+my $json = from-json slurp('data/nsw25k.json');
+
+for @$json -> $md {
+    my $max_lat = ($md<topleft><lat>, $md<topright><lat>).max;
+    my $min_lat = ($md<bottomleft><lat>, $md<bottomright><lat>).min;
+
+    my $min_lon = ($md<topleft><long>, $md<bottomleft><long>).min;
+    my $max_lon = ($md<topright><long>, $md<bottomright><long>).min;
+
+#    say "LAT: $min_lat $max_lat";
+#    say "LON: $min_lon $max_lon";
+
+    if (
+	(in_range($ban, $min_lat, $max_lat) && in_range($bon, $min_lon, $max_lon)) ||
+	(in_range($ban, $min_lat, $max_lat) && in_range($box, $min_lon, $max_lon)) ||
+	(in_range($bax, $min_lat, $max_lat) && in_range($bon, $min_lon, $max_lon)) ||
+	(in_range($bax, $min_lat, $max_lat) && in_range($box, $min_lon, $max_lon)) ||
+	(in_range($min_lat, $ban, $bax) && in_range($min_lon, $bon, $box)) ||
+	(in_range($min_lat, $ban, $bax) && in_range($max_lon, $bon, $box)) ||
+	(in_range($max_lat, $ban, $bax) && in_range($min_lon, $bon, $box)) ||
+	(in_range($max_lat, $ban, $bax) && in_range($max_lon, $bon, $box))
+       ) {
+	@map_data.push: $md;
+    }
+}
+
+#say @map_data.join("\n\n");
+
+my $tilex = Bounds.new;
+my $tiley = Bounds.new;
+
+for @map_data -> $md {
+    $tilex.add($md<tilex>);
+    $tiley.add($md<tiley>);
+}
+
 my $tile = 'data/NSW_25k_Coast_South_12_12.jpg';
 
 if $lat_range > $lon_range {
@@ -95,12 +147,21 @@ for @points -> $p {
 say '</svg></div>';
 
 
-say '<svg width="2000px" height="2000px">';
+$width = ($tilex.max - $tilex.min + 1) * 2000;
+$height = ($tiley.max - $tiley.min + 1) * 2000;
+say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
 #say '<svg width="' ~ $width.Int + $border*2 ~ '" height="' ~ $height.Int + $border*2 ~
 #    '" style="">';
 
-say '<image xlink:href="' ~ $tile ~ '" width="2000px" height="2000px" x="0" y="0" style="z-index:0;opacity:1;"/>';
+sub tile_ref($name) {
+    $tile_url ~ '/' ~ $name;
+}
 
+for @map_data -> $md {
+    say '<image xlink:href="' ~ tile_ref($md<filename>) ~
+    '" width="2000px" height="2000px" x="' ~ ($md<tilex> - $tilex.min)*2000 ~
+    '" y="' ~ ($md<tiley> - $tiley.min)*2000  ~ '" style="z-index:0;opacity:1;"/>';
+}
 
 my $lastx;
 my $lasty;
