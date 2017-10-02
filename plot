@@ -68,10 +68,6 @@ my $width;
 my $height;
 my $scale;
 
-sub in_range($x, $min, $max) {
-    $x >= $min && $x <= $max;
-}
-
 # find the tiles we will need
 my @map_data;
 my $ban = %bounds<lat>.min;
@@ -95,14 +91,15 @@ for @$json -> $md {
 #    say "LON: $min_lon $max_lon";
 
     if (
-	(in_range($ban, $min_lat, $max_lat) && in_range($bon, $min_lon, $max_lon)) ||
-	(in_range($ban, $min_lat, $max_lat) && in_range($box, $min_lon, $max_lon)) ||
-	(in_range($bax, $min_lat, $max_lat) && in_range($bon, $min_lon, $max_lon)) ||
-	(in_range($bax, $min_lat, $max_lat) && in_range($box, $min_lon, $max_lon)) ||
-	(in_range($min_lat, $ban, $bax) && in_range($min_lon, $bon, $box)) ||
-	(in_range($min_lat, $ban, $bax) && in_range($max_lon, $bon, $box)) ||
-	(in_range($max_lat, $ban, $bax) && in_range($min_lon, $bon, $box)) ||
-	(in_range($max_lat, $ban, $bax) && in_range($max_lon, $bon, $box))
+	(in_box($ban, $bon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($ban, $box, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($bax, $bon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($bax, $box, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+
+	(in_box($min_lat, $min_lon, $ban, $bon, $bax, $box)) ||
+	(in_box($min_lat, $max_lon, $ban, $bon, $bax, $box)) ||
+	(in_box($max_lat, $min_lon, $ban, $bon, $bax, $box)) ||
+	(in_box($max_lat, $max_lon, $ban, $bon, $bax, $box))
        ) {
 	@map_data.push: $md;
     }
@@ -152,10 +149,6 @@ $height = ($tiley.max - $tiley.min + 1) * 2000;
 say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
 #say '<svg width="' ~ $width.Int + $border*2 ~ '" height="' ~ $height.Int + $border*2 ~
 #    '" style="">';
-
-sub tile_ref($name) {
-    $tile_url ~ '/' ~ $name;
-}
 
 for @map_data -> $md {
     say '<image xlink:href="' ~ tile_ref($md<filename>) ~
@@ -254,3 +247,16 @@ sub calculate_distance($from, $to) {
 
 
 sub to_r($degrees) { $degrees * pi/180 }
+
+sub in_range($x, $min, $max) {
+    $x >= $min && $x <= $max;
+}
+
+sub in_box($x, $y, $xmin, $ymin, $xmax, $ymax) {
+    in_range($x, $xmin, $xmax) && in_range($y, $ymin, $ymax);
+}
+
+sub tile_ref($name) {
+    $tile_url ~ '/' ~ $name;
+}
+
