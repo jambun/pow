@@ -144,9 +144,16 @@ for @points -> $p {
 say '</svg></div>';
 
 
+my $tile_x = 2000;
+my $tile_y = 2000;
+
 $width = ($tilex.max - $tilex.min + 1) * 2000;
 $height = ($tiley.max - $tiley.min + 1) * 2000;
-say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
+my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
+my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
+say '<svg id="plotmap" width="100%" viewBox="' ~ $bxn-50 ~ ' ' ~ $byx-50 ~ ' ' ~ $bxx-$bxn+100 ~  ' ' ~ $byn-$byx+100 ~ '">';
+#say '<svg width="100%" viewBox="0 0 ' ~ $width ~  ' ' ~ $height ~ '">';
+#say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
 #say '<svg width="' ~ $width.Int + $border*2 ~ '" height="' ~ $height.Int + $border*2 ~
 #    '" style="">';
 
@@ -172,9 +179,6 @@ my $last_dist_mark = 0;
 my $total_dist = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
-
-my $tile_x = 2000;
-my $tile_y = 2000;
 
 for @points -> $p {
     my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
