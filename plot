@@ -178,6 +178,7 @@ my $dist_mark = 1000;
 my $dist_mark_radius = 10;
 my $last_dist_mark = 0;
 my $total_dist = 0;
+my $total_climb = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
 
@@ -207,6 +208,7 @@ for @points -> $p {
 	}
 
 	my Rat $climb = $p<ele> - $laste;
+	$total_climb += $climb if $climb > 0;
 	my $climb_color = $climb > 0.0 ?? 'red' !! 'blue';
 	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
 	    ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
@@ -229,7 +231,8 @@ for @$waypoints -> $p {
 }
 
 say '</svg>';
-say '<p>' ~ $total_dist/1000 ~ '</p>';
+say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
+say 'Total climb: ' ~ $total_climb.round ~ 'm</p>';
 say '</body></html>';
 
 
