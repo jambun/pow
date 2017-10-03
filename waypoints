@@ -1,0 +1,53 @@
+#!/usr/bin/env perl6
+
+# prechew waypoints
+
+# <wpt lat="-35.4296481731" lon="149.5989192291">
+# <ele>1221.6437233373</ele>
+# <time>2012-05-02T02:23:17Z</time>
+# <name><![CDATA[Palerang Trig]]></name>
+# <desc><![CDATA[02/05/2012 12:23 pm]]></desc>
+
+use JSON::Tiny;
+
+my $dir = './data/waypoints';
+my $outfile = './data/points.json';
+my @ways;
+my %w;
+
+for dir($dir) -> $d {
+    next unless $d ~~ /.gpx$/;
+    for $d.lines -> $line {
+	given $line {
+	    when /'<trk>'/ {
+		last;
+	    }
+	    when /'<wpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
+		%w = lat => $0.Rat, lon => $1.Rat;
+	    }
+	    when /'<ele>' (.*) '</ele>'/ {
+		%w<ele> = $0.Rat;
+	    }
+	    when /'<time>' (.*) '</time>'/ {
+		%w<time> = $0.Str;
+	    }
+	    when /'<name>' (.+) '</name>'/ {
+		%w<name> = strip_cdata($0.Str);
+	    }
+	    when /'<desc>' (.+) '</desc>'/ {
+		%w<desc> = strip_cdata($0.Str);
+		@ways.push(%w.clone);
+		last;
+	    }
+	}
+    }
+}
+
+spurt $outfile, to-json @ways;
+
+
+sub strip_cdata($s is copy) {
+    $s ~~ s/'<![CDATA['//;
+    $s ~~ s/']]>'//;
+    $s;
+}
