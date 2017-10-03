@@ -7,6 +7,7 @@ use JSON::Tiny;
 # <time>2016-10-28T00:46:10.000Z</time>
 
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
+my $points_file = './data/points.json';
 
 class Bounds {
     has $.min;
@@ -215,10 +216,31 @@ for @points -> $p {
     $laste = $p<ele>;
     $lastp = $p;
 }
-say '</svg>';
 
+my $waypoints = from-json slurp($points_file);
+
+for @$waypoints -> $p {
+    if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
+	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
+	say svg_line($x.Int, $y.Int, $x.Int+10, $y.Int-10, :style({stroke => 'white', z-index => '0'}));
+	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="14" style="z-index=0;">';
+	say $p<name> ~ '</text>';
+    }
+}
+
+say '</svg>';
 say '<p>' ~ $total_dist/1000 ~ '</p>';
 say '</body></html>';
+
+
+sub svg_line($x1, $y1, $x2, $y2, :%style is copy) {
+    my $style = (%style.map: -> $p { $p.key ~ ':' ~ $p.value }).join(';');
+    my $out = '<line x1="' ~ $x1 ~ '" y1="' ~ $y1 ~ '" x2="' ~ $x2 ~ '" y2="' ~ $y2 ~ '" ';
+    $out ~= 'style="' ~ $style ~ '"';
+    $out ~= '/>';
+
+    $out;
+}
 
 
 sub coords($lat, $lon, %tile) {
