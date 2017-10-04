@@ -47,7 +47,7 @@ for slurp.lines -> $line {
 	    # say "time $0";
 	    my $tim = DateTime.new($0.Str);
 	    @points[@points.elems-1]<tim> = $tim;
-	    %bounds<tim>.add($tim.Instant.Int);
+	    %bounds<tim>.add($tim.Instant.Rat);
 	}
 	when /'<name>' (.+) '</name>'/ {
 	    $title = $0.Str;
@@ -138,7 +138,7 @@ say '<div><svg width="' ~ $width.Int + $border*2 ~ '" height="120">';
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
 my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 for @points -> $p {
-    my $x = ($p<tim>.Instant.Int - %bounds<tim>.min) / $time_range * $width + $border;
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width + $border;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100 + 10;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black"/>';
 }
@@ -168,10 +168,11 @@ my $lastx;
 my $lasty;
 my $laste;
 my $lastp;
+my $lastt;
 
 my $time_mark_secs = 15 * 60;
 my $time_mark_radius = 10;
-my $last_time_mark = @points[0]<tim>.Instant.Int;
+my $last_time_mark = @points[0]<tim>.Instant.Rat;
 
 constant R = 6371000; # radius of Earth in metres
 my $dist_mark = 1000;
@@ -179,6 +180,9 @@ my $dist_mark_radius = 10;
 my $last_dist_mark = 0;
 my $total_dist = 0;
 my $total_climb = 0;
+my $start_time = 0;
+my $current_rest_time = 0;
+my $total_rest_time = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
 
@@ -188,6 +192,17 @@ for @points -> $p {
 	my $dist = calculate_distance($lastp, $p);
 #	say $dist;
 	$total_dist += $dist;
+
+	if $dist < 0.1 {
+	    $current_rest_time += $p<tim> - $lastt;
+	} else {
+	    if $current_rest_time > 60 {
+		$total_rest_time += $current_rest_time;
+		say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
+		' fill="blue" style="opacity:0.5;z-index:1;"/>';
+	    }
+	    $current_rest_time = 0;
+	}
 
 	if $total_dist > $last_dist_mark + $dist_mark {
 	    $dist_mark_count++;
@@ -208,7 +223,7 @@ for @points -> $p {
 	}
 
 	my Rat $climb = $p<ele> - $laste;
-	$total_climb += $climb if $climb > 0;
+	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb > 0.0 ?? 'red' !! 'blue';
 	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
 	    ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
@@ -216,6 +231,8 @@ for @points -> $p {
     $lastx = $x;
     $lasty = $y;
     $laste = $p<ele>;
+    $lastt = $p<tim>;
+    $start_time = $lastt unless $lastp;
     $lastp = $p;
 }
 
@@ -232,8 +249,13 @@ for @$waypoints -> $p {
 
 say '</svg>';
 say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
-say 'Total climb: ' ~ $total_climb.round ~ 'm</p>';
-say '</body></html>';
+say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
+my $total_time = $lastt - $start_time;
+say 'Total time: ' ~ ($total_time/60).Int ~ ' min<br/>';
+say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
+say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
+say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
+say '</p></body></html>';
 
 
 sub svg_line($x1, $y1, $x2, $y2, :%style is copy) {
