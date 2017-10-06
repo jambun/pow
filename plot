@@ -196,6 +196,8 @@ for @points -> $p {
 	if $dist < 0.1 {
 	    $current_rest_time += $p<tim> - $lastt;
 	} else {
+	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
+	    
 	    if $current_rest_time > 60 {
 		$total_rest_time += $current_rest_time;
 		say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
