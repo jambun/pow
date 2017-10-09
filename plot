@@ -132,14 +132,14 @@ if $lat_range > $lon_range {
 
 say '<html><head><title>' ~ $title ~ '</title></head><body>';
 say '<h2>' ~ $title ~ ' - ' ~ $date ~ '</h2>';
-#say '<div><img src="' ~ $tile ~ '"></div>';
 
-say '<div><svg width="' ~ $width.Int + $border*2 ~ '" height="120">';
+say '<div style="padding:10px;">';
+say '<svg width="100%" height="60" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
 my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 for @points -> $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width + $border;
-    my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100 + 10;
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
+    my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black"/>';
 }
 say '</svg></div>';
