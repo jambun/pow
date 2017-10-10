@@ -253,11 +253,29 @@ say '</svg>';
 say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
 say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
 my $total_time = $lastt - $start_time;
+say 'Minimum Elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
+say 'Maximum Elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
 say 'Total time: ' ~ ($total_time/60).Int ~ ' min<br/>';
 say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
 say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
 say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
-say '</p></body></html>';
+say '</p>';
+
+say q:to/END/;
+<script>
+  var pm = document.getElementById("plotmap");
+  pm.onclick = function(e){
+    var vb = this.getAttribute("viewBox").split(" ");
+    var vx = Math.round((e.pageX - this.offsetLeft) / this.width.baseVal.value * parseInt(vb[2]));
+    var vy = Math.round((e.pageY - this.offsetTop) / this.height.baseVal.value * parseInt(vb[3]));
+    vb[0] = Math.round(vx + parseInt(vb[0]) - parseInt(vb[2])/2);
+    vb[1] = Math.round(vy + parseInt(vb[1]) - parseInt(vb[3])/2);
+    this.setAttribute("viewBox", vb.join(" "));
+  };
+</script>
+END
+
+say '</body></html>';
 
 
 sub svg_line($x1, $y1, $x2, $y2, :%style is copy) {
