@@ -152,6 +152,7 @@ $width = ($tilex.max - $tilex.min + 1) * 2000;
 $height = ($tiley.max - $tiley.min + 1) * 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
+say '<div id="plotmap-wrapper">';
 say '<svg id="plotmap" width="100%" viewBox="' ~ $bxn-50 ~ ' ' ~ $byx-50 ~ ' ' ~ $bxx-$bxn+100 ~  ' ' ~ $byn-$byx+100 ~ '">';
 #say '<svg width="100%" viewBox="0 0 ' ~ $width ~  ' ' ~ $height ~ '">';
 #say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
@@ -249,7 +250,7 @@ for @$waypoints -> $p {
     }
 }
 
-say '</svg>';
+say '</svg></div>';
 say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
 say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
 my $total_time = $lastt - $start_time;
@@ -265,9 +266,10 @@ say q:to/END/;
 <script>
   var pm = document.getElementById("plotmap");
   pm.onclick = function(e){
+    var wrap = document.getElementById("plotmap-wrapper");
     var vb = this.getAttribute("viewBox").split(" ");
-    var vx = Math.round((e.pageX - this.offsetLeft) / this.width.baseVal.value * parseInt(vb[2]));
-    var vy = Math.round((e.pageY - this.offsetTop) / this.height.baseVal.value * parseInt(vb[3]));
+    var vx = Math.round((e.pageX - wrap.offsetLeft) / this.width.baseVal.value * parseInt(vb[2]));
+    var vy = Math.round((e.pageY - wrap.offsetTop) / this.height.baseVal.value * parseInt(vb[3]));
     vb[0] = Math.round(vx + parseInt(vb[0]) - parseInt(vb[2])/2);
     vb[1] = Math.round(vy + parseInt(vb[1]) - parseInt(vb[3])/2);
     this.setAttribute("viewBox", vb.join(" "));
