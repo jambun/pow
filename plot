@@ -253,9 +253,9 @@ for @$waypoints -> $p {
 say '</svg>';
 #say '<div id="reset-buttonz" style="position:absolute;top:10px;left:10px;width:16px;height:16px;border-width:1px;border-style:solid;border-radius:2px;background-color:#fff;z-index:0;"></div>';
 
-say '<button type="button" id="reset-button" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
-say '<button type="button" id="zoom-in-button" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
-say '<button type="button" id="zoom-out-button" style="position:absolute;top:60px;left:10px;width:20px;text-align:center;padding:4px 4px;">-</button>';
+say '<button type="button" id="reset-button" title="Reset to original zoom position" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
+say '<button type="button" id="zoom-in-button" title="Zoom in" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
+say '<button type="button" id="zoom-out-button" title="Zoom out" style="position:absolute;top:60px;left:10px;width:20px;text-align:center;padding:4px 4px;">-</button>';
 
 say '</div>';
 say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
