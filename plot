@@ -199,7 +199,7 @@ for @points -> $p {
 	} else {
 	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
 	    
-	    if $current_rest_time > 60 {
+	    if $current_rest_time > 180 {
 		$total_rest_time += $current_rest_time;
 		say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 		' fill="blue" style="opacity:0.5;z-index:1;"/>';
