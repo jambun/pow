@@ -152,7 +152,7 @@ $width = ($tilex.max - $tilex.min + 1) * 2000;
 $height = ($tiley.max - $tiley.min + 1) * 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
-say '<div id="plotmap-wrapper">';
+say '<div id="plotmap-wrapper" style="position:relative;">';
 say '<svg id="plotmap" width="100%" viewBox="' ~ $bxn-50 ~ ' ' ~ $byx-50 ~ ' ' ~ $bxx-$bxn+100 ~  ' ' ~ $byn-$byx+100 ~ '">';
 #say '<svg width="100%" viewBox="0 0 ' ~ $width ~  ' ' ~ $height ~ '">';
 #say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
@@ -250,7 +250,14 @@ for @$waypoints -> $p {
     }
 }
 
-say '</svg></div>';
+say '</svg>';
+#say '<div id="reset-buttonz" style="position:absolute;top:10px;left:10px;width:16px;height:16px;border-width:1px;border-style:solid;border-radius:2px;background-color:#fff;z-index:0;"></div>';
+
+say '<button type="button" id="reset-button" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
+say '<button type="button" id="zoom-in-button" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
+say '<button type="button" id="zoom-out-button" style="position:absolute;top:60px;left:10px;width:20px;text-align:center;padding:4px 4px;">-</button>';
+
+say '</div>';
 say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
 say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
 my $total_time = $lastt - $start_time;
@@ -264,16 +271,56 @@ say '</p>';
 
 say q:to/END/;
 <script>
+  var zoom_factor = 0.8;
   var pm = document.getElementById("plotmap");
   pm.onclick = function(e){
     var wrap = document.getElementById("plotmap-wrapper");
-    var vb = this.getAttribute("viewBox").split(" ");
-    var vx = Math.round((e.pageX - wrap.offsetLeft) / this.width.baseVal.value * parseInt(vb[2]));
-    var vy = Math.round((e.pageY - wrap.offsetTop) / this.height.baseVal.value * parseInt(vb[3]));
-    vb[0] = Math.round(vx + parseInt(vb[0]) - parseInt(vb[2])/2);
-    vb[1] = Math.round(vy + parseInt(vb[1]) - parseInt(vb[3])/2);
-    this.setAttribute("viewBox", vb.join(" "));
+    var vb = viewbox_to_a();
+    var vx = (e.pageX - wrap.offsetLeft) / this.width.baseVal.value * vb[2];
+    var vy = (e.pageY - wrap.offsetTop) / this.height.baseVal.value * vb[3];
+    vb[0] = vx + vb[0] - vb[2]/2;
+    vb[1] = vy + vb[1] - vb[3]/2;
+    this.setAttribute("viewBox", a_to_viewbox(vb));
   };
+
+  var original_viewbox = pm.getAttribute("viewBox");
+  document.getElementById("reset-button").onclick = function(e) {
+    pm.setAttribute("viewBox", original_viewbox);
+  };
+
+  document.getElementById("zoom-in-button").onclick = function(e) {
+    zoom(zoom_factor);
+  };
+
+  document.getElementById("zoom-out-button").onclick = function(e) {
+    zoom(1/zoom_factor);
+  };
+
+  function viewbox_to_a() {
+    var vb = pm.getAttribute("viewBox").split(" ");
+    for (i = 0; i < vb.length; i++) {
+      vb[i] = parseInt(vb[i]);
+    }
+    return vb;
+  }
+
+  function a_to_viewbox(vb) {
+    for (i = 0; i < vb.length; i++) {
+      vb[i] = Math.round(vb[i]);
+    }
+    return vb.join(" ");
+  }
+  
+  function zoom(factor) {
+    var vb = viewbox_to_a();
+    var vw = vb[2] * factor;
+    var vh = vb[3] * factor;
+    vb[0] = vb[0] + (vb[2]-vw)/2;
+    vb[1] = vb[1] + (vb[3]-vh)/2;
+    vb[2] = vw;
+    vb[3] = vh;
+    pm.setAttribute("viewBox", a_to_viewbox(vb));
+  }
 </script>
 END
 
