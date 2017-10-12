@@ -26,6 +26,7 @@ my %bounds = lat => Bounds.new,
              tim => Bounds.new;
 my $title;
 my $date;
+my $pid = 1;
 
 #my @map_data = (from-json slurp('data/nsw25k_12_12.json'))[0];
 
@@ -33,7 +34,7 @@ for slurp.lines -> $line {
     given $line {
 	when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
 	    # say "point $0 $1";
-	    my %pt = lat => $0.Rat, lon => $1.Rat;
+	    my %pt = lat => $0.Rat, lon => $1.Rat, id => $pid++;
 	    @points.push(%pt);
 	    %bounds<lat>.add($0.Rat);
 	    %bounds<lon>.add($1.Rat);
@@ -131,25 +132,14 @@ if $lat_range > $lon_range {
 #say $width.Int ~ ' x ' ~ $height.Int;
 
 say '<html><head><title>' ~ $title ~ '</title></head><body>';
-say '<h2>' ~ $title ~ ' - ' ~ $date ~ '</h2>';
-
-say '<div style="padding:10px;">';
-say '<svg width="100%" height="60" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
-my $time_range = %bounds<tim>.max - %bounds<tim>.min;
-my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
-for @points -> $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
-    my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
-    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black"/>';
-}
-say '</svg></div>';
+say '<h3>' ~ $title ~ ' - ' ~ $date ~ '</h3>';
 
 
 my $tile_x = 2000;
 my $tile_y = 2000;
 
-$width = ($tilex.max - $tilex.min + 1) * 2000;
-$height = ($tiley.max - $tiley.min + 1) * 2000;
+#$width = ($tilex.max - $tilex.min + 1) * 2000;
+#$height = ($tiley.max - $tiley.min + 1) * 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
 say '<div id="plotmap-wrapper" style="position:relative;">';
@@ -165,11 +155,12 @@ for @map_data -> $md {
     '" y="' ~ ($md<tiley> - $tiley.min)*2000  ~ '" style="z-index:0;opacity:1;"/>';
 }
 
+
 my $lastx;
 my $lasty;
 my $laste;
-my $lastp;
 my $lastt;
+my $lastp;
 
 my $time_mark_secs = 15 * 60;
 my $time_mark_radius = 10;
@@ -228,8 +219,7 @@ for @points -> $p {
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb > 0.0 ?? 'red' !! 'blue';
-	say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~
-	    ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
+	say '<line onmouseover="showGraphMark(\'' ~ $p<id> ~ '\');" onmouseout="hideGraphMark(\'' ~ $p<id> ~ '\');" id="path-' ~ $p<id> ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
     }
     $lastx = $x;
     $lasty = $y;
@@ -251,6 +241,48 @@ for @$waypoints -> $p {
 }
 
 say '</svg>';
+
+
+$lastp = Any;
+
+say '<div id="graph-wrapper" style="position:absolute;top:12px;left:50px;width:60%;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
+say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
+
+my $time_range = %bounds<tim>.max - %bounds<tim>.min;
+my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
+my $speeds = Bounds.new;
+for @points -> $p {
+    if $lastp {
+	if $p<tim>.Instant.Rat > $lastp<tim>.Instant.Rat {
+	    $p<speed> = calculate_distance($lastp, $p) / ($p<tim>.Instant.Rat - $lastp<tim>.Instant.Rat);
+	    $speeds.add($p<speed>);
+	}
+    }
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
+    my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
+    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black" style="z-index:1;opacity=0.9;"/>';
+    $lastp = $p;
+}
+
+#say $speeds.max ~ ' .. ' ~ $speeds.min;
+my $speed_range = $speeds.max - $speeds.min;
+my $last_bar_x;
+for @points -> $p {
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
+    if $last_bar_x {
+	say '<rect id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" />';
+    }
+    if $p<speed> {
+	my $y = 100 - ($p<speed> - $speeds.min) / $speed_range * 100;
+	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="blue"/>';
+	$last_bar_x = $x;
+    }
+}
+
+say '</svg>';
+say '</div>';
+
+
 #say '<div id="reset-buttonz" style="position:absolute;top:10px;left:10px;width:16px;height:16px;border-width:1px;border-style:solid;border-radius:2px;background-color:#fff;z-index:0;"></div>';
 
 say '<button type="button" id="reset-button" title="Reset to original zoom position" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
@@ -296,6 +328,14 @@ say q:to/END/;
     zoom(1/zoom_factor);
   };
 
+  function showGraphMark(id) {
+      document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
+  }
+
+  function hideGraphMark(id) {
+      document.getElementById("graph-bar-" + id).setAttribute("visibility", "hidden");
+  }
+  
   function viewbox_to_a() {
     var vb = pm.getAttribute("viewBox").split(" ");
     for (i = 0; i < vb.length; i++) {
