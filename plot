@@ -6,6 +6,8 @@ use JSON::Tiny;
 # <ele>1283.370</ele>
 # <time>2016-10-28T00:46:10.000Z</time>
 
+constant R = 6371000; # radius of Earth in metres
+
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 
@@ -23,32 +25,39 @@ my @points;
 my %bounds = lat => Bounds.new,
              lon => Bounds.new,
              ele => Bounds.new,
-             tim => Bounds.new;
+             tim => Bounds.new,
+             dst => Bounds.new,
+	     spd => Bounds.new;
+
 my $title;
 my $date;
 my $pid = 1;
-
-#my @map_data = (from-json slurp('data/nsw25k_12_12.json'))[0];
+my %pt;
 
 for slurp.lines -> $line {
     given $line {
 	when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-	    # say "point $0 $1";
-	    my %pt = lat => $0.Rat, lon => $1.Rat, id => $pid++;
-	    @points.push(%pt);
+	    @points.push(%pt.clone) if %pt;
+	    %pt = lat => $0.Rat, lon => $1.Rat, id => $pid++;
 	    %bounds<lat>.add($0.Rat);
 	    %bounds<lon>.add($1.Rat);
+            if @points.tail {
+	        %pt<dst> = calculate_distance(@points.tail, %pt);
+	        %bounds<dst>.add(%pt<dst>);
+            }
 	}
 	when /'<ele>' (.*) '</ele>'/ {
-	    # say "elevation $0";
-	    @points[@points.elems-1]<ele> = $0.Rat;
+	    %pt<ele> = $0.Rat;
 	    %bounds<ele>.add($0.Rat);
 	}
 	when /'<time>' (.*) '</time>'/ {
-	    # say "time $0";
 	    my $tim = DateTime.new($0.Str);
-	    @points[@points.elems-1]<tim> = $tim;
+	    %pt<tim> = $tim;
 	    %bounds<tim>.add($tim.Instant.Rat);
+	    if @points.tail && %pt<tim>.Instant.Rat > @points.tail<tim>.Instant.Rat {
+	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
+	        %bounds<spd>.add(%pt<spd>);
+            }
 	}
 	when /'<name>' (.+) '</name>'/ {
 	    $title = $0.Str;
@@ -58,8 +67,6 @@ for slurp.lines -> $line {
 	}
     }
 }
-
-#say %bounds;
 
 my $lat_range = %bounds<lat>.max - %bounds<lat>.min;
 my $lon_range = %bounds<lon>.max - %bounds<lon>.min;
@@ -117,8 +124,6 @@ for @map_data -> $md {
     $tiley.add($md<tiley>);
 }
 
-my $tile = 'data/NSW_25k_Coast_South_12_12.jpg';
-
 if $lat_range > $lon_range {
     $height = $max_dim;
     $scale = $height / $lat_range;
@@ -144,10 +149,6 @@ my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
 say '<div id="plotmap-wrapper" style="position:relative;">';
 say '<svg id="plotmap" width="100%" viewBox="' ~ $bxn-50 ~ ' ' ~ $byx-50 ~ ' ' ~ $bxx-$bxn+100 ~  ' ' ~ $byn-$byx+100 ~ '">';
-#say '<svg width="100%" viewBox="0 0 ' ~ $width ~  ' ' ~ $height ~ '">';
-#say '<svg width="' ~ $width ~ 'px" height="' ~ $height ~ 'px">';
-#say '<svg width="' ~ $width.Int + $border*2 ~ '" height="' ~ $height.Int + $border*2 ~
-#    '" style="">';
 
 for @map_data -> $md {
     say '<image xlink:href="' ~ tile_ref($md<filename>) ~
@@ -166,7 +167,6 @@ my $time_mark_secs = 15 * 60;
 my $time_mark_radius = 10;
 my $last_time_mark = @points[0]<tim>.Instant.Rat;
 
-constant R = 6371000; # radius of Earth in metres
 my $dist_mark = 1000;
 my $dist_mark_radius = 10;
 my $last_dist_mark = 0;
@@ -181,11 +181,9 @@ my $time_mark_count = 0;
 for @points -> $p {
     my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
     if $lastp {
-	my $dist = calculate_distance($lastp, $p);
-#	say $dist;
-	$total_dist += $dist;
+	$total_dist += $p<dst>;
 
-	if $dist < 0.1 {
+	if $p<dst> < 0.1 {
 	    $current_rest_time += $p<tim> - $lastt;
 	} else {
 	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
@@ -250,30 +248,23 @@ say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAsp
 
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
 my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
-my $speeds = Bounds.new;
+
 for @points -> $p {
-    if $lastp {
-	if $p<tim>.Instant.Rat > $lastp<tim>.Instant.Rat {
-	    $p<speed> = calculate_distance($lastp, $p) / ($p<tim>.Instant.Rat - $lastp<tim>.Instant.Rat);
-	    $speeds.add($p<speed>);
-	}
-    }
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black" style="z-index:1;opacity=0.9;"/>';
-    $lastp = $p;
 }
 
-#say $speeds.max ~ ' .. ' ~ $speeds.min;
-my $speed_range = $speeds.max - $speeds.min;
+#say %bounds<spd>.max ~ ' .. ' ~ %bounds<spd>.min;
+my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     if $last_bar_x {
 	say '<rect id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" />';
     }
-    if $p<speed> {
-	my $y = 100 - ($p<speed> - $speeds.min) / $speed_range * 100;
+    if $p<spd> {
+	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
 	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="blue"/>';
 	$last_bar_x = $x;
     }
@@ -282,8 +273,6 @@ for @points -> $p {
 say '</svg>';
 say '</div>';
 
-
-#say '<div id="reset-buttonz" style="position:absolute;top:10px;left:10px;width:16px;height:16px;border-width:1px;border-style:solid;border-radius:2px;background-color:#fff;z-index:0;"></div>';
 
 say '<button type="button" id="reset-button" title="Reset to original zoom position" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
 say '<button type="button" id="zoom-in-button" title="Zoom in" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
