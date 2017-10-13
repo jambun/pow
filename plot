@@ -56,7 +56,7 @@ for slurp.lines -> $line {
 	    %bounds<tim>.add($tim.Instant.Rat);
 	    if @points.tail && %pt<tim>.Instant.Rat > @points.tail<tim>.Instant.Rat {
 	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
-	        %bounds<spd>.add(%pt<spd>);
+	        %bounds<spd>.add(%pt<spd>) if %pt<spd> < 5;
             }
 	}
 	when /'<name>' (.+) '</name>'/ {
@@ -137,8 +137,6 @@ if $lat_range > $lon_range {
 #say $width.Int ~ ' x ' ~ $height.Int;
 
 say '<html><head><title>' ~ $title ~ '</title></head><body>';
-say '<h3>' ~ $title ~ ' - ' ~ $date ~ '</h3>';
-
 
 my $tile_x = 2000;
 my $tile_y = 2000;
@@ -148,7 +146,7 @@ my $tile_y = 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
 say '<div id="plotmap-wrapper" style="position:relative;">';
-say '<svg id="plotmap" width="100%" viewBox="' ~ $bxn-50 ~ ' ' ~ $byx-50 ~ ' ' ~ $bxx-$bxn+100 ~  ' ' ~ $byn-$byx+100 ~ '">';
+say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-200 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+300 ~ '">';
 
 for @map_data -> $md {
     say '<image xlink:href="' ~ tile_ref($md<filename>) ~
@@ -168,7 +166,7 @@ my $time_mark_radius = 10;
 my $last_time_mark = @points[0]<tim>.Instant.Rat;
 
 my $dist_mark = 1000;
-my $dist_mark_radius = 10;
+my $dist_mark_radius = 12;
 my $last_dist_mark = 0;
 my $total_dist = 0;
 my $total_climb = 0;
@@ -190,7 +188,7 @@ for @points -> $p {
 	    
 	    if $current_rest_time > 180 {
 		$total_rest_time += $current_rest_time;
-		say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
+		say '<circle class="rest-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 		' fill="blue" style="opacity:0.5;z-index:1;"/>';
 	    }
 	    $current_rest_time = 0;
@@ -198,8 +196,8 @@ for @points -> $p {
 
 	if $total_dist > $last_dist_mark + $dist_mark {
 	    $dist_mark_count++;
-	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
-	        ' fill="yellow" style="opacity:0.5;z-index:1;"/>';
+	    say '<circle class="dist-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
+	        ' fill="red" style="opacity:0.5;z-index:1;"/>';
 	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
 	        '" font-size="10">' ~ $dist_mark_count ~ '</text>';
 	    $last_dist_mark += $dist_mark;
@@ -207,7 +205,7 @@ for @points -> $p {
 	
 	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
 	    $time_mark_count++;
-	    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
+	    say '<circle class="time-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
 	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
 	        '" font-size="10">' ~ $time_mark_count ~ '</text>';
@@ -216,8 +214,8 @@ for @points -> $p {
 
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
-	my $climb_color = $climb > 0.0 ?? 'red' !! 'blue';
-	say '<line onmouseover="showGraphMark(\'' ~ $p<id> ~ '\');" onmouseout="hideGraphMark(\'' ~ $p<id> ~ '\');" id="path-' ~ $p<id> ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.75;stroke-width:3;z-index:2;"/>';
+	my $climb_color = $climb > 0.0 ?? '#ff3333' !! '#3333ff';
+	say '<line onmouseover="showGraphMark(\'' ~ $p<id> ~ '\');" onmouseout="hideGraphMark(\'' ~ $p<id> ~ '\');" id="path-' ~ $p<id> ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
     }
     $lastx = $x;
     $lasty = $y;
@@ -233,15 +231,12 @@ for @$waypoints -> $p {
     if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	say svg_line($x.Int, $y.Int, $x.Int+10, $y.Int-10, :style({stroke => 'white', z-index => '0'}));
-	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="14" style="z-index=0;">';
+	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="16" style="z-index=0;color:#ff3;">';
 	say $p<name> ~ '</text>';
     }
 }
 
 say '</svg>';
-
-
-$lastp = Any;
 
 say '<div id="graph-wrapper" style="position:absolute;top:12px;left:50px;width:60%;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
 say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
@@ -277,18 +272,33 @@ say '</div>';
 say '<button type="button" id="reset-button" title="Reset to original zoom position" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
 say '<button type="button" id="zoom-in-button" title="Zoom in" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
 say '<button type="button" id="zoom-out-button" title="Zoom out" style="position:absolute;top:60px;left:10px;width:20px;text-align:center;padding:4px 4px;">-</button>';
+say '<button type="button" id="rest-button" title="Toggle rest marks" style="position:absolute;top:85px;left:10px;width:20px;text-align:center;padding:4px 4px;">r</button>';
+say '<button type="button" id="dist-button" title="Toggle km marks" style="position:absolute;top:110px;left:10px;width:20px;text-align:center;padding:4px 4px;">d</button>';
+say '<button type="button" id="time-button" title="Toggle 15 min marks" style="position:absolute;top:135px;left:10px;width:20px;text-align:center;padding:4px 4px;">t</button>';
 
 say '</div>';
-say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
-say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
-my $total_time = $lastt - $start_time;
-say 'Minimum Elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
-say 'Maximum Elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
-say 'Total time: ' ~ ($total_time/60).Int ~ ' min<br/>';
-say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
-say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
-say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
-say '</p>';
+
+say_summary;
+
+sub say_summary {
+  say '<div id="summary" style="position:absolute;top:20px;right:20;width:20%;opacity:0.8;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:8px;text-align:right">';
+
+  say '<h4>' ~ $title ~ "<br/>" ~ $date ~ '</h4>';
+
+  say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
+  my $total_time = $lastt - $start_time;
+  say 'Total time: ' ~ ($total_time/60).Int ~ 'min<br/>';
+  say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
+  say 'Minimum Elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
+  say 'Maximum Elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
+  say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
+  say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
+  say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
+  say 'Maximum speed: ' ~ (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph';
+  say '</p>';
+  say '</div>';
+}
+
 
 say q:to/END/;
 <script>
@@ -316,6 +326,26 @@ say q:to/END/;
   document.getElementById("zoom-out-button").onclick = function(e) {
     zoom(1/zoom_factor);
   };
+
+  document.getElementById("rest-button").onclick = function(e) {
+    toggleMark("rest-mark");
+  };
+
+  document.getElementById("dist-button").onclick = function(e) {
+    toggleMark("dist-mark");
+  };
+
+  document.getElementById("time-button").onclick = function(e) {
+    toggleMark("time-mark");
+  };
+
+  function toggleMark(cls) {
+    var marks = document.getElementsByClassName(cls);
+    var set_value = marks[0].getAttribute("visibility") == 'hidden' ? 'visible' : 'hidden';
+    for (i = 0; i < marks.length; i++) {
+      marks[i].setAttribute("visibility", set_value);
+    }
+  }
 
   function showGraphMark(id) {
       document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
