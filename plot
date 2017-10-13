@@ -162,7 +162,7 @@ my $lastt;
 my $lastp;
 
 my $time_mark_secs = 15 * 60;
-my $time_mark_radius = 10;
+my $time_mark_radius = 12;
 my $last_time_mark = @points[0]<tim>.Instant.Rat;
 
 my $dist_mark = 1000;
@@ -198,8 +198,8 @@ for @points -> $p {
 	    $dist_mark_count++;
 	    say '<circle class="dist-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 	        ' fill="red" style="opacity:0.5;z-index:1;"/>';
-	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
-	        '" font-size="10">' ~ $dist_mark_count ~ '</text>';
+	    say '<text class="dist-mark" x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
+	        '" font-size="12">' ~ $dist_mark_count ~ '</text>';
 	    $last_dist_mark += $dist_mark;
 	}
 	
@@ -207,14 +207,15 @@ for @points -> $p {
 	    $time_mark_count++;
 	    say '<circle class="time-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
-	    say '<text x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
-	        '" font-size="10">' ~ $time_mark_count ~ '</text>';
+	    say '<text class="time-mark" x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
+	        '" font-size="12">' ~ $time_mark_count ~ '</text>';
 	    $last_time_mark += $time_mark_secs;
 	}
 
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb > 0.0 ?? '#ff3333' !! '#3333ff';
+        say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
 	say '<line onmouseover="showGraphMark(\'' ~ $p<id> ~ '\');" onmouseout="hideGraphMark(\'' ~ $p<id> ~ '\');" id="path-' ~ $p<id> ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
     }
     $lastx = $x;
@@ -231,7 +232,7 @@ for @$waypoints -> $p {
     if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	say svg_line($x.Int, $y.Int, $x.Int+10, $y.Int-10, :style({stroke => 'white', z-index => '0'}));
-	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="16" style="z-index=0;color:#ff3;">';
+	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="24" font-family="Times" font-weight="bold" fill="black" style="z-index=1;">';
 	say $p<name> ~ '</text>';
     }
 }
