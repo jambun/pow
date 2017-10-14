@@ -136,7 +136,29 @@ if $lat_range > $lon_range {
 
 #say $width.Int ~ ' x ' ~ $height.Int;
 
-say '<html><head><title>' ~ $title ~ '</title></head><body>';
+
+
+say '<html><head><title>' ~ $title ~ '</title>';
+
+say q:to/END/;
+<script>
+  window.onload = function(e) {
+    var wrap = document.getElementById("plotmap-wrapper");
+    var aspect = wrap.clientWidth / wrap.clientHeight;
+    var vb = viewbox_to_a();
+
+    if (aspect > 1) { vb[0] -= (vb[3] * aspect - vb[2])/2; vb[2] = vb[3] * aspect; }
+    if (aspect < 1) { vb[1] -= (vb[2] * aspect - vb[3])/2; vb[3] = vb[2] / aspect; }
+    document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
+    original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
+  }
+
+</script>
+END
+
+say '</head>';
+say '<body>';
+
 
 my $tile_x = 2000;
 my $tile_y = 2000;
@@ -145,7 +167,7 @@ my $tile_y = 2000;
 #$height = ($tiley.max - $tiley.min + 1) * 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
-say '<div id="plotmap-wrapper" style="position:relative;">';
+say '<div id="plotmap-wrapper" style="position:relative;" width="100%" height="100%">';
 say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-200 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+300 ~ '">';
 
 for @map_data -> $md {
@@ -305,11 +327,12 @@ say q:to/END/;
 <script>
   var zoom_factor = 0.8;
   var pm = document.getElementById("plotmap");
+
   pm.onclick = function(e){
     var wrap = document.getElementById("plotmap-wrapper");
     var vb = viewbox_to_a();
-    var vx = (e.pageX - wrap.offsetLeft) / this.width.baseVal.value * vb[2];
-    var vy = (e.pageY - wrap.offsetTop) / this.height.baseVal.value * vb[3];
+    var vx = (e.pageX - wrap.offsetLeft) / pm.width.baseVal.value * vb[2];
+    var vy = (e.pageY - wrap.offsetTop) / pm.height.baseVal.value * vb[3];
     vb[0] = vx + vb[0] - vb[2]/2;
     vb[1] = vy + vb[1] - vb[3]/2;
     this.setAttribute("viewBox", a_to_viewbox(vb));
@@ -357,7 +380,7 @@ say q:to/END/;
   }
   
   function viewbox_to_a() {
-    var vb = pm.getAttribute("viewBox").split(" ");
+    var vb = document.getElementById("plotmap").getAttribute("viewBox").split(" ");
     for (i = 0; i < vb.length; i++) {
       vb[i] = parseInt(vb[i]);
     }
@@ -379,7 +402,7 @@ say q:to/END/;
     vb[1] = vb[1] + (vb[3]-vh)/2;
     vb[2] = vw;
     vb[3] = vh;
-    pm.setAttribute("viewBox", a_to_viewbox(vb));
+    document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
   }
 </script>
 END
