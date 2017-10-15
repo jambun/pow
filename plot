@@ -34,6 +34,11 @@ my $date;
 my $pid = 1;
 my %pt;
 
+say '<html><head>';
+
+say '<script>';
+say 'var points = [];';
+
 for slurp.lines -> $line {
     given $line {
 	when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
@@ -45,10 +50,14 @@ for slurp.lines -> $line {
 	        %pt<dst> = calculate_distance(@points.tail, %pt);
 	        %bounds<dst>.add(%pt<dst>);
             }
+	    say 'points.push({});';
+	    say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
+	    say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
 	}
 	when /'<ele>' (.*) '</ele>'/ {
 	    %pt<ele> = $0.Rat;
 	    %bounds<ele>.add($0.Rat);
+	    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele> ~ ';';
 	}
 	when /'<time>' (.*) '</time>'/ {
 	    my $tim = DateTime.new($0.Str);
@@ -58,6 +67,8 @@ for slurp.lines -> $line {
 	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
 	        %bounds<spd>.add(%pt<spd>) if %pt<spd> < 5;
             }
+	    # 2017-09-01T01:13:28.999000Z
+	    say 'points.slice(-1)[0]["tim"] = (new Date("' ~ %pt<tim> ~ '")).toLocaleTimeString();';
 	}
 	when /'<name>' (.+) '</name>'/ {
 	    $title = $0.Str;
@@ -67,6 +78,9 @@ for slurp.lines -> $line {
 	}
     }
 }
+
+say '</script>';
+say '<title>' ~ $title ~ '</title>';
 
 my $lat_range = %bounds<lat>.max - %bounds<lat>.min;
 my $lon_range = %bounds<lon>.max - %bounds<lon>.min;
@@ -137,11 +151,9 @@ if $lat_range > $lon_range {
 #say $width.Int ~ ' x ' ~ $height.Int;
 
 
-
-say '<html><head><title>' ~ $title ~ '</title>';
+say '<script>';
 
 say q:to/END/;
-<script>
   window.onload = function(e) {
     var wrap = document.getElementById("plotmap-wrapper");
     var aspect = wrap.clientWidth / wrap.clientHeight;
@@ -151,11 +163,21 @@ say q:to/END/;
     if (aspect < 1) { vb[1] -= (vb[2] * aspect - vb[3])/2; vb[3] = vb[2] / aspect; }
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
     original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
+
+    show_point(0);
   }
 
-</script>
+  function show_point(ix) {
+    document.getElementById("point-tim").innerHTML = points[ix].tim;
+    document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
+    document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
+    document.getElementById("point-ele").innerHTML = "Ele: " + parseInt(points[ix].ele) + "m";
+//    document.getElementById("point-dst").innerHTML = points[ix].dst;
+//    document.getElementById("point-spd").innerHTML = points[ix].spd;
+  }
 END
 
+say '</script>';
 say '</head>';
 say '<body>';
 
@@ -263,12 +285,13 @@ say '</svg>';
 
 say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
 
-say '<span id="point-tim">tim</span>';
-say '<div id="point-lat" style="display:inline-block;">lat</div>';
-say '<div id="point-lon" style="display:inline-block;">lon</div>';
-say '<div id="point-ele" style="display:inline-block;">ele</div>';
-say '<div id="point-dst" style="display:inline-block;">dst</div>';
-say '<div id="point-spd" style="display:inline-block;">spd</div>';
+say '<div id="point-pad" style="display:inline-block;width:2%;"></div>';
+say '<div id="point-tim" style="display:inline-block;width:22%;">lat</div>';
+say '<div id="point-lat" style="display:inline-block;width:22%;">lat</div>';
+say '<div id="point-lon" style="display:inline-block;width:25%;">lon</div>';
+say '<div id="point-ele" style="display:inline-block;width:22%;">ele</div>';
+#say '<div id="point-dst" style="display:inline-block;">dst</div>';
+#say '<div id="point-spd" style="display:inline-block;">spd</div>';
 
 say '</div>';
 
@@ -290,7 +313,7 @@ my $last_bar_x;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     if $last_bar_x {
-	say '<rect id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" />';
+	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" />';
     }
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
@@ -383,7 +406,8 @@ say q:to/END/;
   }
 
   function showGraphMark(id) {
-      document.getElementById("point-tim").innerHTML = "whatevs";
+      show_point(id);
+//      var bars = document.getElementsByClassName("graph-bar").querySelectorAll('[visibility = "visible"]').setAttribute("visibility", "hidden");
       document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
   }
 
