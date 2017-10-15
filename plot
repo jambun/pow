@@ -168,7 +168,7 @@ my $tile_y = 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
 say '<div id="plotmap-wrapper" style="position:relative;" width="100%" height="100%">';
-say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-200 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+300 ~ '">';
+say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-250 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+350 ~ '">';
 
 for @map_data -> $md {
     say '<image xlink:href="' ~ tile_ref($md<filename>) ~
@@ -261,7 +261,18 @@ for @$waypoints -> $p {
 
 say '</svg>';
 
-say '<div id="graph-wrapper" style="position:absolute;top:12px;left:50px;width:60%;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
+say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
+
+say '<span id="point-tim">tim</span>';
+say '<div id="point-lat" style="display:inline-block;">lat</div>';
+say '<div id="point-lon" style="display:inline-block;">lon</div>';
+say '<div id="point-ele" style="display:inline-block;">ele</div>';
+say '<div id="point-dst" style="display:inline-block;">dst</div>';
+say '<div id="point-spd" style="display:inline-block;">spd</div>';
+
+say '</div>';
+
+say '<div id="graph-wrapper" style="position:absolute;top:45px;left:50px;width:60%;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
 say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
 
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
@@ -312,8 +323,8 @@ sub say_summary {
   my $total_time = $lastt - $start_time;
   say 'Total time: ' ~ ($total_time/60).Int ~ 'min<br/>';
   say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
-  say 'Minimum Elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
-  say 'Maximum Elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
+  say 'Minimum elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
+  say 'Maximum elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
   say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
   say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
   say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
@@ -372,6 +383,7 @@ say q:to/END/;
   }
 
   function showGraphMark(id) {
+      document.getElementById("point-tim").innerHTML = "whatevs";
       document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
   }
 
