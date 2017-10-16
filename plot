@@ -291,15 +291,19 @@ for @$waypoints -> $p {
 
 say '</svg>';
 
-say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
+say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;overflow:hidden;white-space:nowrap;">';
 
-say '<div id="point-pad" style="display:inline-block;width:2%;"></div>';
-say '<div id="point-tim" style="display:inline-block;width:18%;">lat</div>';
-say '<div id="point-lat" style="display:inline-block;width:22%;">lat</div>';
-say '<div id="point-lon" style="display:inline-block;width:24%;">lon</div>';
-say '<div id="point-ele" style="display:inline-block;width:18%;">ele</div>';
+say '<div style="display:inline-block;width:2%;"></div>';
+say '<div id="point-tim" style="display:inline-block;width:16%;overflow:hidden;">lat</div>';
+say '<div style="display:inline-block;width:1%;"></div>';
+say '<div id="point-lat" style="display:inline-block;width:21%;overflow:hidden;">lat</div>';
+say '<div style="display:inline-block;width:1%;"></div>';
+say '<div id="point-lon" style="display:inline-block;width:22%;overflow:hidden;">lon</div>';
+say '<div style="display:inline-block;width:1%;"></div>';
+say '<div id="point-ele" style="display:inline-block;width:15%;overflow:hidden;">ele</div>';
+say '<div style="display:inline-block;width:1%;"></div>';
 #say '<div id="point-dst" style="display:inline-block;">dst</div>';
-say '<div id="point-spd" style="display:inline-block;width:12%;">spd</div>';
+say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;">spd</div>';
 
 say '</div>';
 
