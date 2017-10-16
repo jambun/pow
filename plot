@@ -101,10 +101,10 @@ my $bax = %bounds<lat>.max;
 my $bon = %bounds<lon>.min;
 my $box = %bounds<lon>.max;
 
-my $pban = $ban - 0.01;
-my $pbax = $bax + 0.01;
-my $pbon = $bon - 0.01;
-my $pbox = $box + 0.01;
+my $pban = $ban - 0.025;
+my $pbax = $bax + 0.025;
+my $pbon = $bon - 0.025;
+my $pbox = $box + 0.025;
 
 #say "LAT: $ban $bax";
 #say "LON: $bon $box";
