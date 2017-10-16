@@ -54,6 +54,7 @@ for slurp.lines -> $line {
 	    say 'points.push({});';
 	    say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
 	    say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
+	    say 'points.slice(-1)[0]["dst"] = ' ~ (%pt<dst> || 0) ~ ';';
 	}
 	when /'<ele>' (.*) '</ele>'/ {
 	    %pt<ele> = $0.Rat;
@@ -70,6 +71,7 @@ for slurp.lines -> $line {
             }
 	    # 2017-09-01T01:13:28.999000Z
 	    say 'points.slice(-1)[0]["tim"] = (new Date("' ~ %pt<tim> ~ '")).toLocaleTimeString();';
+	    say 'points.slice(-1)[0]["spd"] = ' ~ (%pt<spd> || 0) ~ ';';
 	}
 	when /'<name>' (.+) '</name>'/ {
 	    $title = $0.Str;
@@ -169,12 +171,13 @@ say q:to/END/;
   }
 
   function show_point(ix) {
+      console.log(points[ix]);
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
     document.getElementById("point-ele").innerHTML = "Ele: " + parseInt(points[ix].ele) + "m";
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
-//    document.getElementById("point-spd").innerHTML = points[ix].spd;
+    document.getElementById("point-spd").innerHTML = parseInt(points[ix].spd / 1000 * 3600 * 100)/100 + ' kph';
   }
 END
 
@@ -287,12 +290,12 @@ say '</svg>';
 say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
 
 say '<div id="point-pad" style="display:inline-block;width:2%;"></div>';
-say '<div id="point-tim" style="display:inline-block;width:22%;">lat</div>';
+say '<div id="point-tim" style="display:inline-block;width:18%;">lat</div>';
 say '<div id="point-lat" style="display:inline-block;width:22%;">lat</div>';
-say '<div id="point-lon" style="display:inline-block;width:25%;">lon</div>';
-say '<div id="point-ele" style="display:inline-block;width:22%;">ele</div>';
+say '<div id="point-lon" style="display:inline-block;width:24%;">lon</div>';
+say '<div id="point-ele" style="display:inline-block;width:18%;">ele</div>';
 #say '<div id="point-dst" style="display:inline-block;">dst</div>';
-#say '<div id="point-spd" style="display:inline-block;">spd</div>';
+say '<div id="point-spd" style="display:inline-block;width:12%;">spd</div>';
 
 say '</div>';
 
