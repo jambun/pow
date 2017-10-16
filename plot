@@ -101,6 +101,11 @@ my $bax = %bounds<lat>.max;
 my $bon = %bounds<lon>.min;
 my $box = %bounds<lon>.max;
 
+my $pban = $ban - 0.01;
+my $pbax = $bax + 0.01;
+my $pbon = $bon - 0.01;
+my $pbox = $box + 0.01;
+
 #say "LAT: $ban $bax";
 #say "LON: $bon $box";
 
@@ -117,15 +122,15 @@ for @$json -> $md {
 #    say "LON: $min_lon $max_lon";
 
     if (
-	(in_box($ban, $bon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($ban, $box, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($bax, $bon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($bax, $box, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($pban, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($pban, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($pbax, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+	(in_box($pbax, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
 
-	(in_box($min_lat, $min_lon, $ban, $bon, $bax, $box)) ||
-	(in_box($min_lat, $max_lon, $ban, $bon, $bax, $box)) ||
-	(in_box($max_lat, $min_lon, $ban, $bon, $bax, $box)) ||
-	(in_box($max_lat, $max_lon, $ban, $bon, $bax, $box))
+	(in_box($min_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
+	(in_box($min_lat, $max_lon, $pban, $pbon, $pbax, $pbox)) ||
+	(in_box($max_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
+	(in_box($max_lat, $max_lon, $pban, $pbon, $pbax, $pbox))
        ) {
 	@map_data.push: $md;
     }
@@ -359,8 +364,8 @@ sub say_summary {
   say 'Minimum elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
   say 'Maximum elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
   say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
-  say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
-  say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
+  say 'Avg speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
+  say 'Avg non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
   say 'Maximum speed: ' ~ (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph';
   say '</div>';
   say '</div>';
