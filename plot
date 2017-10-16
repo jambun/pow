@@ -39,6 +39,7 @@ say '<html><head>';
 
 say '<script>';
 say 'var points = [];';
+say 'var point_ix = 0;';
 
 for slurp.lines -> $line {
     given $line {
@@ -70,7 +71,8 @@ for slurp.lines -> $line {
 	        %bounds<spd>.add(%pt<spd>) if %pt<spd> < 5;
             }
 	    # 2017-09-01T01:13:28.999000Z
-	    say 'points.slice(-1)[0]["tim"] = (new Date("' ~ %pt<tim> ~ '")).toLocaleTimeString();';
+	    say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
+	    say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
 	    say 'points.slice(-1)[0]["spd"] = ' ~ (%pt<spd> || 0) ~ ';';
 	}
 	when /'<name>' (.+) '</name>'/ {
@@ -81,6 +83,8 @@ for slurp.lines -> $line {
 	}
     }
 }
+
+@points.push(%pt.clone);
 
 say '</script>';
 say '<title>' ~ $title ~ '</title>';
@@ -180,16 +184,28 @@ say q:to/END/;
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
     original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
 
-    show_point(0);
+    show_point(point_ix);
   }
 
   function show_point(ix) {
+    var pl = document.getElementById("line-" + ix);
+    if (pl == null) { return; }
+
+    var pt = document.getElementById("point-target");
+    pt.setAttribute("cx", pl.getAttribute("x2"));
+    pt.setAttribute("cy", pl.getAttribute("y2"));
+
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
     document.getElementById("point-ele").innerHTML = "Ele: " + parseInt(points[ix].ele) + "m";
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
     document.getElementById("point-spd").innerHTML = parseInt(points[ix].spd / 1000 * 3600 * 100)/100 + ' kph';
+
+    hideGraphMark(point_ix);
+    showGraphMark(ix);
+
+    point_ix = ix;
   }
 END
 
@@ -236,7 +252,7 @@ my $total_rest_time = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
 
-for @points -> $p {
+for @points.kv -> $ix, $p {
     my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
     if $lastp {
 	$total_dist += $p<dst>;
@@ -275,9 +291,12 @@ for @points -> $p {
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb > 0.0 ?? '#ff3333' !! '#3333ff';
-        say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
-	say '<line onmouseover="showGraphMark(\'' ~ $p<id> ~ '\');" onmouseout="hideGraphMark(\'' ~ $p<id> ~ '\');" id="path-' ~ $p<id> ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
+        say '<line id="line-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
+	say '<line onmouseover="show_point(\'' ~ $ix ~ '\');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
+    } else {
+        say '<line id="line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
     }
+
     $lastx = $x;
     $lasty = $y;
     $laste = $p<ele>;
@@ -296,6 +315,8 @@ for @$waypoints -> $p {
 	say $p<name> ~ '</text>';
     }
 }
+
+say '<circle id="point-target" cx="50" cy="50" r="30" stroke="black" stroke-width="2" fill="none" style="opacity:1;"/>';
 
 say '</svg>';
 
@@ -330,11 +351,14 @@ for @points -> $p {
 #say %bounds<spd>.max ~ ' .. ' ~ %bounds<spd>.min;
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
-for @points -> $p {
+for @points.kv -> $ix, $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
-    if $last_bar_x {
-	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="yellow" />';
-    }
+    my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
+#    if $last_bar_x {
+    say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="yellow" />';
+#    } else {
+#	say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $x ~ '" y="0" width="1" height="100" visibility="hidden" fill="yellow" />';
+#    }
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
 	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
@@ -388,22 +412,30 @@ say q:to/END/;
 <script>
   var zoom_factor = 0.8;
   var move_step = 50;
+  var keep_animating = false;;
   var pm = document.getElementById("plotmap");
 
   document.onkeydown = function(e) {
+    keep_animating = false;
     if (e.key == ',') { document.getElementById("reset-button").click(); }
-    if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
-    if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
-    if (e.key == 'd') { document.getElementById("dist-button").click(); }
-    if (e.key == 't') { document.getElementById("time-button").click(); }
-    if (e.key == 'r') { document.getElementById("rest-button").click(); }
-    if (e.key == 's') { document.getElementById("summary-button").click(); }
-    if (e.key == 'g') { document.getElementById("graph-button").click(); }
-    if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
-    if (e.key == 'ArrowLeft') { move_map(move_step*-1, 0); }
-    if (e.key == 'ArrowRight') { move_map(move_step, 0); }
-    if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
-    if (e.key == 'ArrowDown') { move_map(0, move_step); }
+    else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
+    else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
+    else if (e.key == 'd') { document.getElementById("dist-button").click(); }
+    else if (e.key == 't') { document.getElementById("time-button").click(); }
+    else if (e.key == 'r') { document.getElementById("rest-button").click(); }
+    else if (e.key == 's') { document.getElementById("summary-button").click(); }
+    else if (e.key == 'g') { document.getElementById("graph-button").click(); }
+    else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
+    else if (e.key == 'ArrowLeft') { move_map(move_step*-1, 0); }
+    else if (e.key == 'ArrowRight') { move_map(move_step, 0); }
+    else if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
+    else if (e.key == 'ArrowDown') { move_map(0, move_step); }
+    else if (e.key == ' ') { show_point(parseInt(point_ix) + 1); }
+    else if (e.key == 'b') { show_point(point_ix - 1); }
+    else if (e.key == 'Enter') { show_point(0); }
+    else if (e.key == '.') { show_point(points.length-1); }
+    else if (e.key == ']') { keep_animating = true; animate(1); }
+    else if (e.key == '[') { keep_animating = true; animate(-1); }
     e.preventDefault();
   };
 
@@ -412,6 +444,18 @@ say q:to/END/;
     vb[0] += x;
     vb[1] += y;
     pm.setAttribute("viewBox", a_to_viewbox(vb));
+  }
+
+  function animate(rate) {
+    var step = rate < 0 ? -1 : 1;
+    if (!points[point_ix + step]) { keep_animating = false; return; }
+
+    var wait = 100;
+    if (points[point_ix + (step*-1)]) {
+      wait = Math.abs((points[point_ix]["date"].getTime() - points[point_ix + (step*-1)]["date"].getTime()) * rate / 100);
+    }
+
+    setTimeout(function(){ show_point(parseInt(point_ix) + step); if (keep_animating) { animate(rate); } }, wait);
   }
 
   pm.onclick = function(e){
@@ -472,7 +516,7 @@ say q:to/END/;
   }
 
   function showGraphMark(id) {
-      show_point(id);
+//      show_point(id);
 //      var bars = document.getElementsByClassName("graph-bar").querySelectorAll('[visibility = "visible"]').setAttribute("visibility", "hidden");
       document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
   }
