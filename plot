@@ -164,9 +164,17 @@ say '<script>';
 say q:to/END/;
   window.onload = function(e) {
     var wrap = document.getElementById("plotmap-wrapper");
-    var aspect = wrap.clientWidth / wrap.clientHeight;
     var vb = viewbox_to_a();
 
+    var left_padding = vb[2] / wrap.clientWidth * 40;
+    vb[0] -= left_padding;
+    vb[2] += left_padding;
+
+    var top_padding = vb[3] / wrap.clientHeight * 120;
+    vb[1] -= top_padding;
+    vb[3] += top_padding;
+
+    var aspect = wrap.clientWidth / wrap.clientHeight;
     if (aspect > 1) { vb[0] -= (vb[3] * aspect - vb[2])/2; vb[2] = vb[3] * aspect; }
     if (aspect < 1) { vb[1] -= (vb[2] * aspect - vb[3])/2; vb[3] = vb[2] / aspect; }
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
@@ -187,7 +195,7 @@ END
 
 say '</script>';
 say '</head>';
-say '<body>';
+say '<body style="margin:0px;overflow:hidden;">';
 
 
 my $tile_x = 2000;
@@ -198,7 +206,7 @@ my $tile_y = 2000;
 my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
 my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
 say '<div id="plotmap-wrapper" style="position:relative;" width="100%" height="100%">';
-say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-250 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+350 ~ '">';
+say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-100 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+200 ~ '">';
 
 for @map_data -> $md {
     say '<image xlink:href="' ~ tile_ref($md<filename>) ~
@@ -357,7 +365,7 @@ sub add_button($id, $label, $title) {
 say_summary;
 
 sub say_summary {
-  say '<div id="summary" style="position:absolute;top:20px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:65px;">';
+  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:65px;">';
 
   say '<div style="font-weight:bold;font-size:medium;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
