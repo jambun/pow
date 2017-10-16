@@ -176,7 +176,6 @@ say q:to/END/;
   }
 
   function show_point(ix) {
-      console.log(points[ix]);
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
@@ -284,8 +283,8 @@ my $waypoints = from-json slurp($points_file);
 for @$waypoints -> $p {
     if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
-	say svg_line($x.Int, $y.Int, $x.Int+10, $y.Int-10, :style({stroke => 'white', z-index => '0'}));
-	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="26" font-family="Times" font-weight="bold" stroke="black" fill="black" style="z-index=1;">';
+	say '<polygon class="waypoint-mark" points="' ~ (($x, $y).join(','), ($x-10, $y-30).join(','), ($x+10, $y-30).join(',')).join(' ') ~ '" style="stroke:black;stroke-width:1px;fill:lime;"/>';
+	say '<text class="waypoint-mark" x="' ~ $x.Int-10 ~ '" y="' ~ $y.Int-35 ~ '" font-size="28" font-family="Times" font-weight="normal" stroke="black" fill="black" style="z-index=1;">';
 	say $p<name> ~ '</text>';
     }
 }
@@ -322,7 +321,7 @@ my $last_bar_x;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     if $last_bar_x {
-	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="white" />';
+	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="yellow" />';
     }
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
@@ -342,6 +341,7 @@ add_button('time-button', 't', 'Toggle 15 min marks');
 add_button('rest-button', 'r', 'Toggle rest marks');
 add_button('summary-button', 's', 'Toggle summary detail');
 add_button('graph-button', 'g', 'Toggle graph');
+add_button('waypoint-button', 'w', 'Toggle waypoints');
 
 say '</div>';
 
@@ -375,7 +375,32 @@ sub say_summary {
 say q:to/END/;
 <script>
   var zoom_factor = 0.8;
+  var move_step = 50;
   var pm = document.getElementById("plotmap");
+
+  document.onkeydown = function(e) {
+    if (e.key == ',') { document.getElementById("reset-button").click(); }
+    if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
+    if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
+    if (e.key == 'd') { document.getElementById("dist-button").click(); }
+    if (e.key == 't') { document.getElementById("time-button").click(); }
+    if (e.key == 'r') { document.getElementById("rest-button").click(); }
+    if (e.key == 's') { document.getElementById("summary-button").click(); }
+    if (e.key == 'g') { document.getElementById("graph-button").click(); }
+    if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
+    if (e.key == 'ArrowLeft') { move_map(move_step*-1, 0); }
+    if (e.key == 'ArrowRight') { move_map(move_step, 0); }
+    if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
+    if (e.key == 'ArrowDown') { move_map(0, move_step); }
+    e.preventDefault();
+  };
+
+  function move_map(x, y) {
+    var vb = viewbox_to_a();
+    vb[0] += x;
+    vb[1] += y;
+    pm.setAttribute("viewBox", a_to_viewbox(vb));
+  }
 
   pm.onclick = function(e){
     var wrap = document.getElementById("plotmap-wrapper");
@@ -420,6 +445,10 @@ say q:to/END/;
   document.getElementById("graph-button").onclick = function(e) {
     var graph = document.getElementById("graph-wrapper");
     graph.style.display = graph.style.display == 'none' ? 'inherit' : 'none';
+  };
+
+  document.getElementById("waypoint-button").onclick = function(e) {
+    toggleMark("waypoint-mark");
   };
 
   function toggleMark(cls) {
