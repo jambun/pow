@@ -8,6 +8,7 @@ use JSON::Tiny;
 
 constant R = 6371000; # radius of Earth in metres
 
+my $buttons = 0;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 
@@ -276,14 +277,14 @@ for @$waypoints -> $p {
     if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	say svg_line($x.Int, $y.Int, $x.Int+10, $y.Int-10, :style({stroke => 'white', z-index => '0'}));
-	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="24" font-family="Times" font-weight="bold" fill="black" style="z-index=1;">';
+	say '<text x="' ~ $x.Int+10 ~ '" y="' ~ $y.Int-10 ~ '" font-size="26" font-family="Times" font-weight="bold" stroke="black" fill="black" style="z-index=1;">';
 	say $p<name> ~ '</text>';
     }
 }
 
 say '</svg>';
 
-say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
+say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
 
 say '<div id="point-pad" style="display:inline-block;width:2%;"></div>';
 say '<div id="point-tim" style="display:inline-block;width:22%;">lat</div>';
@@ -295,7 +296,7 @@ say '<div id="point-ele" style="display:inline-block;width:22%;">ele</div>';
 
 say '</div>';
 
-say '<div id="graph-wrapper" style="position:absolute;top:45px;left:50px;width:60%;opacity:0.75;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:4px">';
+say '<div id="graph-wrapper" style="position:absolute;top:45px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
 say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
 
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
@@ -304,7 +305,7 @@ my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
-    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="black" style="z-index:1;opacity=0.9;"/>';
+    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
 
 #say %bounds<spd>.max ~ ' .. ' ~ %bounds<spd>.min;
@@ -313,11 +314,11 @@ my $last_bar_x;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     if $last_bar_x {
-	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" />';
+	say '<rect class="graph-bar" id="graph-bar-' ~ $p<id>  ~ '" x="' ~ $last_bar_x.Int ~ '" y="0" width="' ~ (($x - $last_bar_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="white" />';
     }
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
-	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="blue"/>';
+	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
 	$last_bar_x = $x;
     }
 }
@@ -325,24 +326,30 @@ for @points -> $p {
 say '</svg>';
 say '</div>';
 
-
-say '<button type="button" id="reset-button" title="Reset to original zoom position" style="position:absolute;top:10px;left:10px;width:20px;text-align:center;padding:4px 4px;">&lt;</button>';
-say '<button type="button" id="zoom-in-button" title="Zoom in" style="position:absolute;top:35px;left:10px;width:20px;text-align:center;padding:4px 4px;">+</button>';
-say '<button type="button" id="zoom-out-button" title="Zoom out" style="position:absolute;top:60px;left:10px;width:20px;text-align:center;padding:4px 4px;">-</button>';
-say '<button type="button" id="rest-button" title="Toggle rest marks" style="position:absolute;top:85px;left:10px;width:20px;text-align:center;padding:4px 4px;">r</button>';
-say '<button type="button" id="dist-button" title="Toggle km marks" style="position:absolute;top:110px;left:10px;width:20px;text-align:center;padding:4px 4px;">d</button>';
-say '<button type="button" id="time-button" title="Toggle 15 min marks" style="position:absolute;top:135px;left:10px;width:20px;text-align:center;padding:4px 4px;">t</button>';
+add_button('reset-button', '<', 'Reset to original zoom position');
+add_button('zoom-in-button', '+', 'Zoom in');
+add_button('zoom-out-button', '-', 'Zoom out');
+add_button('dist-button', 'd', 'Toggle km marks');
+add_button('time-button', 't', 'Toggle 15 min marks');
+add_button('rest-button', 'r', 'Toggle rest marks');
+add_button('summary-button', 's', 'Toggle summary detail');
+add_button('graph-button', 'g', 'Toggle graph');
 
 say '</div>';
+
+sub add_button($id, $label, $title) {
+    say '<button type="button" id="' ~ $id ~ '" title="' ~ $title ~ '" style="position:absolute;top:' ~ 10 + $buttons*25 ~ 'px;left:10px;width:20px;text-align:center;padding:2px 2px;background-color:#333;color:#fff;opacity:0.8;">' ~ $label ~ '</button>';
+    $buttons++;
+}
 
 say_summary;
 
 sub say_summary {
-  say '<div id="summary" style="position:absolute;top:20px;right:20;width:20%;opacity:0.8;background-color:#fff;border-style:solid;border-width:1px;border-color:#666;border-radius:2px;padding:8px;text-align:right">';
+  say '<div id="summary" style="position:absolute;top:20px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:65px;">';
 
-  say '<h4>' ~ $title ~ "<br/>" ~ $date ~ '</h4>';
+  say '<div style="font-weight:bold;font-size:medium;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
-  say '<p>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
+  say '<div id="summary-detail" style="display:none;"><br/>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
   my $total_time = $lastt - $start_time;
   say 'Total time: ' ~ ($total_time/60).Int ~ 'min<br/>';
   say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
@@ -352,7 +359,7 @@ sub say_summary {
   say 'Average speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
   say 'Average non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
   say 'Maximum speed: ' ~ (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph';
-  say '</p>';
+  say '</div>';
   say '</div>';
 }
 
@@ -395,6 +402,16 @@ say q:to/END/;
 
   document.getElementById("time-button").onclick = function(e) {
     toggleMark("time-mark");
+  };
+
+  document.getElementById("summary-button").onclick = function(e) {
+    var sum = document.getElementById("summary-detail");
+    sum.style.display = sum.style.display == 'none' ? 'inherit' : 'none';
+  };
+
+  document.getElementById("graph-button").onclick = function(e) {
+    var graph = document.getElementById("graph-wrapper");
+    graph.style.display = graph.style.display == 'none' ? 'inherit' : 'none';
   };
 
   function toggleMark(cls) {
