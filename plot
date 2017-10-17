@@ -358,7 +358,7 @@ my $last_bar_x;
 for @points.kv -> $ix, $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
-    say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" visibility="hidden" fill="yellow" />';
+    say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
 	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
@@ -529,11 +529,11 @@ say q:to/END/;
   }
 
   function showGraphMark(id) {
-      document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
+      document.getElementById("graph-bar-" + id).style["opacity"] = 1.0;
   }
 
   function hideGraphMark(id) {
-      document.getElementById("graph-bar-" + id).setAttribute("visibility", "hidden");
+      document.getElementById("graph-bar-" + id).style["opacity"] = 0.0;
   }
   
   function viewbox_to_a() {
