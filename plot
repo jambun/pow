@@ -77,10 +77,10 @@ for slurp.lines -> $line {
 	    say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
 	    say 'points.slice(-1)[0]["spd"] = ' ~ (%pt<spd> || 0) ~ ';';
 	}
-	when /'<name>' (.+) '</name>'/ {
+	when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
 	    $title = $0.Str;
 	}
-	when /'<desc>' (.+) '</desc>'/ {
+	when /'<desc>' '<![CDATA['? (.+?) ']]>'? '</desc>'/ {
 	    $date = $0.Str;
 	}
     }
