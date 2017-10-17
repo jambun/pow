@@ -358,11 +358,7 @@ my $last_bar_x;
 for @points.kv -> $ix, $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
-#    if $last_bar_x {
-    say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 1).max ~ '" height="100" visibility="hidden" fill="yellow" />';
-#    } else {
-#	say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $x ~ '" y="0" width="1" height="100" visibility="hidden" fill="yellow" />';
-#    }
+    say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" visibility="hidden" fill="yellow" />';
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
 	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
@@ -522,8 +518,6 @@ say q:to/END/;
   }
 
   function showGraphMark(id) {
-//      show_point(id);
-//      var bars = document.getElementsByClassName("graph-bar").querySelectorAll('[visibility = "visible"]').setAttribute("visibility", "hidden");
       document.getElementById("graph-bar-" + id).setAttribute("visibility", "visible");
   }
 
