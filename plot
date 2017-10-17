@@ -344,7 +344,7 @@ say '<div style="display:inline-block;width:1%;"></div>';
 say '<div id="point-ele" style="display:inline-block;width:15%;overflow:hidden;">ele</div>';
 say '<div style="display:inline-block;width:1%;"></div>';
 #say '<div id="point-dst" style="display:inline-block;">dst</div>';
-say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;">spd</div>';
+say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;text-align:right">spd</div>';
 
 say '</div>';
 
@@ -388,6 +388,7 @@ add_button('rest-button', 'r', 'Toggle rest marks');
 add_button('summary-button', 's', 'Toggle summary detail');
 add_button('graph-button', 'g', 'Toggle graph');
 add_button('waypoint-button', 'w', 'Toggle waypoints');
+add_button('help-button', 'h', 'Show help');
 
 say '</div>';
 
@@ -450,6 +451,7 @@ say q:to/END/;
     else if (e.key == '\\\\') { animation_rate /= 2; }
     else if (e.key == 'o') { animation_rate = 1; }
     else if (e.key == '/') { keep_point_centered = !keep_point_centered; if (keep_point_centered) { center_on_point(); } }
+    else if (e.key == 'h') { document.getElementById("help-button").click(); }
     e.preventDefault();
   };
 
@@ -538,6 +540,13 @@ say q:to/END/;
 
   document.getElementById("waypoint-button").onclick = function(e) {
     toggleMark("waypoint-mark");
+  };
+
+  document.getElementById("help-button").onclick = function(e) {
+    var help = document.getElementsByClassName("help");
+    for (i = 0; i < help.length; i++) {
+      help[i].setAttribute("visibility", 'visible');
+    }
   };
 
   function toggleMark(cls) {
