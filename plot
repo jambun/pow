@@ -41,6 +41,7 @@ say '<script>';
 say 'var points = [];';
 say 'var point_ix = 0;';
 say 'var animation_rate = 1;';
+say 'var keep_point_centered = false;';
 
 for slurp.lines -> $line {
     given $line {
@@ -210,6 +211,8 @@ say q:to/END/;
     pl.style.strokeWidth = 40;
     
     point_ix = ix;
+
+    if (keep_point_centered) { center_on_point(); }
   }
 END
 
@@ -369,7 +372,7 @@ for @points.kv -> $ix, $p {
 say '</svg>';
 say '</div>';
 
-add_button('reset-button', '<', 'Reset to original zoom position');
+add_button('reset-button', '0', 'Reset to original zoom position');
 add_button('zoom-in-button', '+', 'Zoom in');
 add_button('zoom-out-button', '-', 'Zoom out');
 add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for slower, o for original speed. Space to stop.');
@@ -418,7 +421,7 @@ say q:to/END/;
   var pm = document.getElementById("plotmap");
 
   document.onkeydown = function(e) {
-    if      (e.key == ',') { document.getElementById("reset-button").click(); }
+    if      (e.key == '0') { document.getElementById("reset-button").click(); }
     else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
     else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
     else if (e.key == 'd') { document.getElementById("dist-button").click(); }
@@ -434,13 +437,14 @@ say q:to/END/;
     else if (e.key == ' ') { keep_animating = false; show_point(parseInt(point_ix) + 1); }
     else if (e.key == 'b') { keep_animating = false; show_point(point_ix - 1); }
     else if (e.key == 'Enter') { keep_animating = false; show_point(0); }
-    else if (e.key == '.') { keep_animating = false; show_point(points.length-1); }
+    else if (e.key == '\'') { keep_animating = false; show_point(points.length-1); }
     else if (e.key == ']') { document.getElementById("animate-fwd-button").click(); }
     else if (e.key == '[') { document.getElementById("animate-bwd-button").click(); }
     else if (e.key == 'q') { keep_animating = false; }
     else if (e.key == 'p') { animation_rate *= 2; }
     else if (e.key == '\\\\') { animation_rate /= 2; }
     else if (e.key == 'o') { animation_rate = 1; }
+    else if (e.key == '/') { keep_point_centered = !keep_point_centered; if (keep_point_centered) { center_on_point(); } }
     e.preventDefault();
   };
 
@@ -461,6 +465,17 @@ say q:to/END/;
     }
 
     setTimeout(function(){ show_point(parseInt(point_ix) + step); if (keep_animating) { animate(rate); } }, wait);
+  }
+
+  function center_on_point() {
+      var pl = document.getElementById("line-" + point_ix);
+      if (pl == null) { return; }
+
+      var vb = viewbox_to_a();
+      vb[0] = pl.getAttribute("x2") - vb[2]/2;
+      vb[1] = pl.getAttribute("y2") - vb[3]/2;
+
+      document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
   }
 
   pm.onclick = function(e){
