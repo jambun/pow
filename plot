@@ -106,10 +106,10 @@ my $bax = %bounds<lat>.max;
 my $bon = %bounds<lon>.min;
 my $box = %bounds<lon>.max;
 
-my $pban = $ban - 0.025;
-my $pbax = $bax + 0.025;
-my $pbon = $bon - 0.025;
-my $pbox = $box + 0.025;
+my $pban = $ban - 0.04;
+my $pbax = $bax + 0.04;
+my $pbon = $bon - 0.04;
+my $pbox = $box + 0.04;
 
 #say "LAT: $ban $bax";
 #say "LON: $bon $box";
@@ -372,6 +372,8 @@ say '</div>';
 add_button('reset-button', '<', 'Reset to original zoom position');
 add_button('zoom-in-button', '+', 'Zoom in');
 add_button('zoom-out-button', '-', 'Zoom out');
+add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for slower, o for original speed. Space to stop.');
+add_button('animate-bwd-button', '[', 'Animate backward. p for slower, \\ for slower, o for original speed. Space to stop.');
 add_button('dist-button', 'd', 'Toggle km marks');
 add_button('time-button', 't', 'Toggle 15 min marks');
 add_button('rest-button', 'r', 'Toggle rest marks');
@@ -433,11 +435,12 @@ say q:to/END/;
     else if (e.key == 'b') { keep_animating = false; show_point(point_ix - 1); }
     else if (e.key == 'Enter') { keep_animating = false; show_point(0); }
     else if (e.key == '.') { keep_animating = false; show_point(points.length-1); }
-    else if (e.key == ']') { if (!keep_animating) { keep_animating = true; animate(1); } }
-    else if (e.key == '[') { if (!keep_animating) { keep_animating = true; animate(-1); } }
+    else if (e.key == ']') { document.getElementById("animate-fwd-button").click(); }
+    else if (e.key == '[') { document.getElementById("animate-bwd-button").click(); }
     else if (e.key == 'q') { keep_animating = false; }
     else if (e.key == 'p') { animation_rate *= 2; }
     else if (e.key == '\\\\') { animation_rate /= 2; }
+    else if (e.key == 'o') { animation_rate = 1; }
     e.preventDefault();
   };
 
@@ -481,6 +484,14 @@ say q:to/END/;
 
   document.getElementById("zoom-out-button").onclick = function(e) {
     zoom(1/zoom_factor);
+  };
+
+  document.getElementById("animate-fwd-button").onclick = function(e) {
+    if (!keep_animating) { keep_animating = true; animate(1); }
+  };
+
+  document.getElementById("animate-bwd-button").onclick = function(e) {
+    if (!keep_animating) { keep_animating = true; animate(-1); }
   };
 
   document.getElementById("rest-button").onclick = function(e) {
