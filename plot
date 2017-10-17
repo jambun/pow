@@ -40,6 +40,7 @@ say '<html><head>';
 say '<script>';
 say 'var points = [];';
 say 'var point_ix = 0;';
+say 'var animation_rate = 1;';
 
 for slurp.lines -> $line {
     given $line {
@@ -205,6 +206,9 @@ say q:to/END/;
     hideGraphMark(point_ix);
     showGraphMark(ix);
 
+    document.getElementById("line-" + point_ix).style.strokeWidth = 12;
+    pl.style.strokeWidth = 40;
+    
     point_ix = ix;
   }
 END
@@ -291,8 +295,8 @@ for @points.kv -> $ix, $p {
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb > 0.0 ?? '#ff3333' !! '#3333ff';
-        say '<line id="line-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
-	say '<line onmouseover="show_point(' ~ $ix ~ ');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
+        say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
+	say '<line id="line-' ~ $ix ~ '" onmouseover="show_point(' ~ $ix ~ ');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
     } else {
         say '<line id="line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
     }
@@ -416,8 +420,7 @@ say q:to/END/;
   var pm = document.getElementById("plotmap");
 
   document.onkeydown = function(e) {
-    keep_animating = false;
-    if (e.key == ',') { document.getElementById("reset-button").click(); }
+    if      (e.key == ',') { document.getElementById("reset-button").click(); }
     else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
     else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
     else if (e.key == 'd') { document.getElementById("dist-button").click(); }
@@ -430,12 +433,15 @@ say q:to/END/;
     else if (e.key == 'ArrowRight') { move_map(move_step, 0); }
     else if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
     else if (e.key == 'ArrowDown') { move_map(0, move_step); }
-    else if (e.key == ' ') { show_point(parseInt(point_ix) + 1); }
-    else if (e.key == 'b') { show_point(point_ix - 1); }
-    else if (e.key == 'Enter') { show_point(0); }
-    else if (e.key == '.') { show_point(points.length-1); }
-    else if (e.key == ']') { keep_animating = true; animate(1); }
-    else if (e.key == '[') { keep_animating = true; animate(-1); }
+    else if (e.key == ' ') { keep_animating = false; show_point(parseInt(point_ix) + 1); }
+    else if (e.key == 'b') { keep_animating = false; show_point(point_ix - 1); }
+    else if (e.key == 'Enter') { keep_animating = false; show_point(0); }
+    else if (e.key == '.') { keep_animating = false; show_point(points.length-1); }
+    else if (e.key == ']') { if (!keep_animating) { keep_animating = true; animate(1); } }
+    else if (e.key == '[') { if (!keep_animating) { keep_animating = true; animate(-1); } }
+    else if (e.key == 'q') { keep_animating = false; }
+    else if (e.key == 'p') { animation_rate *= 2; }
+    else if (e.key == '\\\\') { animation_rate /= 2; }
     e.preventDefault();
   };
 
@@ -452,7 +458,7 @@ say q:to/END/;
 
     var wait = 100;
     if (points[point_ix + (step*-1)]) {
-      wait = Math.abs((points[point_ix]["date"].getTime() - points[point_ix + (step*-1)]["date"].getTime()) * rate / 100);
+      wait = Math.abs((points[point_ix]["date"].getTime() - points[point_ix + (step*-1)]["date"].getTime()) * rate * animation_rate / 100);
     }
 
     setTimeout(function(){ show_point(parseInt(point_ix) + step); if (keep_animating) { animate(rate); } }, wait);
