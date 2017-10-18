@@ -462,16 +462,29 @@ say q:to/END/;
     pm.setAttribute("viewBox", a_to_viewbox(vb));
   }
 
-  function animate(rate) {
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function animate(rate) {
     var step = rate < 0 ? -1 : 1;
-    if (!points[point_ix + step]) { keep_animating = false; return; }
 
-    var wait = 100;
-    if (points[point_ix + (step*-1)]) {
-      wait = Math.abs((points[point_ix]["date"].getTime() - points[point_ix + (step*-1)]["date"].getTime()) * rate * animation_rate / 100);
+    while (true) {
+      if (!keep_animating) { break; }
+      if (!points[point_ix + step]) { keep_animating = false; break; }
+	
+      var wait = 100;
+      if (points[point_ix - step]) {
+	wait = Math.abs((points[point_ix]["date"].getTime()
+			 - points[point_ix
+			 + (step*-1)]["date"].getTime())
+			 * rate * animation_rate / 100);
+      }
+	
+      show_point(parseInt(point_ix) + step);
+
+      await sleep(wait);
     }
-
-    setTimeout(function(){ show_point(parseInt(point_ix) + step); if (keep_animating) { animate(rate); } }, wait);
   }
 
   function center_on_point() {
