@@ -376,8 +376,8 @@ for @points.kv -> $ix, $p {
     if $p<spd> {
 	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
 	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
-	$last_bar_x = $x;
     }
+    $last_bar_x = $x;
 }
 
 say '</svg>';
