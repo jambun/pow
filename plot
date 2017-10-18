@@ -201,6 +201,10 @@ say q:to/END/;
     ptc.setAttribute("cx", pl.getAttribute("x2"));
     ptc.setAttribute("cy", pl.getAttribute("y2"));
 
+    var pts = document.getElementById("point-target-spot");
+    pts.setAttribute("cx", pl.getAttribute("x2"));
+    pts.setAttribute("cy", pl.getAttribute("y2"));
+
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
@@ -302,10 +306,11 @@ for @points.kv -> $ix, $p {
 	my Rat $climb = $p<ele> - $laste;
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb >= 0.0 ?? '#ff3333' !! '#3333ff';
-        say '<line x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
+        say '<line id="fine-line-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
 	say '<line id="line-' ~ $ix ~ '" onclick="show_point(' ~ $ix ~ ');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
     } else {
         say '<line id="line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
+        say '<line id="fine-line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
     }
 
     $lastx = $x;
@@ -329,6 +334,7 @@ for @$waypoints -> $p {
 
 say '<circle id="point-target-centered" cx="50" cy="50" r="32" stroke="white" stroke-width="8" fill="none" style="opacity:0.6;"/>';
 say '<circle id="point-target" cx="50" cy="50" r="33" stroke="black" stroke-width="3" fill="none" style="opacity:1;"/>';
+say '<circle id="point-target-spot" cx="50" cy="50" r="3" stroke="white" stroke-width="0" fill="white" style="opacity:0.9;"/>';
 
 say '</svg>';
 
