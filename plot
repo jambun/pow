@@ -219,9 +219,9 @@ say q:to/END/;
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
-    document.getElementById("point-ele").innerHTML = "Ele: " + parseInt(points[ix].ele) + "m";
+    document.getElementById("point-ele").innerHTML = "Ele: " + Math.round(points[ix].ele) + "m";
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
-    document.getElementById("point-spd").innerHTML = parseInt(points[ix].spd / 1000 * 3600 * 100)/100 + ' kph';
+    document.getElementById("point-spd").innerHTML = Math.round(points[ix].spd / 1000 * 3600 * 100)/100 + ' kph';
 
     hideGraphMark(point_ix);
     showGraphMark(ix);
