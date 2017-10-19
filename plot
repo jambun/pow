@@ -423,11 +423,11 @@ sub say_summary {
 
   say '<div id="summary-detail" style="display:none;"><br/>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
   my $total_time = $lastt - $start_time;
-  say 'Total time: ' ~ ($total_time / 3600).Int ~ 'hr ' ~ ($total_time % 3600 / 60).Int ~ 'min<br/>';
+  say 'Total time: ' ~ sec_to_hm($total_time) ~ '<br/>';
   say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
   say 'Minimum elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
   say 'Maximum elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
-  say 'Total rest time: ' ~ ($total_rest_time/60).Int ~ ' min<br/>';
+  say 'Total rest time: ' ~ sec_to_hm($total_rest_time) ~ '<br/>';
   say 'Avg speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
   say 'Avg non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
   say 'Maximum speed: ' ~ (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph';
@@ -435,6 +435,9 @@ sub say_summary {
   say '</div>';
 }
 
+sub sec_to_hm($sec) {
+    ($sec / 3600).Int ~ 'hr ' ~ ($sec % 3600 / 60).round ~ 'min';
+}
 
 say q:to/END/;
 <script>
