@@ -43,26 +43,39 @@ say 'var point_ix = 0;';
 say 'var animation_rate = 1;';
 say 'var keep_point_centered = false;';
 
+sub add_point(%pt is copy) {
+    return unless %pt;
+    return if @points && !%pt<spd>;
+
+    %pt<id> = $pid++;
+    @points.push(%pt);
+
+    say 'points.push({});';
+    say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
+    say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
+    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele> ~ ';';
+    say 'points.slice(-1)[0]["dst"] = ' ~ (%pt<dst> || 0) ~ ';';
+    say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
+    say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
+    say 'points.slice(-1)[0]["spd"] = ' ~ %pt<spd> ~ ';';
+}
+
+
 for slurp.lines -> $line {
     given $line {
 	when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-	    @points.push(%pt.clone) if %pt;
-	    %pt = lat => $0.Rat, lon => $1.Rat, id => $pid++;
+	    add_point(%pt);
+	    %pt = lat => $0.Rat, lon => $1.Rat;
 	    %bounds<lat>.add($0.Rat);
 	    %bounds<lon>.add($1.Rat);
             if @points.tail {
 	        %pt<dst> = calculate_distance(@points.tail, %pt);
 	        %bounds<dst>.add(%pt<dst>);
             }
-	    say 'points.push({});';
-	    say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
-	    say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
-	    say 'points.slice(-1)[0]["dst"] = ' ~ (%pt<dst> || 0) ~ ';';
 	}
 	when /'<ele>' (.*) '</ele>'/ {
 	    %pt<ele> = $0.Rat;
 	    %bounds<ele>.add($0.Rat);
-	    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele> ~ ';';
 	}
 	when /'<time>' (.*) '</time>'/ {
 	    my $tim = DateTime.new($0.Str);
@@ -71,11 +84,9 @@ for slurp.lines -> $line {
 	    if @points.tail && %pt<tim>.Instant.Rat > @points.tail<tim>.Instant.Rat {
 	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
 	        %bounds<spd>.add(%pt<spd>) if %pt<spd> < 5;
-            }
-	    # 2017-09-01T01:13:28.999000Z
-	    say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
-	    say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
-	    say 'points.slice(-1)[0]["spd"] = ' ~ (%pt<spd> || 0) ~ ';';
+            } else {
+		%pt<spd> = 0;
+	    }
 	}
 	when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
 	    $title = $0.Str;
@@ -86,7 +97,7 @@ for slurp.lines -> $line {
     }
 }
 
-@points.push(%pt.clone);
+add_point(%pt);
 
 say '</script>';
 say '<title>' ~ $title ~ '</title>';
@@ -272,7 +283,7 @@ for @points.kv -> $ix, $p {
     if $lastp {
 	$total_dist += $p<dst>;
 
-	if $p<dst> < 0.1 {
+	if $p<spd> < 0.1 {
 	    $current_rest_time += $p<tim> - $lastt;
 	} else {
 	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
@@ -366,17 +377,14 @@ for @points -> $p {
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
 
-#say %bounds<spd>.max ~ ' .. ' ~ %bounds<spd>.min;
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
 for @points.kv -> $ix, $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
     say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
-    if $p<spd> {
-	my $y = 100 - ($p<spd> - %bounds<spd>.min) / $speed_range * 100;
-	say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
-    }
+    my $y = 100 - (($p<spd> || 0) - %bounds<spd>.min) / $speed_range * 100;
+    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
     $last_bar_x = $x;
 }
 
@@ -487,9 +495,8 @@ say q:to/END/;
 			 * rate * animation_rate / 100);
       }
 	
-      show_point(parseInt(point_ix) + step);
-
       await sleep(wait);
+      show_point(parseInt(point_ix) + step);
     }
   }
 
