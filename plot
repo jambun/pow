@@ -421,7 +421,7 @@ sub say_summary {
 
   say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
-  say '<div id="summary-detail" style="display:none;width:100%">';
+  say '<div id="summary-detail" style="display:none;width:100%;font-size:large;">';
   say '<br/>';
   say summary_item('Total distance: ', ($total_dist/1000).round(.01) ~ 'km');
   my $total_time = $lastt - $start_time;
