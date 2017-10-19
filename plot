@@ -417,7 +417,7 @@ sub add_button($id, $label, $title) {
 say_summary;
 
 sub say_summary {
-  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:70px;">';
+  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
 
   say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
