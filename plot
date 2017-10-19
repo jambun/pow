@@ -355,16 +355,16 @@ say '</svg>';
 say '<div id="point-detail" style="position:absolute;font-size:large;top:12px;left:50px;width:60%;height:20px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;overflow:hidden;white-space:nowrap;">';
 
 say '<div style="display:inline-block;width:1%;"></div>';
-say '<div id="point-tim" style="display:inline-block;width:16%;overflow:hidden;">lat</div>';
+say '<div id="point-tim" style="display:inline-block;width:16%;overflow:hidden;">Time</div>';
 say '<div style="display:inline-block;width:1%;"></div>';
-say '<div id="point-lat" style="display:inline-block;width:21%;overflow:hidden;">lat</div>';
+say '<div id="point-lat" style="display:inline-block;width:21%;overflow:hidden;">Lat</div>';
 say '<div style="display:inline-block;width:1%;"></div>';
-say '<div id="point-lon" style="display:inline-block;width:23%;overflow:hidden;">lon</div>';
+say '<div id="point-lon" style="display:inline-block;width:24%;overflow:hidden;">Lon</div>';
 say '<div style="display:inline-block;width:1%;"></div>';
-say '<div id="point-ele" style="display:inline-block;width:15%;overflow:hidden;">ele</div>';
+say '<div id="point-ele" style="display:inline-block;width:15%;overflow:hidden;">Ele</div>';
 say '<div style="display:inline-block;width:1%;"></div>';
-#say '<div id="point-dst" style="display:inline-block;">dst</div>';
-say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;text-align:right">spd</div>';
+#say '<div id="point-dst" style="display:inline-block;">Distance</div>';
+say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;text-align:right">Speed</div>';
 
 say '</div>';
 
@@ -397,8 +397,8 @@ say '</div>';
 add_button('reset-button', '0', 'Reset to original zoom position');
 add_button('zoom-in-button', '+', 'Zoom in');
 add_button('zoom-out-button', '-', 'Zoom out');
-add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for slower, o for original speed. Space to stop.');
-add_button('animate-bwd-button', '[', 'Animate backward. p for slower, \\ for slower, o for original speed. Space to stop.');
+add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for faster, o for original speed. Space to stop.');
+add_button('animate-bwd-button', '[', 'Animate backward. p for slower, \\ for faster, o for original speed. Space to stop.');
 add_button('dist-button', 'd', 'Toggle km marks');
 add_button('time-button', 't', 'Toggle 15 min marks');
 add_button('rest-button', 'r', 'Toggle rest marks');
