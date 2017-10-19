@@ -352,7 +352,7 @@ say '<circle id="point-target-spot" cx="50" cy="50" r="3" stroke="white" stroke-
 
 say '</svg>';
 
-say '<div id="point-detail" style="position:absolute;top:12px;left:50px;width:60%;height:16px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;overflow:hidden;white-space:nowrap;">';
+say '<div id="point-detail" style="position:absolute;font-size:large;top:12px;left:50px;width:60%;height:20px;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;overflow:hidden;white-space:nowrap;">';
 
 say '<div style="display:inline-block;width:2%;"></div>';
 say '<div id="point-tim" style="display:inline-block;width:16%;overflow:hidden;">lat</div>';
@@ -368,7 +368,7 @@ say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;t
 
 say '</div>';
 
-say '<div id="graph-wrapper" style="position:absolute;top:45px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
+say '<div id="graph-wrapper" style="position:absolute;top:50px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
 say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
 
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
@@ -410,16 +410,16 @@ add_button('help-button', 'h', 'Show help');
 say '</div>';
 
 sub add_button($id, $label, $title) {
-    say '<button type="button" id="' ~ $id ~ '" title="' ~ $title ~ '" style="position:absolute;top:' ~ 10 + $buttons*25 ~ 'px;left:10px;width:20px;text-align:center;padding:2px 2px;background-color:#333;color:#fff;opacity:0.8;">' ~ $label ~ '</button>';
+    say '<button type="button" id="' ~ $id ~ '" title="' ~ $title ~ '" style="position:absolute;font-size:large;top:' ~ 10 + $buttons*36 ~ 'px;left:10px;width:30px;text-align:center;padding:2px 2px;background-color:#333;color:#fff;opacity:0.8;">' ~ $label ~ '</button>';
     $buttons++;
 }
 
 say_summary;
 
 sub say_summary {
-  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:65px;">';
+  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:70px;">';
 
-  say '<div style="font-weight:bold;font-size:medium;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
+  say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
   say '<div id="summary-detail" style="display:none;width:100%">';
   say '<br/>';
