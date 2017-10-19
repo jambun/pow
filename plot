@@ -419,24 +419,32 @@ say_summary;
 sub say_summary {
   say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;min-height:65px;">';
 
-  say '<div style="font-weight:bold;font-size:medium;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
+  say '<div style="font-weight:bold;font-size:medium;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
-  say '<div id="summary-detail" style="display:none;"><br/>Total distance: ' ~ ($total_dist/1000).round(.01) ~ 'km<br/>';
+  say '<div id="summary-detail" style="display:none;width:100%">';
+  say '<br/>';
+  say summary_item('Total distance: ', ($total_dist/1000).round(.01) ~ 'km');
   my $total_time = $lastt - $start_time;
-  say 'Total time: ' ~ sec_to_hm($total_time) ~ '<br/>';
-  say 'Total climb: ' ~ $total_climb.round ~ 'm<br/>';
-  say 'Minimum elevation: ' ~ %bounds<ele>.min.round ~ 'm<br/>';
-  say 'Maximum elevation: ' ~ %bounds<ele>.max.round ~ 'm<br/>';
-  say 'Total rest time: ' ~ sec_to_hm($total_rest_time) ~ '<br/>';
-  say 'Avg speed: ' ~ (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph<br/>';
-  say 'Avg non-rest speed: ' ~ (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph<br/>';
-  say 'Maximum speed: ' ~ (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph';
+  say summary_item('Total time: ', sec_to_hm($total_time));
+  say summary_item('Total rest time: ', sec_to_hm($total_rest_time));
+  say summary_item();
+  say summary_item('Total climb: ', $total_climb.round ~ 'm');
+  say summary_item('Minimum elevation: ', %bounds<ele>.min.round ~ 'm');
+  say summary_item('Maximum elevation: ', %bounds<ele>.max.round ~ 'm');
+  say summary_item();
+  say summary_item('Avg speed: ', (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph');
+  say summary_item('Avg non-rest speed: ', (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph');
+  say summary_item('Maximum speed: ', (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph');
   say '</div>';
   say '</div>';
 }
 
 sub sec_to_hm($sec) {
     ($sec / 3600).Int ~ 'hr ' ~ ($sec % 3600 / 60).round ~ 'min';
+}
+
+sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
+    '<div style="width:100%;"><div style="display:inline-block;float:left;">' ~ $label ~ '</div><div style="display:inline-block;right:0;">' ~ $value ~ '</div></div>';
 }
 
 say q:to/END/;
