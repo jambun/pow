@@ -303,8 +303,9 @@ for @points.kv -> $ix, $p {
 	    $dist_mark_count++;
 	    say '<circle class="dist-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 	        ' fill="red" style="opacity:0.5;z-index:1;"/>';
-	    say '<text class="dist-mark" x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
-	        '" font-size="12">' ~ $dist_mark_count ~ '</text>';
+	    say '<text class="dist-mark" x="' ~ ($x.Int + 12) ~ '" y="' ~ ($y.Int + 4) ~
+	        '" font-size="12">' ~ $dist_mark_count ~ 'km</text>';
+            say '<circle class="dist-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" style="fill:red;opacity:0.9;"/>';
 	    $last_dist_mark += $dist_mark;
 	}
 	
@@ -312,8 +313,10 @@ for @points.kv -> $ix, $p {
 	    $time_mark_count++;
 	    say '<circle class="time-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
-	    say '<text class="time-mark" x="' ~ ($x.Int - 5) ~ '" y="' ~ ($y.Int - 5) ~
-	        '" font-size="12">' ~ $time_mark_count ~ '</text>';
+	    my $elapsed_time = (($time_mark_count * 15) / 60).Int ~ ':' ~ sprintf('%02s', (($time_mark_count * 15) % 60).round);
+	    say '<text class="time-mark" x="' ~ ($x.Int + 12) ~ '" y="' ~ ($y.Int + 4) ~
+	        '" font-size="12">' ~ $elapsed_time ~ '</text>';
+            say '<circle class="time-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" style="fill:gray;opacity:0.9;"/>';
 	    $last_time_mark += $time_mark_secs;
 	}
 
@@ -321,9 +324,9 @@ for @points.kv -> $ix, $p {
 	$total_climb += $climb if $climb > 0.0;
 	my $climb_color = $climb >= 0.0 ?? '#ff3333' !! '#3333ff';
         say '<line id="fine-line-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
-	say '<line id="line-' ~ $ix ~ '" onclick="show_point(' ~ $ix ~ ');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
+	say '<line class="trail-mark" id="line-' ~ $ix ~ '" onclick="show_point(' ~ $ix ~ ');" id="path-' ~ $ix ~ '" x1="' ~ $lastx ~ '" y1="' ~ $lasty ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '"' ~ ' style="stroke:' ~ $climb_color  ~ ';opacity:0.5;stroke-width:12;z-index:' ~ 2 + rand.round ~ ';"/>';
     } else {
-        say '<line id="line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
+        say '<line class="trail-mark" id="line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
         say '<line id="fine-line-' ~ $ix ~ '" x1="' ~ $x.Int ~ '" y1="' ~ $y.Int ~ '" x2="' ~ $x.Int ~ '" y2="' ~ $y.Int ~ '" style="stroke:black;opacity:0.9;stroke-width:1;z-index:1"/>';
     }
 
@@ -348,7 +351,7 @@ for @$waypoints -> $p {
 
 say '<circle id="point-target-centered" cx="50" cy="50" r="32" stroke="white" stroke-width="8" fill="none" style="opacity:0.6;"/>';
 say '<circle id="point-target" cx="50" cy="50" r="33" stroke="black" stroke-width="3" fill="none" style="opacity:1;"/>';
-say '<circle id="point-target-spot" cx="50" cy="50" r="3" stroke="white" stroke-width="0" fill="white" style="opacity:0.9;"/>';
+say '<circle id="point-target-spot" cx="50" cy="50" r="3" stroke="white" stroke-width="0" fill="white" style="opacity:0.8;"/>';
 
 say '</svg>';
 
@@ -399,6 +402,7 @@ add_button('zoom-in-button', '+', 'Zoom in');
 add_button('zoom-out-button', '-', 'Zoom out');
 add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for faster, o for original speed. Space to stop.');
 add_button('animate-bwd-button', '[', 'Animate backward. p for slower, \\ for faster, o for original speed. Space to stop.');
+add_button('trail-button', 'l', 'Toggle trail marks');
 add_button('dist-button', 'd', 'Toggle km marks');
 add_button('time-button', 't', 'Toggle 15 min marks');
 add_button('rest-button', 'r', 'Toggle rest marks');
@@ -426,15 +430,15 @@ sub say_summary {
   say summary_item('Total distance: ', ($total_dist/1000).round(.01) ~ 'km');
   my $total_time = $lastt - $start_time;
   say summary_item('Total time: ', sec_to_hm($total_time));
-  say summary_item('Total rest time: ', sec_to_hm($total_rest_time));
+  say summary_item('Rest time: ', sec_to_hm($total_rest_time));
   say summary_item();
   say summary_item('Total climb: ', $total_climb.round ~ 'm');
-  say summary_item('Minimum elevation: ', %bounds<ele>.min.round ~ 'm');
-  say summary_item('Maximum elevation: ', %bounds<ele>.max.round ~ 'm');
+  say summary_item('Min elevation: ', %bounds<ele>.min.round ~ 'm');
+  say summary_item('Max elevation: ', %bounds<ele>.max.round ~ 'm');
   say summary_item();
   say summary_item('Avg speed: ', (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph');
-  say summary_item('Avg non-rest speed: ', (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph');
-  say summary_item('Maximum speed: ', (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph');
+  say summary_item('Non-rest speed: ', (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph');
+  say summary_item('Max speed: ', (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph');
   say '</div>';
   say '</div>';
 }
@@ -464,6 +468,7 @@ say q:to/END/;
     else if (e.key == 's') { document.getElementById("summary-button").click(); }
     else if (e.key == 'g') { document.getElementById("graph-button").click(); }
     else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
+    else if (e.key == 'l') { document.getElementById("trail-button").click(); }
     else if (e.key == 'ArrowLeft') { move_map(move_step*-1, 0); }
     else if (e.key == 'ArrowRight') { move_map(move_step, 0); }
     else if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
@@ -569,10 +574,18 @@ say q:to/END/;
   };
 
   document.getElementById("summary-button").onclick = function(e) {
-    var sum = document.getElementById("summary-detail");
-    sum.style.display = sum.style.display == 'none' ? 'inherit' : 'none';
+    toggleSummary();
   };
 
+  document.getElementById("summary").onclick = function(e) {
+    toggleSummary();
+  };
+
+  function toggleSummary() {
+    var sum = document.getElementById("summary-detail");
+    sum.style.display = sum.style.display == 'none' ? 'inherit' : 'none';
+  }
+  
   document.getElementById("graph-button").onclick = function(e) {
     var graph = document.getElementById("graph-wrapper");
     graph.style.display = graph.style.display == 'none' ? 'inherit' : 'none';
@@ -580,6 +593,10 @@ say q:to/END/;
 
   document.getElementById("waypoint-button").onclick = function(e) {
     toggleMark("waypoint-mark");
+  };
+
+  document.getElementById("trail-button").onclick = function(e) {
+    toggleMark("trail-mark");
   };
 
   document.getElementById("help-button").onclick = function(e) {
