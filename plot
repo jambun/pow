@@ -274,6 +274,8 @@ my $total_dist = 0;
 my $total_climb = 0;
 my $start_time = 0;
 my $current_rest_time = 0;
+my $rest_x;
+my $rest_y;
 my $total_rest_time = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
@@ -284,13 +286,14 @@ for @points.kv -> $ix, $p {
 	$total_dist += $p<dst>;
 
 	if $p<spd> < 0.1 {
+	    unless $current_rest_time { $rest_x = $x.Int; $rest_y = $y.Int; }
 	    $current_rest_time += $p<tim> - $lastt;
 	} else {
 	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
 	    
 	    if $current_rest_time > 180 {
 		$total_rest_time += $current_rest_time;
-		say '<circle class="rest-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $dist_mark_radius ~ '"' ~
+		say '<circle class="rest-mark" cx="' ~ $rest_x ~ '" cy="' ~ $rest_y ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 		' fill="blue" style="opacity:0.5;z-index:1;"/>';
 	    }
 	    $current_rest_time = 0;
