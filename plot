@@ -420,6 +420,9 @@ sub add_button($id, $label, $title) {
 
 say_summary;
 
+say_help;
+
+
 sub say_summary {
   say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
 
@@ -451,6 +454,60 @@ sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
     '<div style="width:100%;"><div style="display:inline-block;float:left;">' ~ $label ~ '</div><div style="display:inline-block;right:0;">' ~ $value ~ '</div></div>';
 }
 
+sub say_help {
+    say qq:to/END/;
+    <div class="help" id="help-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.3;background-color:#fff;border-style:none;;padding:0px;"></div>
+    <div class="help" id="help-detail" style="position:absolute;top:160;left:120;width:65%;height:60%;opacity:0.9;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;color:#fff;">
+      <div align="center" style="font-size:large;">Help: [Any] key or click to exit. [h] to show.</div>
+      <table width="100%" height="90%" border="1" style="padding:20;color:#fff;">
+      <tr>
+      <td width="50%" valign="top">
+        { help_item('0', 'Original nav position') }
+        { help_item('+', 'Zoom in') }
+        { help_item('-', 'Zoom out') }
+        { help_item('Arrows', 'Move map position') }
+        { help_item('Space', 'Step forward') }
+        { help_item('b', 'Step backward') }
+        { help_item('Return', 'Go to start') }
+        { help_item("'", 'Go to end') }
+        { help_item(']', 'Animate forward') }
+        { help_item('[', 'Animate backward') }
+        { help_item('q', 'Stop animation') }
+        { help_item('\\', 'Faster animation') }
+        { help_item('p', 'Slower animation') }
+        { help_item('o', 'Original animation speed') }
+        { help_item('/', 'Toggle follow target') }
+      </td>
+      <td width="50%" valign="top">
+        { help_item('l', 'Toggle trail') }
+        { help_item('d', 'Toggle km marks') }
+        { help_item('t', 'Toggle 15min marks') }
+        { help_item('r', 'Toggle rest marks') }
+        { help_item('w', 'Toggle waypoints') }
+        { help_item('g', 'Toggle graph') }
+        { help_item('s', 'Toggle summary detail') }
+        { help_item('h', 'Show this help') }
+        { help_item() }
+        { help_item('Map', 'Click to centre') }
+        { help_item('Trail', 'Red = climb, Blue = descend. Click to move target') }
+        { help_item('Graph', 'White = elevation, Blue = speed. Click to move target') }
+        { help_item('Summary', 'Click to see detail') }
+      </td>
+      </tr>
+      </table>
+    </div>
+    END
+}
+
+sub help_item($key = '&nbsp;', $text = '&nbsp;') {
+    qq:to/END/;
+    <div style="width:100%;">
+    <div style="display:inline-block;width:75;font-size:large;"> $key </div>
+    <div style="display:inline-block;"> $text </div>
+    </div>
+    END
+}
+
 say q:to/END/;
 <script>
   var zoom_factor = 0.8;
@@ -459,7 +516,8 @@ say q:to/END/;
   var pm = document.getElementById("plotmap");
 
   document.onkeydown = function(e) {
-    if      (e.key == '0') { document.getElementById("reset-button").click(); }
+    if (!(document.getElementById("help-detail").style.display == 'none')) { document.getElementById("help-button").click(); }
+    else if (e.key == '0') { document.getElementById("reset-button").click(); }
     else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
     else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
     else if (e.key == 'd') { document.getElementById("dist-button").click(); }
@@ -600,11 +658,25 @@ say q:to/END/;
   };
 
   document.getElementById("help-button").onclick = function(e) {
+    toggleHelp();
+  };
+
+  document.getElementById("help-detail").onclick = function(e) {
+    toggleHelp();
+  };
+
+  document.getElementById("help-overlay").onclick = function(e) {
+    toggleHelp();
+  };
+
+  function toggleHelp() {
+    var help = document.getElementById("help-detail");
+    var set_value = help.style.display == 'none' ? 'inherit' : 'none';
     var help = document.getElementsByClassName("help");
     for (i = 0; i < help.length; i++) {
-      help[i].setAttribute("visibility", 'visible');
+      help[i].style.display = set_value;
     }
-  };
+  }
 
   function toggleMark(cls) {
     var marks = document.getElementsByClassName(cls);
