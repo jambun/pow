@@ -197,6 +197,9 @@ say q:to/END/;
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
     original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
 
+    toggleMark('dist-mark');
+    toggleMark('time-mark');
+    toggleMark('rest-mark');
     show_point(point_ix);
   }
 
@@ -457,13 +460,13 @@ sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
 sub say_help {
     say qq:to/END/;
     <div class="help" id="help-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.3;background-color:#fff;border-style:none;;padding:0px;"></div>
-    <div class="help" id="help-detail" style="position:absolute;top:160;left:120;width:65%;height:60%;opacity:0.9;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;color:#fff;">
+    <div class="help" id="help-detail" style="position:absolute;top:160;left:120;width:65%;height:60%;overflow:scroll;opacity:0.9;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;color:#fff;">
       <div align="center" style="font-size:large;">Help: [Any] key or click to exit. [h] to show.</div>
-      <table width="100%" height="90%" border="1" style="padding:20;color:#fff;">
+      <table width="100%" height="90%" border="0" style="padding:20;color:#fff;">
       <tr>
       <td width="50%" valign="top">
-        { help_item('0', 'Original nav position') }
-        { help_item('+', 'Zoom in') }
+        { help_item('0 (zero)', 'Original nav position') }
+        { help_item('=', 'Zoom in') }
         { help_item('-', 'Zoom out') }
         { help_item('Arrows', 'Move map position') }
         { help_item('Space', 'Step forward') }
