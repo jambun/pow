@@ -609,8 +609,8 @@ say q:to/END/;
   pm.onclick = function(e){
     var wrap = document.getElementById("plotmap-wrapper");
     var vb = viewbox_to_a();
-    var vx = (e.pageX - wrap.offsetLeft) / pm.width.baseVal.value * vb[2];
-    var vy = (e.pageY - wrap.offsetTop) / pm.height.baseVal.value * vb[3];
+    var vx = (e.pageX - wrap.offsetLeft) / wrap.offsetWidth * vb[2];
+    var vy = (e.pageY - wrap.offsetTop) / wrap.offsetHeight * vb[3];
     vb[0] = vx + vb[0] - vb[2]/2;
     vb[1] = vy + vb[1] - vb[3]/2;
     this.setAttribute("viewBox", a_to_viewbox(vb));
