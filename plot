@@ -11,6 +11,7 @@ constant R = 6371000; # radius of Earth in metres
 my $buttons = 0;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
+my $rest_threshold = 5 * 60; # 5 minutes
 
 class Bounds {
     has $.min;
@@ -19,6 +20,19 @@ class Bounds {
     method add($val) {
 	$!min = $val if !$!min.defined || $val < $!min;
 	$!max = $val if !$!max.defined || $val > $!max;
+    }
+
+    method include($val) {
+	$val >= $!min && $val <= $!max;
+    }
+
+    method range() {
+	$!max - $!min;
+    }
+
+    method scale($val) {
+	return unless self.include($val);
+	($val - $!min) / self.range;
     }
 }
 
@@ -294,7 +308,7 @@ for @points.kv -> $ix, $p {
 	} else {
 	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
 	    
-	    if $current_rest_time > 180 {
+	    if $current_rest_time > $rest_threshold {
 		$total_rest_time += $current_rest_time;
 		say '<circle class="rest-mark" cx="' ~ $rest_x ~ '" cy="' ~ $rest_y ~ '" r="' ~ $dist_mark_radius ~ '"' ~
 		' fill="blue" style="opacity:0.5;z-index:1;"/>';
@@ -344,7 +358,8 @@ for @points.kv -> $ix, $p {
 my $waypoints = from-json slurp($points_file);
 
 for @$waypoints -> $p {
-    if in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
+    my $tim = DateTime.new($p<time>).Instant.Rat;
+    if $tim >= %bounds<tim>.min && $tim <= %bounds<tim>.max && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	say '<polygon class="waypoint-mark" points="' ~ (($x, $y).join(','), ($x-10, $y-30).join(','), ($x+10, $y-30).join(',')).join(' ') ~ '" style="stroke:black;stroke-width:1px;fill:lime;"/>';
 	say '<text class="waypoint-mark" x="' ~ $x.Int-10 ~ '" y="' ~ $y.Int-35 ~ '" font-size="28" font-family="Times" font-weight="normal" stroke="black" fill="black" style="z-index=1;">';
