@@ -69,10 +69,10 @@ sub add_point(%pt is copy) {
     say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
     say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
     say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele> ~ ';';
-    say 'points.slice(-1)[0]["dst"] = ' ~ (%pt<dst> || 0) ~ ';';
+    say 'points.slice(-1)[0]["dst"] = "' ~ (sprintf '%.2f', (%pt<dst> || 0).round(.01)).Str ~ '";';
     say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
     say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
-    say 'points.slice(-1)[0]["spd"] = ' ~ %pt<spd> ~ ';';
+    say 'points.slice(-1)[0]["spd"] = "' ~ mps_to_kph(%pt<spd> || 0) ~ '";';
 }
 
 
@@ -239,7 +239,7 @@ say q:to/END/;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
     document.getElementById("point-ele").innerHTML = "Ele: " + Math.round(points[ix].ele) + "m";
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
-    document.getElementById("point-spd").innerHTML = Math.round(points[ix].spd / 1000 * 3600 * 100)/100 + ' kph';
+    document.getElementById("point-spd").innerHTML = points[ix].spd;
 
     hideGraphMark(point_ix);
     showGraphMark(ix);
@@ -491,15 +491,19 @@ sub say_summary {
   say summary_item('Min elevation: ', %bounds<ele>.min.round ~ 'm');
   say summary_item('Max elevation: ', %bounds<ele>.max.round ~ 'm');
   say summary_item();
-  say summary_item('Avg speed: ', (($total_dist/1000)/($total_time/3600)).round(.01) ~ 'kph');
-  say summary_item('Non-rest speed: ', (($total_dist/1000)/(($total_time-$total_rest_time)/3600)).round(.01) ~ 'kph');
-  say summary_item('Max speed: ', (%bounds<spd>.max / 1000 * 3600).round(.01) ~ 'kph');
+  say summary_item('Avg speed: ',      mps_to_kph($total_dist/$total_time));
+  say summary_item('Non-rest speed: ', mps_to_kph($total_dist/($total_time-$total_rest_time)));
+  say summary_item('Max speed: ',      mps_to_kph(%bounds<spd>.max));
   say '</div>';
   say '</div>';
 }
 
 sub sec_to_hm($sec) {
     ($sec / 3600).Int ~ 'hr ' ~ ($sec % 3600 / 60).round ~ 'min';
+}
+
+sub mps_to_kph($mps) {
+    (sprintf '%.2f', ($mps/1000*3600).round(.01)).Str ~ ' kph';
 }
 
 sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
