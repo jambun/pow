@@ -8,7 +8,8 @@ use JSON::Tiny;
 
 constant R = 6371000; # radius of Earth in metres
 
-my $buttons = 0;
+my %buttons;
+my $button_group;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
@@ -211,9 +212,9 @@ say q:to/END/;
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
     original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
 
-    toggleMark('dist-mark');
-    toggleMark('time-mark');
-    toggleMark('rest-mark');
+    toggleMark('dist-mark', document.getElementById("dist-button"));
+    toggleMark('time-mark', document.getElementById("time-button"));
+    toggleMark('rest-mark', document.getElementById("rest-button"));
     show_point(point_ix);
   }
 
@@ -359,7 +360,7 @@ my $waypoints = from-json slurp($points_file);
 
 for @$waypoints -> $p {
     my $tim = DateTime.new($p<time>).Instant.Rat;
-    if $tim >= %bounds<tim>.min && $tim <= %bounds<tim>.max && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
+    if %bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	say '<polygon class="waypoint-mark" points="' ~ (($x, $y).join(','), ($x-10, $y-30).join(','), ($x+10, $y-30).join(',')).join(' ') ~ '" style="stroke:black;stroke-width:1px;fill:lime;"/>';
 	say '<text class="waypoint-mark" x="' ~ $x.Int-10 ~ '" y="' ~ $y.Int-35 ~ '" font-size="28" font-family="Times" font-weight="normal" stroke="black" fill="black" style="z-index=1;">';
@@ -415,25 +416,58 @@ for @points.kv -> $ix, $p {
 say '</svg>';
 say '</div>';
 
+$button_group = 'base';
+say '<div id="base-button-group">';
+add_button('help-button', '?', 'Show help', :on);
+add_button('select-button', '&hellip;', 'Select button group');
+say '</div>';
+
+$button_group = 'navigation';
+say '<div class="button-group" id="navigation-button-group" style="display:none;">';
 add_button('reset-button', '0', 'Reset to original zoom position');
 add_button('zoom-in-button', '+', 'Zoom in');
 add_button('zoom-out-button', '-', 'Zoom out');
-add_button('animate-fwd-button', ']', 'Animate forward. p for slower, \\ for faster, o for original speed. Space to stop.');
-add_button('animate-bwd-button', '[', 'Animate backward. p for slower, \\ for faster, o for original speed. Space to stop.');
-add_button('trail-button', 'l', 'Toggle trail marks');
-add_button('dist-button', 'd', 'Toggle km marks');
-add_button('time-button', 't', 'Toggle 15 min marks');
-add_button('rest-button', 'r', 'Toggle rest marks');
-add_button('summary-button', 's', 'Toggle summary detail');
-add_button('graph-button', 'g', 'Toggle graph');
-add_button('waypoint-button', 'w', 'Toggle waypoints');
-add_button('help-button', 'h', 'Show help');
+add_button('move-north-button', '&#8593;', 'Move north');
+add_button('move-west-button', '&#8592;', 'Move west');
+add_button('move-east-button', '&#8594;', 'Move east');
+add_button('move-south-button', '&#8595;', 'Move south');
+say '</div>';
+
+$button_group = 'animation';
+say '<div class="button-group" id="animation-button-group" style="display:none;">';
+add_button('goto-start-button', '&larrb;', 'Go to start');
+add_button('goto-end-button', '&rarrb;', 'Go to end');
+add_button('step-fwd-button', '&rarr;', 'Step forward');
+add_button('step-bwd-button', '&larr;', 'Step backward');
+add_button('animate-fwd-button', '&vrtri;', 'Animate forward');
+add_button('animate-bwd-button', '&vltri;', 'Animate backward');
+add_button('follow-button', '/', 'Toggle follow target');
+add_button('faster-button', '&raquo;', 'Faster');
+add_button('slower-button', '&laquo;', 'Slower');
+add_button('original-speed-button', 'o', 'Original speed', :on);
+add_button('stop-button', '!', 'Stop animation');
+say '</div>';
+
+
+$button_group = 'display';
+say '<div class="button-group" id="display-button-group" style="display:inherit;">';
+add_button('trail-button', 'L', 'Toggle trail marks', :on);
+add_button('dist-button', 'D', 'Toggle km marks', :on);
+add_button('time-button', 'T', 'Toggle 15 min marks', :on);
+add_button('rest-button', 'R', 'Toggle rest marks', :on);
+add_button('summary-button', 'S', 'Toggle summary detail');
+add_button('graph-button', 'G', 'Toggle graph', :on);
+add_button('waypoint-button', 'W', 'Toggle waypoints', :on);
+say '</div>';
 
 say '</div>';
 
-sub add_button($id, $label, $title) {
-    say '<button type="button" id="' ~ $id ~ '" title="' ~ $title ~ '" style="position:absolute;font-size:large;top:' ~ 10 + $buttons*36 ~ 'px;left:10px;width:30px;text-align:center;padding:2px 2px;background-color:#333;color:#fff;opacity:0.8;">' ~ $label ~ '</button>';
-    $buttons++;
+sub add_button($id, $label, $title, Bool :$on) {
+    %buttons{$button_group} ||= 0;
+    my $position = %buttons<base>;
+    $position += %buttons{$button_group} unless $button_group eq 'base';
+    say '<button type="button" id="' ~ $id ~ '" title="' ~ $title ~ '" style="position:absolute;font-size:large;top:' ~ 10 + $position*36 ~ 'px;left:10px;width:30px;text-align:center;padding:2px 2px;background-color:#333;color:' ~ ($on ?? 'lime' !! 'white') ~ ';opacity:0.8;">' ~ $label ~ '</button>';
+    %buttons{$button_group}++;
 }
 
 say_summary;
@@ -480,10 +514,13 @@ sub say_help {
       <table width="100%" height="90%" border="0" style="padding:20;color:#fff;">
       <tr>
       <td width="50%" valign="top">
+        <span style="font-size:large;">Navigation</span>
         { help_item('0 (zero)', 'Original nav position') }
         { help_item('=', 'Zoom in') }
         { help_item('-', 'Zoom out') }
         { help_item('Arrows', 'Move map position') }
+        { help_item() }
+        <span style="font-size:large;">Animation</span>
         { help_item('Space', 'Step forward') }
         { help_item('b', 'Step backward') }
         { help_item('Return', 'Go to start') }
@@ -497,6 +534,7 @@ sub say_help {
         { help_item('/', 'Toggle follow target') }
       </td>
       <td width="50%" valign="top">
+        <span style="font-size:large;">Display</span>
         { help_item('l', 'Toggle trail') }
         { help_item('d', 'Toggle km marks') }
         { help_item('t', 'Toggle 15min marks') }
@@ -505,6 +543,9 @@ sub say_help {
         { help_item('g', 'Toggle graph') }
         { help_item('s', 'Toggle summary detail') }
         { help_item('h', 'Show this help') }
+        { help_item() }
+        { help_item('?', 'Show this help') }
+        { help_item('&hellip;', 'Next button group') }
         { help_item() }
         { help_item('Map', 'Click to centre') }
         { help_item('Trail', 'Red = climb, Blue = descend. Click to move target') }
@@ -535,6 +576,7 @@ say q:to/END/;
 
   document.onkeydown = function(e) {
     if (!(document.getElementById("help-detail").style.display == 'none')) { document.getElementById("help-button").click(); }
+    else if (e.key == ';') { document.getElementById("select-button").click(); }
     else if (e.key == '0') { document.getElementById("reset-button").click(); }
     else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
     else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
@@ -545,21 +587,21 @@ say q:to/END/;
     else if (e.key == 'g') { document.getElementById("graph-button").click(); }
     else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
     else if (e.key == 'l') { document.getElementById("trail-button").click(); }
-    else if (e.key == 'ArrowLeft') { move_map(move_step*-1, 0); }
-    else if (e.key == 'ArrowRight') { move_map(move_step, 0); }
-    else if (e.key == 'ArrowUp') { move_map(0, move_step*-1); }
-    else if (e.key == 'ArrowDown') { move_map(0, move_step); }
-    else if (e.key == ' ') { keep_animating = false; show_point(parseInt(point_ix) + 1); }
-    else if (e.key == 'b') { keep_animating = false; show_point(point_ix - 1); }
-    else if (e.key == 'Enter') { keep_animating = false; show_point(0); }
-    else if (e.key == '\'') { keep_animating = false; show_point(points.length-1); }
+    else if (e.key == 'ArrowLeft') { document.getElementById("move-west-button").click(); }
+    else if (e.key == 'ArrowRight') { document.getElementById("move-east-button").click(); }
+    else if (e.key == 'ArrowUp') { document.getElementById("move-north-button").click(); }
+    else if (e.key == 'ArrowDown') { document.getElementById("move-south-button").click(); }
+    else if (e.key == ' ') { document.getElementById("step-fwd-button").click(); }
+    else if (e.key == 'b') { document.getElementById("step-bwd-button").click(); }
+    else if (e.key == 'Enter') { document.getElementById("goto-start-button").click(); }
+    else if (e.key == '\'') { document.getElementById("goto-end-button").click(); }
     else if (e.key == ']') { document.getElementById("animate-fwd-button").click(); }
     else if (e.key == '[') { document.getElementById("animate-bwd-button").click(); }
-    else if (e.key == 'q') { keep_animating = false; }
-    else if (e.key == 'p') { animation_rate *= 2; }
-    else if (e.key == '\\\\') { animation_rate /= 2; }
-    else if (e.key == 'o') { animation_rate = 1; }
-    else if (e.key == '/') { keep_point_centered = !keep_point_centered; if (keep_point_centered) { center_on_point(); } }
+    else if (e.key == 'q') { document.getElementById("stop-button").click(); }
+    else if (e.key == 'p') { document.getElementById("slower-button").click(); }
+    else if (e.key == '\\\\') { document.getElementById("faster-button").click(); }
+    else if (e.key == 'o') { document.getElementById("original-speed-button").click(); }
+    else if (e.key == '/') { document.getElementById("follow-button").click(); }
     else if (e.key == 'h') { document.getElementById("help-button").click(); }
     e.preventDefault();
   };
@@ -577,7 +619,8 @@ say q:to/END/;
 
   async function animate(rate) {
     var step = rate < 0 ? -1 : 1;
-
+    var button = document.getElementById(step == 1 ? 'animate-fwd-button' : 'animate-bwd-button');
+    switchButton(button, true);
     while (true) {
       if (!keep_animating) { break; }
       if (!points[point_ix + step]) { keep_animating = false; break; }
@@ -593,6 +636,7 @@ say q:to/END/;
       await sleep(wait);
       show_point(parseInt(point_ix) + step);
     }
+    switchButton(button, false);
   }
 
   function center_on_point() {
@@ -616,7 +660,20 @@ say q:to/END/;
     this.setAttribute("viewBox", a_to_viewbox(vb));
   };
 
+  var button_groups = ['display', 'navigation', 'animation'];
+  var button_group_ix = 0;
+  document.getElementById("select-button").onclick = function(e) {
+    var groups = document.getElementsByClassName("button-group");
+    for (i = 0; i < groups.length; i++) {
+      groups[i].style.display = 'none';
+    }
+    button_group_ix++;
+    if (button_group_ix >= button_groups.length) { button_group_ix = 0; }
+    document.getElementById(button_groups[button_group_ix] + '-button-group').style.display = 'inherit';
+  };
+
   var original_viewbox = pm.getAttribute("viewBox");
+
   document.getElementById("reset-button").onclick = function(e) {
     pm.setAttribute("viewBox", original_viewbox);
   };
@@ -629,6 +686,42 @@ say q:to/END/;
     zoom(1/zoom_factor);
   };
 
+  document.getElementById("move-north-button").onclick = function(e) {
+    move_map(0, move_step*-1);
+  };
+
+  document.getElementById("move-west-button").onclick = function(e) {
+    move_map(move_step*-1, 0);
+  };
+
+  document.getElementById("move-east-button").onclick = function(e) {
+    move_map(move_step, 0);
+  };
+
+  document.getElementById("move-south-button").onclick = function(e) {
+    move_map(0, move_step);
+  };
+
+  document.getElementById("goto-start-button").onclick = function(e) {
+    keep_animating = false;
+    show_point(0);
+  };
+
+  document.getElementById("goto-end-button").onclick = function(e) {
+    keep_animating = false;
+    show_point(points.length-1);
+  };
+
+  document.getElementById("step-fwd-button").onclick = function(e) {
+    keep_animating = false;
+    show_point(parseInt(point_ix) + 1);
+  };
+
+  document.getElementById("step-bwd-button").onclick = function(e) {
+    keep_animating = false;
+    show_point(parseInt(point_ix) - 1);
+  };
+
   document.getElementById("animate-fwd-button").onclick = function(e) {
     if (!keep_animating) { keep_animating = true; animate(1); }
   };
@@ -637,42 +730,73 @@ say q:to/END/;
     if (!keep_animating) { keep_animating = true; animate(-1); }
   };
 
+  document.getElementById("faster-button").onclick = function(e) {
+    setAnimationRate(animation_rate/2);
+  };
+
+  document.getElementById("slower-button").onclick = function(e) {
+    setAnimationRate(animation_rate*2);
+  };
+
+  document.getElementById("original-speed-button").onclick = function(e) {
+    setAnimationRate(1);
+  };
+
+  function setAnimationRate(rate) {
+      animation_rate = rate;
+      switchButton(document.getElementById("faster-button"), rate < 1);
+      switchButton(document.getElementById("slower-button"), rate > 1);
+      switchButton(document.getElementById("original-speed-button"), rate == 1);
+  }
+
+  document.getElementById("stop-button").onclick = function(e) {
+    keep_animating = false;
+  };
+
+  document.getElementById("follow-button").onclick = function(e) {
+    keep_point_centered = !keep_point_centered;
+    switchButton(this, keep_point_centered);
+    if (keep_point_centered) { center_on_point(); }
+  };
+
   document.getElementById("rest-button").onclick = function(e) {
-    toggleMark("rest-mark");
+    toggleMark("rest-mark", this);
   };
 
   document.getElementById("dist-button").onclick = function(e) {
-    toggleMark("dist-mark");
+    toggleMark("dist-mark", this);
   };
 
   document.getElementById("time-button").onclick = function(e) {
-    toggleMark("time-mark");
+    toggleMark("time-mark", this);
   };
 
   document.getElementById("summary-button").onclick = function(e) {
-    toggleSummary();
+    toggleSummary(this);
   };
 
   document.getElementById("summary").onclick = function(e) {
-    toggleSummary();
+    toggleSummary(document.getElementById("summary-button"));
   };
 
-  function toggleSummary() {
+  function toggleSummary(button) {
     var sum = document.getElementById("summary-detail");
     sum.style.display = sum.style.display == 'none' ? 'inherit' : 'none';
+    switchButton(button, sum.style.display != 'none');
   }
   
   document.getElementById("graph-button").onclick = function(e) {
     var graph = document.getElementById("graph-wrapper");
     graph.style.display = graph.style.display == 'none' ? 'inherit' : 'none';
+    switchButton(this, graph.style.display != 'none');
   };
 
   document.getElementById("waypoint-button").onclick = function(e) {
-    toggleMark("waypoint-mark");
+    toggleMark("waypoint-mark", this);
   };
 
   document.getElementById("trail-button").onclick = function(e) {
-    toggleMark("trail-mark");
+    toggleMark("trail-mark", this);
   };
 
   document.getElementById("help-button").onclick = function(e) {
@@ -687,18 +811,24 @@ say q:to/END/;
     toggleHelp();
   };
 
+  function switchButton(button, on) {
+    button.style.color = on ? 'lime' : 'white';
+  }
+
   function toggleHelp() {
     var help = document.getElementById("help-detail");
     var set_value = help.style.display == 'none' ? 'inherit' : 'none';
+    switchButton(document.getElementById("help-button"), set_value != 'none');
     var help = document.getElementsByClassName("help");
     for (i = 0; i < help.length; i++) {
       help[i].style.display = set_value;
     }
   }
 
-  function toggleMark(cls) {
+  function toggleMark(cls, button) {
     var marks = document.getElementsByClassName(cls);
     var set_value = marks[0].getAttribute("visibility") == 'hidden' ? 'visible' : 'hidden';
+    switchButton(button, set_value != 'hidden');
     for (i = 0; i < marks.length; i++) {
       marks[i].setAttribute("visibility", set_value);
     }
