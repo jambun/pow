@@ -13,6 +13,14 @@ my $button_group;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
+my $images_dir = 'html/img'; #
+my $images_html_dir = 'img'; # kooky
+my %images;
+
+for dir($images_dir) -> $d {
+    next unless $d.extension eq 'jpg';
+    %images{$d.basename.chop(4)} = $images_html_dir ~ '/' ~ $d.basename;
+}
 
 class Bounds {
     has $.min;
@@ -362,8 +370,14 @@ for @$waypoints -> $p {
     my $tim = DateTime.new($p<time>).Instant.Rat;
     if %bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
+	my $text_x = $x.Int-10;
+	if (%images{$p<name>}) {
+	    say '<image class="waypoint-mark waypoint-image" xlink:href="' ~ %images{$p<name>} ~
+	        '" width="22" height="22" x="' ~ ($x-11) ~'" y="' ~ ($y-55)  ~ '" style="opacity:1;"/>';
+	    $text_x += 22;
+	}
 	say '<polygon class="waypoint-mark" points="' ~ (($x, $y).join(','), ($x-10, $y-30).join(','), ($x+10, $y-30).join(',')).join(' ') ~ '" style="stroke:black;stroke-width:1px;fill:lime;"/>';
-	say '<text class="waypoint-mark" x="' ~ $x.Int-10 ~ '" y="' ~ $y.Int-35 ~ '" font-size="28" font-family="Times" font-weight="normal" stroke="black" fill="black" style="z-index=1;">';
+	say '<text class="waypoint-mark" x="' ~ $text_x ~ '" y="' ~ $y.Int-35 ~ '" font-size="28" font-family="Times" font-weight="normal" stroke="black" fill="black" style="z-index=1;">';
 	say $p<name> ~ '</text>';
     }
 }
@@ -472,11 +486,13 @@ sub add_button($id, $label, $title, Bool :$on) {
 
 say_summary;
 
+say image_viewer;
+
 say_help;
 
 
 sub say_summary {
-  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.8;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
+  say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.95;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
 
   say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
 
@@ -494,6 +510,12 @@ sub say_summary {
   say summary_item('Avg speed: ',      mps_to_kph($total_dist/$total_time));
   say summary_item('Non-rest speed: ', mps_to_kph($total_dist/($total_time-$total_rest_time)));
   say summary_item('Max speed: ',      mps_to_kph(%bounds<spd>.max));
+  say '<div id="summary-image" style="padding:6px;">';
+  if (%images{$title}) {
+      say summary_item();
+      say '<img src="' ~ %images{$title} ~ '" style="max-width:100%;max-height:100%;"/>';
+  }
+  say '</div>';
   say '</div>';
   say '</div>';
 }
@@ -508,6 +530,14 @@ sub mps_to_kph($mps) {
 
 sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
     '<div style="width:100%;"><div style="display:inline-block;float:left;">' ~ $label ~ '</div><div style="display:inline-block;right:0;">' ~ $value ~ '</div></div>';
+}
+
+sub image_viewer {
+    qq:to/END/;
+    <div id="image-viewer" onclick="this.style.display = 'none';" align="center" style="display:none;position:absolute;top:20%;left:20%;width:60%;height:60%;font-size:large;">
+      <img src="" style="max-width:100%;max-height:100%;"/>
+    </div>
+    END
 }
 
 sub say_help {
@@ -845,7 +875,21 @@ say q:to/END/;
   function hideGraphMark(id) {
       document.getElementById("graph-bar-" + id).style["opacity"] = 0.0;
   }
-  
+
+  var wims = document.getElementsByClassName("waypoint-image");
+  for (i = 0; i < wims.length; i++) {
+      wims[i].onclick = function(e) {
+	e.stopPropagation();
+	viewImage(e.target.getAttribute("xlink:href"));
+      }
+  }
+
+  function viewImage(url) {
+      var iv = document.getElementById("image-viewer");
+      iv.children[0].src = url;
+      iv.style.display = 'inherit';
+  }
+
   function viewbox_to_a() {
     var vb = document.getElementById("plotmap").getAttribute("viewBox").split(" ");
     for (i = 0; i < vb.length; i++) {
