@@ -76,10 +76,11 @@ sub add_point(%pt is copy) {
     say 'points.push({});';
     say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
     say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
-    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele> ~ ';';
+    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele>.round ~ ';';
     say 'points.slice(-1)[0]["dst"] = "' ~ (sprintf '%.2f', (%pt<dst> || 0).round(.01)).Str ~ '";';
     say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
     say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
+    say 'points.slice(-1)[0]["tstamp"] = points.slice(-1)[0]["date"].getTime();';
     say 'points.slice(-1)[0]["spd"] = "' ~ mps_to_kph(%pt<spd> || 0) ~ '";';
 }
 
@@ -226,10 +227,17 @@ say q:to/END/;
     show_point(point_ix);
   }
 
-  function show_point(ix) {
+  function show_point(ix, loop_around) {
     var pl = document.getElementById("line-" + ix);
-    if (pl == null) { return; }
-
+    if (pl == null) {
+      if (loop_around) {
+	ix = ix < 1 ? points.length - 1 : 0;
+	pl = document.getElementById("line-" + ix);
+      } else {
+	return;
+      }
+    }
+  
     var pt = document.getElementById("point-target");
     pt.setAttribute("cx", pl.getAttribute("x2"));
     pt.setAttribute("cy", pl.getAttribute("y2"));
@@ -245,7 +253,7 @@ say q:to/END/;
     document.getElementById("point-tim").innerHTML = points[ix].tim;
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
-    document.getElementById("point-ele").innerHTML = "Ele: " + Math.round(points[ix].ele) + "m";
+    document.getElementById("point-ele").innerHTML = "Ele: " + points[ix].ele + "m";
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
     document.getElementById("point-spd").innerHTML = points[ix].spd;
 
@@ -653,20 +661,19 @@ say q:to/END/;
 
   async function animate(rate) {
     var step = rate < 0 ? -1 : 1;
+    if (!points[point_ix + step]) { show_point(step == 1 ? 0 : points.length - 1); }
     var button = document.getElementById(step == 1 ? 'animate-fwd-button' : 'animate-bwd-button');
     switchButton(button, true);
     while (true) {
       if (!keep_animating) { break; }
       if (!points[point_ix + step]) { keep_animating = false; break; }
-	
+
       var wait = 100;
       if (points[point_ix - step]) {
-	wait = Math.abs((points[point_ix]["date"].getTime()
-			 - points[point_ix
-			 + (step*-1)]["date"].getTime())
+	wait = Math.abs((points[point_ix]["tstamp"] - points[point_ix - step]["tstamp"])
 			 * rate * animation_rate / 100);
       }
-	
+
       await sleep(wait);
       show_point(parseInt(point_ix) + step);
     }
@@ -748,12 +755,12 @@ say q:to/END/;
 
   document.getElementById("step-fwd-button").onclick = function(e) {
     keep_animating = false;
-    show_point(parseInt(point_ix) + 1);
+    show_point(parseInt(point_ix) + 1, true);
   };
 
   document.getElementById("step-bwd-button").onclick = function(e) {
     keep_animating = false;
-    show_point(parseInt(point_ix) - 1);
+    show_point(parseInt(point_ix) - 1, true);
   };
 
   document.getElementById("animate-fwd-button").onclick = function(e) {
