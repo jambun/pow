@@ -123,6 +123,10 @@ for slurp.lines -> $line {
 
 add_point(%pt);
 
+for @points.kv -> $ix, $p {
+    say 'points[' ~ $ix ~ ']["speed_color"] = "#' ~ (sprintf('%x', (%bounds<spd>.scale($p<spd>) * 255)) x 3) ~ '";';
+}
+
 say '</script>';
 say '<title>' ~ $title ~ '</title>';
 
@@ -473,13 +477,14 @@ say '</div>';
 
 $button_group = 'display';
 say '<div class="button-group" id="display-button-group" style="display:inherit;">';
+add_button('trail-half-button', '|', 'Show trail out/back/all', :on);
 add_button('trail-button', 'L', 'Toggle trail marks', :on);
 add_button('dist-button', 'D', 'Toggle km marks', :on);
 add_button('time-button', 'T', 'Toggle 15 min marks', :on);
 add_button('rest-button', 'R', 'Toggle rest marks', :on);
-add_button('summary-button', 'S', 'Toggle summary detail');
-add_button('graph-button', 'G', 'Toggle graph', :on);
 add_button('waypoint-button', 'W', 'Toggle waypoints', :on);
+add_button('graph-button', 'G', 'Toggle graph', :on);
+add_button('summary-button', 'S', 'Toggle summary detail');
 say '</div>';
 
 say '</div>';
@@ -578,12 +583,14 @@ sub say_help {
       <td width="50%" valign="top">
         <span style="font-size:large;">Display</span>
         { help_item('l', 'Toggle trail') }
+        { help_item(';', 'Show trail out/back/all') }
         { help_item('d', 'Toggle km marks') }
         { help_item('t', 'Toggle 15min marks') }
         { help_item('r', 'Toggle rest marks') }
         { help_item('w', 'Toggle waypoints') }
         { help_item('g', 'Toggle graph') }
         { help_item('s', 'Toggle summary detail') }
+        { help_item('c', 'Next trail color map') }
         { help_item('h', 'Show this help') }
         { help_item() }
         { help_item('?', 'Show this help') }
@@ -629,6 +636,8 @@ say q:to/END/;
     else if (e.key == 'g') { document.getElementById("graph-button").click(); }
     else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
     else if (e.key == 'l') { document.getElementById("trail-button").click(); }
+    else if (e.key == 'k') { document.getElementById("trail-half-button").click(); }
+    else if (e.key == 'c') { colorTrail(); }
     else if (e.key == 'ArrowLeft') { document.getElementById("move-west-button").click(); }
     else if (e.key == 'ArrowRight') { document.getElementById("move-east-button").click(); }
     else if (e.key == 'ArrowUp') { document.getElementById("move-north-button").click(); }
@@ -836,6 +845,18 @@ say q:to/END/;
     toggleMark("waypoint-mark", this);
   };
 
+  document.getElementById("trail-half-button").onclick = function(e) {
+    // all > first > second > all ...
+    if (document.getElementById("line-0").getAttribute("visibility") == 'hidden')  {
+      toggleMark("trail-mark", this, 0, parseInt(points.length/2));
+    } else if (document.getElementById("line-" + (parseInt(points.length/2)+1)).getAttribute("visibility") == 'hidden') {
+      toggleMark("trail-mark", this, 0, parseInt(points.length/2));
+      toggleMark("trail-mark", this, parseInt(points.length/2) + 1, points.length-1);
+    } else {
+      toggleMark("trail-mark", this, parseInt(points.length/2) + 1, points.length-1);
+    }
+  };
+
   document.getElementById("trail-button").onclick = function(e) {
     toggleMark("trail-mark", this);
   };
@@ -866,11 +887,13 @@ say q:to/END/;
     }
   }
 
-  function toggleMark(cls, button) {
+  function toggleMark(cls, button, start_ix, length) {
+    start_ix = start_ix || 0;
     var marks = document.getElementsByClassName(cls);
-    var set_value = marks[0].getAttribute("visibility") == 'hidden' ? 'visible' : 'hidden';
+    length = length || marks.length;
+    var set_value = marks[start_ix].getAttribute("visibility") == 'hidden' ? 'visible' : 'hidden';
     switchButton(button, set_value != 'hidden');
-    for (i = 0; i < marks.length; i++) {
+    for (i = start_ix; i < length; i++) {
       marks[i].setAttribute("visibility", set_value);
     }
   }
@@ -895,6 +918,12 @@ say q:to/END/;
       var iv = document.getElementById("image-viewer");
       iv.children[0].src = url;
       iv.style.display = 'inherit';
+  }
+
+  function colorTrail() {
+    for (i = 0; i < points.length; i++) {
+	document.getElementById("line-" + i).style.stroke = points[i]["speed_color"];
+    }
   }
 
   function viewbox_to_a() {
