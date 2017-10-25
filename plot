@@ -107,7 +107,7 @@ for slurp.lines -> $line {
 	    %bounds<tim>.add($tim.Instant.Rat);
 	    if @points.tail && %pt<tim>.Instant.Rat > @points.tail<tim>.Instant.Rat {
 	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
-	        %bounds<spd>.add(%pt<spd>) if %pt<spd> < 5;
+	        %bounds<spd>.add(%pt<spd>); # if %pt<spd> < 5;
             } else {
 		%pt<spd> = 0;
 	    }
@@ -124,7 +124,7 @@ for slurp.lines -> $line {
 add_point(%pt);
 
 for @points.kv -> $ix, $p {
-    say 'points[' ~ $ix ~ ']["speed_color"] = "#' ~ (sprintf('%x', (%bounds<spd>.scale($p<spd>) * 255)) x 3) ~ '";';
+    say 'points[' ~ $ix ~ ']["speed_color"] = "#' ~ (sprintf('%x', (%bounds<spd>.scale($p<spd>) * 223) + 16) x 3) ~ '";';
 }
 
 say '</script>';
