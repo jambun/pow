@@ -425,7 +425,7 @@ my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 for @points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
-    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="white" style="z-index:1;opacity=0.9;"/>';
+    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
 
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
@@ -435,7 +435,7 @@ for @points.kv -> $ix, $p {
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
     say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
     my $y = 100 - (($p<spd> || 0) - %bounds<spd>.min) / $speed_range * 100;
-    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="1" fill="#9090ff"/>';
+    say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="#8080ff"/>';
     $last_bar_x = $x;
 }
 
