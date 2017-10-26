@@ -477,7 +477,8 @@ say '</div>';
 
 $button_group = 'display';
 say '<div class="button-group" id="display-button-group" style="display:inherit;">';
-add_button('trail-half-button', '|', 'Show trail out/back/all', :on);
+add_button('trail-half-button', '&half;', 'Show trail out/back/all');
+add_button('trail-color-button', 'C', 'Next trail color map');
 add_button('trail-button', 'L', 'Toggle trail marks', :on);
 add_button('dist-button', 'D', 'Toggle km marks', :on);
 add_button('time-button', 'T', 'Toggle 15 min marks', :on);
@@ -637,7 +638,7 @@ say q:to/END/;
     else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
     else if (e.key == 'l') { document.getElementById("trail-button").click(); }
     else if (e.key == 'k') { document.getElementById("trail-half-button").click(); }
-    else if (e.key == 'c') { colorTrail(); }
+    else if (e.key == 'c') { document.getElementById("trail-color-button").click(); }
     else if (e.key == 'ArrowLeft') { document.getElementById("move-west-button").click(); }
     else if (e.key == 'ArrowRight') { document.getElementById("move-east-button").click(); }
     else if (e.key == 'ArrowUp') { document.getElementById("move-north-button").click(); }
@@ -849,12 +850,19 @@ say q:to/END/;
     // all > first > second > all ...
     if (document.getElementById("line-0").getAttribute("visibility") == 'hidden')  {
       toggleMark("trail-mark", this, 0, parseInt(points.length/2));
+      switchButton(this, false);
     } else if (document.getElementById("line-" + (parseInt(points.length/2)+1)).getAttribute("visibility") == 'hidden') {
       toggleMark("trail-mark", this, 0, parseInt(points.length/2));
       toggleMark("trail-mark", this, parseInt(points.length/2) + 1, points.length-1);
+      switchButton(this, true);
     } else {
       toggleMark("trail-mark", this, parseInt(points.length/2) + 1, points.length-1);
+      switchButton(this, true);
     }
+  };
+
+  document.getElementById("trail-color-button").onclick = function(e) {
+    colorTrail();
   };
 
   document.getElementById("trail-button").onclick = function(e) {
