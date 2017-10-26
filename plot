@@ -467,7 +467,7 @@ add_button('step-fwd-button', '&rarr;', 'Step forward');
 add_button('step-bwd-button', '&larr;', 'Step backward');
 add_button('animate-fwd-button', '&vrtri;', 'Animate forward');
 add_button('animate-bwd-button', '&vltri;', 'Animate backward');
-add_button('follow-button', '/', 'Toggle follow target');
+add_button('follow-button', '&target;', 'Toggle follow target');
 add_button('faster-button', '&raquo;', 'Faster');
 add_button('slower-button', '&laquo;', 'Slower');
 add_button('original-speed-button', 'o', 'Original speed', :on);
