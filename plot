@@ -13,6 +13,7 @@ my $button_group;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
+
 my $images_dir = 'html/img'; #
 my $images_html_dir = 'img'; # kooky
 my %images;
@@ -20,6 +21,15 @@ my %images;
 for dir($images_dir) -> $d {
     next unless $d.extension eq 'jpg';
     %images{$d.basename.chop(4)} = $images_html_dir ~ '/' ~ $d.basename;
+}
+
+my $audio_dir = 'html/audio'; #
+my $audio_html_dir = 'audio'; # kooky
+my %audio;
+
+for dir($audio_dir) -> $d {
+    next unless $d.extension eq 'mp3';
+    %audio{$d.basename.chop(4)} = $audio_html_dir ~ '/' ~ $d.basename;
 }
 
 class Bounds {
@@ -124,7 +134,14 @@ for slurp.lines -> $line {
 add_point(%pt);
 
 for @points.kv -> $ix, $p {
-    say 'points[' ~ $ix ~ ']["speed_color"] = "#' ~ (sprintf('%x', (%bounds<spd>.scale($p<spd>) * 223) + 16) x 3) ~ '";';
+    say 'points[' ~ $ix ~ ']["speed_color"]  = "' ~ scaled_color(%bounds<spd>.scale($p<spd>)) ~ '";';
+    say 'points[' ~ $ix ~ ']["ele_color"]  = "' ~ scaled_color(1 - %bounds<ele>.scale($p<ele>)) ~ '";';
+}
+
+sub scaled_color($val, $r = Any, $g = Any, $b = Any) {
+    my $sv = sprintf('%x', $val * 223 + 16);
+#    '#' ~ ($r.WHAT ~~ Any ?? sv !! $r)
+    '#' ~ ($sv x 3);
 }
 
 say '</script>';
@@ -384,8 +401,9 @@ for @$waypoints -> $p {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	my $text_x = $x.Int-10;
 	if (%images{$p<name>}) {
-	    say '<image class="waypoint-mark waypoint-image" xlink:href="' ~ %images{$p<name>} ~
-	        '" width="22" height="22" x="' ~ ($x-11) ~'" y="' ~ ($y-55)  ~ '" style="opacity:1;"/>';
+	    my $audio_attr = %audio{$p<name>} ?? ' x-audio="' ~ %audio{$p<name>} ~ '"' !! '';
+	    say '<image class="waypoint-mark waypoint-image" xlink:href="' ~ %images{$p<name>} ~ '"' ~ $audio_attr ~
+	        ' width="22" height="22" x="' ~ ($x-11) ~'" y="' ~ ($y-55)  ~ '" style="opacity:1;"/>';
 	    $text_x += 22;
 	}
 	say '<polygon class="waypoint-mark" points="' ~ (($x, $y).join(','), ($x-10, $y-30).join(','), ($x+10, $y-30).join(',')).join(' ') ~ '" style="stroke:black;stroke-width:1px;fill:lime;"/>';
@@ -548,8 +566,8 @@ sub summary_item($label = '&nbsp;', $value = '&nbsp;') {
 
 sub image_viewer {
     qq:to/END/;
-    <div id="image-viewer" onclick="this.style.display = 'none';" align="center" style="display:none;position:absolute;top:20%;left:20%;width:60%;height:60%;font-size:large;">
-      <img src="" style="max-width:100%;max-height:100%;"/>
+    <div id="image-viewer" align="center" style="display:none;position:absolute;top:20%;left:20%;width:60%;height:60%;font-size:large;">
+      <img id="image-media" src="" style="max-width:100%;max-height:100%;"/>
     </div>
     END
 }
@@ -869,6 +887,10 @@ say q:to/END/;
     toggleMark("trail-mark", this);
   };
 
+  document.getElementById("image-media").onclick = function(e) {
+    closeImage();
+  };
+
   document.getElementById("help-button").onclick = function(e) {
     toggleHelp();
   };
@@ -918,19 +940,42 @@ say q:to/END/;
   for (i = 0; i < wims.length; i++) {
       wims[i].onclick = function(e) {
 	e.stopPropagation();
-	viewImage(e.target.getAttribute("xlink:href"));
+	viewImage(e.target.getAttribute("xlink:href"), e.target.getAttribute("x-audio"));
       }
   }
 
-  function viewImage(url) {
-      var iv = document.getElementById("image-viewer");
-      iv.children[0].src = url;
-      iv.style.display = 'inherit';
+  function closeImage() {
+    var iv = document.getElementById("image-viewer");
+    var aw = document.getElementById("audio-wrapper");
+    iv.style.display = 'none';
+    if (aw) { iv.removeChild(aw); }
   }
 
+  function viewImage(url, audio) {
+    var iv = document.getElementById("image-viewer");
+    iv.children[0].src = url;
+    if (audio) {
+      var de = document.createElement("div");
+      var ae = document.createElement("audio");
+      var se = document.createElement("source");
+      de.style.padding = 4;
+      de.setAttribute("id", "audio-wrapper");
+      ae.setAttribute("controls", true);
+      se.setAttribute("src", audio);
+      se.setAttribute("type", "audio/mpeg");
+      ae.appendChild(se);
+      de.appendChild(ae);
+      iv.appendChild(de);
+    }
+    iv.style.display = 'inherit';
+  }
+
+  var trail_colors = ["speed_color", "ele_color"];
+  var trail_color_ix = 0;
   function colorTrail() {
+    if (++trail_color_ix >= trail_colors.length) { trail_color_ix = 0; }
     for (i = 0; i < points.length; i++) {
-	document.getElementById("line-" + i).style.stroke = points[i]["speed_color"];
+	document.getElementById("line-" + i).style.stroke = points[i][trail_colors[trail_color_ix]];
     }
   }
 
