@@ -602,7 +602,7 @@ sub say_help {
       <td width="50%" valign="top">
         <span style="font-size:large;">Display</span>
         { help_item('l', 'Toggle trail') }
-        { help_item(';', 'Show trail out/back/all') }
+        { help_item('k', 'Show trail out/back/all') }
         { help_item('d', 'Toggle km marks') }
         { help_item('t', 'Toggle 15min marks') }
         { help_item('r', 'Toggle rest marks') }
