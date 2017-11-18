@@ -435,13 +435,13 @@ say '<div id="point-spd" style="display:inline-block;width:12%;overflow:hidden;t
 say '</div>';
 
 say '<div id="graph-wrapper" style="position:absolute;top:50px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
-say '<svg width="100%" height="40" viewBox="0 0 ' ~ $width  ~ ' 100" preserveAspectRatio="none">';
+say '<svg width="100%" height="40" viewBox="0 0 1000 100" preserveAspectRatio="none">';
 
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
 my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 
 for @points -> $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
@@ -449,7 +449,7 @@ for @points -> $p {
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
 for @points.kv -> $ix, $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * $width;
+    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
     say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
     my $y = 100 - (($p<spd> || 0) - %bounds<spd>.min) / $speed_range * 100;
