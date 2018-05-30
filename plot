@@ -73,6 +73,7 @@ say '<html><head>';
 say '<script>';
 say 'var points = [];';
 say 'var point_ix = 0;';
+say 'var mark_ix = 0;';
 say 'var animation_rate = 1;';
 say 'var keep_point_centered = false;';
 
@@ -278,8 +279,7 @@ say q:to/END/;
 //    document.getElementById("point-dst").innerHTML = points[ix].dst;
     document.getElementById("point-spd").innerHTML = points[ix].spd;
 
-    hideGraphMark(point_ix);
-    showGraphMark(ix);
+    updateGraph(ix);
 
     document.getElementById("line-" + point_ix).style.strokeWidth = 12;
     pl.style.strokeWidth = 40;
@@ -445,6 +445,9 @@ for @points -> $p {
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
+
+say '<rect id="graph-mark-to-point" x="0" y="0" width="200" height="100" style="opacity:0.4;" fill="green" />';
+say '<line id="graph-mark x1="0" y1="0" x2="0" y2="100" style="stroke:green;opacity:1.0;stroke-width:8;z-index:1;"/>';
 
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
@@ -928,12 +931,24 @@ say q:to/END/;
     }
   }
 
-  function showGraphMark(id) {
-      document.getElementById("graph-bar-" + id).style["opacity"] = 1.0;
+  function setGraphMark(id, opacity) {
+      document.getElementById("graph-bar-" + id).style["opacity"] = opacity || 0.0;
   }
 
-  function hideGraphMark(id) {
-      document.getElementById("graph-bar-" + id).style["opacity"] = 0.0;
+  function updateGraph(ix) {
+      setGraphMark(ix, 1.0);
+      setGraphMark(point_ix, 0.0);
+
+      if (isNaN(mark_ix)) {
+	  document.getElementById("graph-mark-to-point").setAttribute("visibility", 'hidden');
+      } else {
+	  var mark = document.getElementById("graph-mark-to-point");
+	  mark.setAttribute("visibility", 'visible');
+	  var left_x = document.getElementById("graph-bar-" + Math.min(mark_ix, ix)).getAttribute("x");
+	  var right_x = document.getElementById("graph-bar-" + Math.max(mark_ix, ix)).getAttribute("x");
+	  mark.setAttribute("x", left_x);
+	  mark.setAttribute("width", right_x - left_x);
+      }
   }
 
   var wims = document.getElementsByClassName("waypoint-image");
