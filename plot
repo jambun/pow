@@ -79,6 +79,7 @@ say 'var keep_point_centered = false;';
 
 sub add_point(%pt is copy) {
     return unless %pt;
+    return unless %pt<lat>;
     return if @points && !%pt<spd>;
 
     %pt<id> = $pid++;
@@ -164,10 +165,10 @@ my $bax = %bounds<lat>.max;
 my $bon = %bounds<lon>.min;
 my $box = %bounds<lon>.max;
 
-my $pban = $ban - 0.04;
-my $pbax = $bax + 0.04;
-my $pbon = $bon - 0.04;
-my $pbox = $box + 0.04;
+my $pban = $ban - 0.06;
+my $pbax = $bax + 0.06;
+my $pbon = $bon - 0.06;
+my $pbox = $box + 0.06;
 
 #say "LAT: $ban $bax";
 #say "LON: $bon $box";
