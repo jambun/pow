@@ -23,7 +23,7 @@ use JSON::Tiny;
 # }
 
 
-constant R = 6371000; # radius of Earth in metres
+#constant R = 6371000; # radius of Earth in metres
 
 my %buttons;
 my $button_group;

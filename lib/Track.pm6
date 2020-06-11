@@ -1,5 +1,7 @@
 use Bounds;
 
+constant R = 6371000; # radius of Earth in metres
+
 class Track {
     has Str $.title is rw;
     has @.points;
@@ -13,7 +15,15 @@ class Track {
     method add_point(%pt is copy) {
         return unless %pt;
         return unless %pt<lat>;
-        return if @!points && !%pt<spd>;
+
+        if @!points.tail {
+	          %pt<dst> = calculate_distance(@!points.tail, %pt);
+	          if %pt<tim>.Instant.Rat > @!points.tail<tim>.Instant.Rat {
+	              %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @!points.tail<tim>.Instant.Rat);
+            } else {
+		            %pt<spd> = 0;
+	          }
+        }
 
         @!points.push(%pt);
 
@@ -41,9 +51,27 @@ class Track {
     }
 }
 
+
 sub mps_to_kph($mps) {
     (sprintf '%.2f', ($mps/1000*3600).round(.01)).Str ~ ' kph';
 }
+
+
+sub calculate_distance($from, $to) {
+    my $from_lat = to_r($from<lat>);
+    my $to_lat = to_r($to<lat>);
+    my $lat_d = to_r($to<lat> - $from<lat>);
+    my $lon_d = to_r($to<lon> - $from<lon>);
+
+    my $a = sin($lat_d/2) ** 2 + cos($from_lat) * cos($to_lat) * sin($lon_d/2) ** 2;
+    my $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+    R * $c;
+}
+
+
+sub to_r($degrees) { $degrees * pi/180 }
+
 
 sub scaled_color($val, $r = Any, $g = Any, $b = Any) {
     my $sv = sprintf('%x', $val * 223 + 16);
