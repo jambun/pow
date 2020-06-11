@@ -17,17 +17,14 @@ class Track {
         return unless %pt<lat>;
 
         %pt<tim> = %pt<time>.Instant.Rat;
+        %pt<dst> = 0;
+        %pt<spd> = 0;
 
         if @!points.tail {
 	          %pt<dst> = calculate_distance(@!points.tail, %pt);
 	          if %pt<tim> > @!points.tail<tim> {
 	              %pt<spd> = %pt<dst> / (%pt<tim> - @!points.tail<tim>);
-            } else {
-		            %pt<spd> = 0;
 	          }
-        } else {
-            %pt<dst> = 0;
-            %pt<spd> = 0;
         }
 
         @!points.push(%pt);
@@ -44,7 +41,7 @@ class Track {
                 points.slice(-1)[0]["lat"] = { $p<lat> };
                 points.slice(-1)[0]["lon"] = { $p<lon> };
                 points.slice(-1)[0]["ele"] = { $p<ele>.round };
-                points.slice(-1)[0]["dst"] = "{ (sprintf '%.2f', ($p<dst> || 0).round(.01)).Str }";
+                points.slice(-1)[0]["dst"] = "{ (sprintf '%.2f', $p<dst>.round(.01)).Str }";
                 points.slice(-1)[0]["date"] = (new Date("{ $p<time> }"));
                 points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();
                 points.slice(-1)[0]["tstamp"] = points.slice(-1)[0]["date"].getTime();
