@@ -49,7 +49,6 @@ for dir($audio_dir) -> $d {
 my $track = Track.new;
 
 my $date;
-my $pid = 1;
 my %pt;
 
 for slurp.lines -> $line {
@@ -75,26 +74,22 @@ for slurp.lines -> $line {
 
 $track.add_point(%pt);
 
-say '<html><head>';
-say '<title>' ~ $track.title ~ '</title>';
+say qq:to/END/;
+<html>
+  <head>
+    <title>{ $track.title }</title>
 
-say '<script>';
-say 'var points = [];';
-say 'var point_ix = 0;';
-say 'var mark_ix = 0;';
-say 'var animation_rate = 1;';
-say 'var keep_point_centered = false;';
+    <script>
+      var points = [];
+      var point_ix = 0;
+      var mark_ix = 0;
+      var animation_rate = 1;
+      var keep_point_centered = false;
+END
 
 $track.points_to_js;
 
-my $lat_range = $track.bounds<lat>.max - $track.bounds<lat>.min;
-my $lon_range = $track.bounds<lon>.max - $track.bounds<lon>.min;
-
-my $max_dim = 800;
 my $border = 20;
-my $width;
-my $height;
-my $scale;
 
 # find the tiles we will need
 my @map_data;
@@ -108,9 +103,6 @@ my $pbax = $bax + 0.06;
 my $pbon = $bon - 0.06;
 my $pbox = $box + 0.06;
 
-#say "LAT: $ban $bax";
-#say "LON: $bon $box";
-
 my $json = from-json slurp('data/nsw25k.json');
 
 for @$json -> $md {
@@ -120,25 +112,19 @@ for @$json -> $md {
     my $min_lon = ($md<topleft><long>, $md<bottomleft><long>).min;
     my $max_lon = ($md<topright><long>, $md<bottomright><long>).min;
 
-#    say "LAT: $min_lat $max_lat";
-#    say "LON: $min_lon $max_lon";
+    if ((in_box($pban, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+        (in_box($pban, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+        (in_box($pbax, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+        (in_box($pbax, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
 
-    if (
-	(in_box($pban, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($pban, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($pbax, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-	(in_box($pbax, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
+        (in_box($min_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
+        (in_box($min_lat, $max_lon, $pban, $pbon, $pbax, $pbox)) ||
+        (in_box($max_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
+        (in_box($max_lat, $max_lon, $pban, $pbon, $pbax, $pbox))) {
 
-	(in_box($min_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
-	(in_box($min_lat, $max_lon, $pban, $pbon, $pbax, $pbox)) ||
-	(in_box($max_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
-	(in_box($max_lat, $max_lon, $pban, $pbon, $pbax, $pbox))
-       ) {
-	@map_data.push: $md;
+        @map_data.push: $md;
     }
 }
-
-#say @map_data.join("\n\n");
 
 my $tilex = Bounds.new;
 my $tiley = Bounds.new;
@@ -147,19 +133,6 @@ for @map_data -> $md {
     $tilex.add($md<tilex>);
     $tiley.add($md<tiley>);
 }
-
-if $lat_range > $lon_range {
-    $height = $max_dim;
-    $scale = $height / $lat_range;
-    $width = $lon_range * $scale;
-} else {
-    $width = $max_dim;
-    $scale = $width / $lon_range;
-    $height = $lat_range * $scale;
-}
-
-#say $width.Int ~ ' x ' ~ $height.Int;
-
 
 say q:to/END/;
   window.onload = function(e) {
