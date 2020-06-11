@@ -51,13 +51,6 @@ for dir($audio_dir) -> $d {
 
 my $track = Track.new;
 
-my %bounds = lat => Bounds.new,
-             lon => Bounds.new,
-             ele => Bounds.new,
-             tim => Bounds.new,
-             dst => Bounds.new,
-	           spd => Bounds.new;
-
 my $date;
 my $pid = 1;
 my %pt;
@@ -67,27 +60,13 @@ for slurp.lines -> $line {
 	      when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
 	          $track.add_point(%pt);
 	          %pt = lat => $0.Rat, lon => $1.Rat;
-	          %bounds<lat>.add($0.Rat);
-	          %bounds<lon>.add($1.Rat);
-            if $track.points.tail {
-	              %pt<dst> = calculate_distance($track.points.tail, %pt);
-	              %bounds<dst>.add(%pt<dst>);
-            }
 	      }
 	      when /'<ele>' (.*) '</ele>'/ {
 	          %pt<ele> = $0.Rat;
-	          %bounds<ele>.add($0.Rat);
 	      }
 	      when /'<time>' (.*) '</time>'/ {
 	          my $tim = DateTime.new($0.Str);
-	          %pt<tim> = $tim;
-	          %bounds<tim>.add($tim.Instant.Rat);
-	          if $track.points.tail && %pt<tim>.Instant.Rat > $track.points.tail<tim>.Instant.Rat {
-	              %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - $track.points.tail<tim>.Instant.Rat);
-	              %bounds<spd>.add(%pt<spd>); # if %pt<spd> < 5;
-            } else {
-		            %pt<spd> = 0;
-	          }
+	          %pt<time> = $tim;
 	      }
 	      when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
 	          $track.title = $0.Str;
@@ -112,8 +91,8 @@ say 'var keep_point_centered = false;';
 
 $track.points_to_js;
 
-my $lat_range = %bounds<lat>.max - %bounds<lat>.min;
-my $lon_range = %bounds<lon>.max - %bounds<lon>.min;
+my $lat_range = $track.bounds<lat>.max - $track.bounds<lat>.min;
+my $lon_range = $track.bounds<lon>.max - $track.bounds<lon>.min;
 
 my $max_dim = 800;
 my $border = 20;
@@ -123,10 +102,10 @@ my $scale;
 
 # find the tiles we will need
 my @map_data;
-my $ban = %bounds<lat>.min;
-my $bax = %bounds<lat>.max;
-my $bon = %bounds<lon>.min;
-my $box = %bounds<lon>.max;
+my $ban = $track.bounds<lat>.min;
+my $bax = $track.bounds<lat>.max;
+my $bon = $track.bounds<lon>.min;
+my $box = $track.bounds<lon>.max;
 
 my $pban = $ban - 0.06;
 my $pbax = $bax + 0.06;
@@ -282,7 +261,7 @@ my $lastp;
 
 my $time_mark_secs = 15 * 60;
 my $time_mark_radius = 12;
-my $last_time_mark = $track.points[0]<tim>.Instant.Rat;
+my $last_time_mark = $track.points[0]<tim>;
 
 my $dist_mark = 1000;
 my $dist_mark_radius = 12;
@@ -304,9 +283,9 @@ for $track.points.kv -> $ix, $p {
 
 	if $p<spd> < 0.1 {
 	    unless $current_rest_time { $rest_x = $x.Int; $rest_y = $y.Int; }
-	    $current_rest_time += $p<tim> - $lastt;
+	    $current_rest_time += $p<time> - $lastt;
 	} else {
-	    $current_rest_time += $p<tim> - $lastt if $current_rest_time;
+	    $current_rest_time += $p<time> - $lastt if $current_rest_time;
 	    
 	    if $current_rest_time > $rest_threshold {
 		$total_rest_time += $current_rest_time;
@@ -326,7 +305,7 @@ for $track.points.kv -> $ix, $p {
 	    $last_dist_mark += $dist_mark;
 	}
 	
-	if $p<tim>.Instant.Int > $last_time_mark + $time_mark_secs {
+	if $p<tim> > $last_time_mark + $time_mark_secs {
 	    $time_mark_count++;
 	    say '<circle class="time-mark" cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="' ~ $time_mark_radius ~ '"' ~
 	        ' fill="black" style="opacity:0.25;z-index:1;"/>';
@@ -350,7 +329,7 @@ for $track.points.kv -> $ix, $p {
     $lastx = $x;
     $lasty = $y;
     $laste = $p<ele>;
-    $lastt = $p<tim>;
+    $lastt = $p<time>;
     $start_time = $lastt unless $lastp;
     $lastp = $p;
 }
@@ -359,7 +338,7 @@ my $waypoints = from-json slurp($points_file);
 
 for @$waypoints -> $p {
     my $tim = DateTime.new($p<time>).Instant.Rat;
-    if %bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
+    if $track.bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
 	my $text_x = $x.Int-10;
 	if (%images{$p<name>}) {
@@ -399,25 +378,25 @@ say '</div>';
 say '<div id="graph-wrapper" style="position:absolute;top:50px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">';
 say '<svg width="100%" height="40" viewBox="0 0 1000 100" preserveAspectRatio="none">';
 
-my $time_range = %bounds<tim>.max - %bounds<tim>.min;
-my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
+my $time_range = $track.bounds<tim>.max - $track.bounds<tim>.min;
+my $elevation_range = $track.bounds<ele>.max - $track.bounds<ele>.min;
 
 for $track.points -> $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
-    my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
+    my $x = ($p<tim> - $track.bounds<tim>.min) / $time_range * 1000;
+    my $y = 100 - ($p<ele> - $track.bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="white" style="z-index:1;opacity=0.9;"/>';
 }
 
 say '<rect id="graph-mark-to-point" x="0" y="0" width="200" height="100" style="opacity:0.4;" fill="green" />';
 say '<line id="graph-mark x1="0" y1="0" x2="0" y2="100" style="stroke:green;opacity:1.0;stroke-width:8;z-index:1;"/>';
 
-my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
+my $speed_range = $track.bounds<spd>.max - $track.bounds<spd>.min;
 my $last_bar_x;
 for $track.points.kv -> $ix, $p {
-    my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
+    my $x = ($p<tim> - $track.bounds<tim>.min) / $time_range * 1000;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
     say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
-    my $y = 100 - (($p<spd> || 0) - %bounds<spd>.min) / $speed_range * 100;
+    my $y = 100 - (($p<spd> || 0) - $track.bounds<spd>.min) / $speed_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="#8080ff"/>';
     $last_bar_x = $x;
 }
@@ -501,12 +480,12 @@ sub say_summary {
   say summary_item('Rest time: ', sec_to_hm($total_rest_time));
   say summary_item();
   say summary_item('Total climb: ', $total_climb.round ~ 'm');
-  say summary_item('Min elevation: ', %bounds<ele>.min.round ~ 'm');
-  say summary_item('Max elevation: ', %bounds<ele>.max.round ~ 'm');
+  say summary_item('Min elevation: ', $track.bounds<ele>.min.round ~ 'm');
+  say summary_item('Max elevation: ', $track.bounds<ele>.max.round ~ 'm');
   say summary_item();
   say summary_item('Avg speed: ',      mps_to_kph($total_dist/$total_time));
   say summary_item('Non-rest speed: ', mps_to_kph($total_dist/($total_time-$total_rest_time)));
-  say summary_item('Max speed: ',      mps_to_kph(%bounds<spd>.max));
+  say summary_item('Max speed: ',      mps_to_kph($track.bounds<spd>.max));
   say '<div id="summary-image" style="padding:6px;">';
   if (%images{$track.title}) {
       say summary_item();
