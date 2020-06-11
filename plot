@@ -1,10 +1,27 @@
 #!/usr/bin/env perl6
 
+use lib 'lib';
+use Bounds;
+use Track;
+
 use JSON::Tiny;
 
 # <trkpt lat="-35.7237188" lon="148.8175634">
 # <ele>1283.370</ele>
 # <time>2016-10-28T00:46:10.000Z</time>
+
+# i'll be needing a main - parses switches
+# this example from stackoverflow
+# sub MAIN ( Str  :f(:$file)    = "file.dat"
+#          , Num  :l(:$length)  = Num(24)
+#          , Bool :v(:$verbose) = False
+#          )
+# {
+#     $file.say;
+#     $length.say;
+#     $verbose.say;
+# }
+
 
 constant R = 6371000; # radius of Earth in metres
 
@@ -32,43 +49,59 @@ for dir($audio_dir) -> $d {
     %audio{$d.basename.chop(4)} = $audio_html_dir ~ '/' ~ $d.basename;
 }
 
-class Bounds {
-    has $.min;
-    has $.max;
+my $track = Track.new;
 
-    method add($val) {
-	$!min = $val if !$!min.defined || $val < $!min;
-	$!max = $val if !$!max.defined || $val > $!max;
-    }
-
-    method include($val) {
-	$val >= $!min && $val <= $!max;
-    }
-
-    method range() {
-	$!max - $!min;
-    }
-
-    method scale($val) {
-	return unless self.include($val);
-	($val - $!min) / self.range;
-    }
-}
-
-my @points;
 my %bounds = lat => Bounds.new,
              lon => Bounds.new,
              ele => Bounds.new,
              tim => Bounds.new,
              dst => Bounds.new,
-	     spd => Bounds.new;
+	           spd => Bounds.new;
 
-my $title;
 my $date;
 my $pid = 1;
 my %pt;
 
+for slurp.lines -> $line {
+    given $line {
+	      when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
+	          $track.add_point(%pt);
+	          %pt = lat => $0.Rat, lon => $1.Rat;
+	          %bounds<lat>.add($0.Rat);
+	          %bounds<lon>.add($1.Rat);
+            if $track.points.tail {
+	              %pt<dst> = calculate_distance($track.points.tail, %pt);
+	              %bounds<dst>.add(%pt<dst>);
+            }
+	      }
+	      when /'<ele>' (.*) '</ele>'/ {
+	          %pt<ele> = $0.Rat;
+	          %bounds<ele>.add($0.Rat);
+	      }
+	      when /'<time>' (.*) '</time>'/ {
+	          my $tim = DateTime.new($0.Str);
+	          %pt<tim> = $tim;
+	          %bounds<tim>.add($tim.Instant.Rat);
+	          if $track.points.tail && %pt<tim>.Instant.Rat > $track.points.tail<tim>.Instant.Rat {
+	              %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - $track.points.tail<tim>.Instant.Rat);
+	              %bounds<spd>.add(%pt<spd>); # if %pt<spd> < 5;
+            } else {
+		            %pt<spd> = 0;
+	          }
+	      }
+	      when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
+	          $track.title = $0.Str;
+	      }
+	      when /'<desc>' '<![CDATA['? (.+?) ']]>'? '</desc>'/ {
+	          $date = $0.Str;
+	      }
+    }
+}
+
+$track.add_point(%pt);
+
 say '<html><head>';
+say '<title>' ~ $track.title ~ '</title>';
 
 say '<script>';
 say 'var points = [];';
@@ -77,77 +110,7 @@ say 'var mark_ix = 0;';
 say 'var animation_rate = 1;';
 say 'var keep_point_centered = false;';
 
-sub add_point(%pt is copy) {
-    return unless %pt;
-    return unless %pt<lat>;
-    return if @points && !%pt<spd>;
-
-    %pt<id> = $pid++;
-    @points.push(%pt);
-
-    say 'points.push({});';
-    say 'points.slice(-1)[0]["lat"] = ' ~ %pt<lat> ~ ';';
-    say 'points.slice(-1)[0]["lon"] = ' ~ %pt<lon> ~ ';';
-    say 'points.slice(-1)[0]["ele"] = ' ~ %pt<ele>.round ~ ';';
-    say 'points.slice(-1)[0]["dst"] = "' ~ (sprintf '%.2f', (%pt<dst> || 0).round(.01)).Str ~ '";';
-    say 'points.slice(-1)[0]["date"] = (new Date("' ~ %pt<tim> ~ '"));';
-    say 'points.slice(-1)[0]["tim"] = points.slice(-1)[0]["date"].toLocaleTimeString();';
-    say 'points.slice(-1)[0]["tstamp"] = points.slice(-1)[0]["date"].getTime();';
-    say 'points.slice(-1)[0]["spd"] = "' ~ mps_to_kph(%pt<spd> || 0) ~ '";';
-}
-
-
-for slurp.lines -> $line {
-    given $line {
-	when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-	    add_point(%pt);
-	    %pt = lat => $0.Rat, lon => $1.Rat;
-	    %bounds<lat>.add($0.Rat);
-	    %bounds<lon>.add($1.Rat);
-            if @points.tail {
-	        %pt<dst> = calculate_distance(@points.tail, %pt);
-	        %bounds<dst>.add(%pt<dst>);
-            }
-	}
-	when /'<ele>' (.*) '</ele>'/ {
-	    %pt<ele> = $0.Rat;
-	    %bounds<ele>.add($0.Rat);
-	}
-	when /'<time>' (.*) '</time>'/ {
-	    my $tim = DateTime.new($0.Str);
-	    %pt<tim> = $tim;
-	    %bounds<tim>.add($tim.Instant.Rat);
-	    if @points.tail && %pt<tim>.Instant.Rat > @points.tail<tim>.Instant.Rat {
-	        %pt<spd> = %pt<dst> / (%pt<tim>.Instant.Rat - @points.tail<tim>.Instant.Rat);
-	        %bounds<spd>.add(%pt<spd>); # if %pt<spd> < 5;
-            } else {
-		%pt<spd> = 0;
-	    }
-	}
-	when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
-	    $title = $0.Str;
-	}
-	when /'<desc>' '<![CDATA['? (.+?) ']]>'? '</desc>'/ {
-	    $date = $0.Str;
-	}
-    }
-}
-
-add_point(%pt);
-
-for @points.kv -> $ix, $p {
-    say 'points[' ~ $ix ~ ']["speed_color"]  = "' ~ scaled_color(%bounds<spd>.scale($p<spd>)) ~ '";';
-    say 'points[' ~ $ix ~ ']["ele_color"]  = "' ~ scaled_color(1 - %bounds<ele>.scale($p<ele>)) ~ '";';
-}
-
-sub scaled_color($val, $r = Any, $g = Any, $b = Any) {
-    my $sv = sprintf('%x', $val * 223 + 16);
-#    '#' ~ ($r.WHAT ~~ Any ?? sv !! $r)
-    '#' ~ ($sv x 3);
-}
-
-say '</script>';
-say '<title>' ~ $title ~ '</title>';
+$track.points_to_js;
 
 my $lat_range = %bounds<lat>.max - %bounds<lat>.min;
 my $lon_range = %bounds<lon>.max - %bounds<lon>.min;
@@ -222,8 +185,6 @@ if $lat_range > $lon_range {
 
 #say $width.Int ~ ' x ' ~ $height.Int;
 
-
-say '<script>';
 
 say q:to/END/;
   window.onload = function(e) {
@@ -321,7 +282,7 @@ my $lastp;
 
 my $time_mark_secs = 15 * 60;
 my $time_mark_radius = 12;
-my $last_time_mark = @points[0]<tim>.Instant.Rat;
+my $last_time_mark = $track.points[0]<tim>.Instant.Rat;
 
 my $dist_mark = 1000;
 my $dist_mark_radius = 12;
@@ -336,7 +297,7 @@ my $total_rest_time = 0;
 my $dist_mark_count = 0;
 my $time_mark_count = 0;
 
-for @points.kv -> $ix, $p {
+for $track.points.kv -> $ix, $p {
     my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
     if $lastp {
 	$total_dist += $p<dst>;
@@ -441,7 +402,7 @@ say '<svg width="100%" height="40" viewBox="0 0 1000 100" preserveAspectRatio="n
 my $time_range = %bounds<tim>.max - %bounds<tim>.min;
 my $elevation_range = %bounds<ele>.max - %bounds<ele>.min;
 
-for @points -> $p {
+for $track.points -> $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
     my $y = 100 - ($p<ele> - %bounds<ele>.min) / $elevation_range * 100;
     say '<circle cx="' ~ $x.Int ~ '" cy="' ~ $y.Int ~ '" r="2" fill="white" style="z-index:1;opacity=0.9;"/>';
@@ -452,7 +413,7 @@ say '<line id="graph-mark x1="0" y1="0" x2="0" y2="100" style="stroke:green;opac
 
 my $speed_range = %bounds<spd>.max - %bounds<spd>.min;
 my $last_bar_x;
-for @points.kv -> $ix, $p {
+for $track.points.kv -> $ix, $p {
     my $x = ($p<tim>.Instant.Rat - %bounds<tim>.min) / $time_range * 1000;
     my $last_x = $last_bar_x ?? $last_bar_x.Int !! $x;
     say '<rect class="graph-bar" id="graph-bar-' ~ $ix  ~ '" onclick="show_point(' ~ $ix ~ ');" x="' ~ $last_x ~ '" y="0" width="' ~ (($x - $last_x).Int, 2).max ~ '" height="100" style="opacity:0.0;" fill="yellow" />';
@@ -530,7 +491,7 @@ say_help;
 sub say_summary {
   say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.95;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
 
-  say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $title ~ "<br/>" ~ $date ~ '</div>';
+  say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $track.title ~ "<br/>" ~ $date ~ '</div>';
 
   say '<div id="summary-detail" style="display:none;width:100%;font-size:large;">';
   say '<br/>';
@@ -547,9 +508,9 @@ sub say_summary {
   say summary_item('Non-rest speed: ', mps_to_kph($total_dist/($total_time-$total_rest_time)));
   say summary_item('Max speed: ',      mps_to_kph(%bounds<spd>.max));
   say '<div id="summary-image" style="padding:6px;">';
-  if (%images{$title}) {
+  if (%images{$track.title}) {
       say summary_item();
-      say '<img src="' ~ %images{$title} ~ '" style="max-width:100%;max-height:100%;"/>';
+      say '<img src="' ~ %images{$track.title} ~ '" style="max-width:100%;max-height:100%;"/>';
   }
   say '</div>';
   say '</div>';
