@@ -22,9 +22,6 @@ use JSON::Tiny;
 #     $verbose.say;
 # }
 
-
-#constant R = 6371000; # radius of Earth in metres
-
 my %buttons;
 my $button_group;
 my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
@@ -65,8 +62,7 @@ for slurp.lines -> $line {
 	          %pt<ele> = $0.Rat;
 	      }
 	      when /'<time>' (.*) '</time>'/ {
-	          my $tim = DateTime.new($0.Str);
-	          %pt<time> = $tim;
+	          %pt<time> = DateTime.new($0.Str);
 	      }
 	      when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
 	          $track.title = $0.Str;
@@ -991,21 +987,6 @@ sub coords($lat, $lon, %tile) {
     ($x.Int, $y.Int);
 }
 
-
-sub calculate_distance($from, $to) {
-    my $from_lat = to_r($from<lat>);
-    my $to_lat = to_r($to<lat>);
-    my $lat_d = to_r($to<lat> - $from<lat>);
-    my $lon_d = to_r($to<lon> - $from<lon>);
-
-    my $a = sin($lat_d/2) ** 2 + cos($from_lat) * cos($to_lat) * sin($lon_d/2) ** 2;
-    my $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-
-    R * $c;
-}
-
-
-sub to_r($degrees) { $degrees * pi/180 }
 
 sub in_range($x, $min, $max) {
     $x >= $min && $x <= $max;
