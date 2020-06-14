@@ -4,13 +4,18 @@ constant R = 6371000; # radius of Earth in metres
 
 class Track {
     has Str $.title is rw;
+    has Str $.desc is rw;
     has @.points;
     has Bounds %.bounds = lat => Bounds.new,
                           lon => Bounds.new,
                           ele => Bounds.new,
                           tim => Bounds.new,
                           dst => Bounds.new,
-	                        spd => Bounds.new;
+                          spd => Bounds.new;
+
+    method date() {
+        @.points.head<time>.Date.Str;
+    }
 
     method add_point(%pt is copy) {
         return unless %pt;
@@ -36,6 +41,7 @@ class Track {
 
     method points_to_js() {
         for @!points.kv -> $ix, $p {
+            $p<ele> ||= %!bounds<ele>.min;
             say qq:to/END/;
                   points.push(\{\});
                   points.slice(-1)[0]["lat"] = { $p<lat> };

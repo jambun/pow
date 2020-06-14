@@ -3,6 +3,7 @@
 use lib 'lib';
 use Bounds;
 use Track;
+use Markers;
 
 use JSON::Tiny;
 
@@ -28,6 +29,10 @@ my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
 
+my $markers = Markers.new(json_file => $points_file);
+$markers.load;
+
+
 my $images_dir = 'html/img'; #
 my $images_html_dir = 'img'; # kooky
 my %images;
@@ -48,13 +53,20 @@ for dir($audio_dir) -> $d {
 
 my $track = Track.new;
 
-my $date;
 my %pt;
 
 for slurp.lines -> $line {
     given $line {
+        when /'<wpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
+            %pt = lat => $0.Rat, lon => $1.Rat;
+        }
 	      when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-	          $track.add_point(%pt);
+            if %pt<name> {
+	              $track.title = %pt<name>;
+	              $track.desc = %pt<desc>;
+                %pt<name>:delete;
+                %pt<desc>:delete;
+            }
 	          %pt = lat => $0.Rat, lon => $1.Rat;
 	      }
 	      when /'<ele>' (.*) '</ele>'/ {
@@ -64,15 +76,24 @@ for slurp.lines -> $line {
 	          %pt<time> = DateTime.new($0.Str);
 	      }
 	      when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
-	          $track.title = $0.Str;
+            %pt<name> = $0.Str;
 	      }
 	      when /'<desc>' '<![CDATA['? (.+?) ']]>'? '</desc>'/ {
-	          $date = $0.Str;
+            %pt<desc> = $0.Str;
 	      }
+	      when /'</trkpt>'/ {
+            $track.add_point(%pt);
+            %pt = < >;
+        }
+	      when /'</wpt>'/ {
+            $markers.add(%pt);
+            %pt = < >;
+        }
     }
 }
 
-$track.add_point(%pt);
+$markers.save;
+
 
 say qq:to/END/;
 <html>
@@ -303,9 +324,8 @@ for $track.points.kv -> $ix, $p {
     $lastp = $p;
 }
 
-my $waypoints = from-json slurp($points_file);
 
-for @$waypoints -> $p {
+for $markers.points -> $p {
     my $tim = DateTime.new($p<time>).Instant.Rat;
     if $track.bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
 	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
@@ -439,9 +459,11 @@ say_help;
 sub say_summary {
   say '<div id="summary" style="position:absolute;top:12px;right:20;width:20%;opacity:0.95;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:8px;text-align:right;color:#fff;">';
 
-  say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $track.title ~ "<br/>" ~ $date ~ '</div>';
+  say '<div style="font-weight:bold;font-size:large;width:100%;">' ~ $track.title ~ "<br/>" ~ $track.date ~ '</div>';
 
   say '<div id="summary-detail" style="display:none;width:100%;font-size:large;">';
+  say '<br/>';
+  say '<div style="font-weight:bold;font-size:large;width:100%;text-align:left">' ~ $track.desc ~ '</div>';
   say '<br/>';
   say summary_item('Total distance: ', ($total_dist/1000).round(.01) ~ 'km');
   my $total_time = $lastt - $start_time;
