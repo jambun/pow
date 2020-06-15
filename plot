@@ -122,8 +122,8 @@ say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ 
 
 for $maps.list -> $md {
     say '<image xlink:href="' ~ $md<tile_ref> ~
-    '" width="2000px" height="2000px" x="' ~ ($md<tilex> - $maps.x_bounds.min)*2000 ~
-    '" y="' ~ ($md<tiley> - $maps.y_bounds.min)*2000  ~ '" style="z-index:0;opacity:1;"/>';
+    '" width="' ~ $maps.tile_x ~ 'px" height="' ~ $maps.tile_y ~ 'px" x="' ~ ($md<tilex> - $maps.x_bounds.min) * $maps.tile_x ~
+    '" y="' ~ ($md<tiley> - $maps.y_bounds.min) * $maps.tile_y ~ '" style="z-index:0;opacity:1;"/>';
 }
 
 
