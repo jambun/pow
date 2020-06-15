@@ -4,6 +4,7 @@ use lib 'lib';
 use Bounds;
 use Track;
 use Markers;
+use Maps;
 
 use JSON::Tiny;
 
@@ -25,7 +26,6 @@ use JSON::Tiny;
 
 my %buttons;
 my $button_group;
-my $tile_url = 'http://home.whaite.com/fet/imgraw/NSW_25k_Coast_South';
 my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
 
@@ -112,48 +112,8 @@ $track.points_to_js;
 
 my $border = 20;
 
-# find the tiles we will need
-my @map_data;
-my $ban = $track.bounds<lat>.min;
-my $bax = $track.bounds<lat>.max;
-my $bon = $track.bounds<lon>.min;
-my $box = $track.bounds<lon>.max;
+my $maps = Maps.new(track => $track);
 
-my $pban = $ban - 0.06;
-my $pbax = $bax + 0.06;
-my $pbon = $bon - 0.06;
-my $pbox = $box + 0.06;
-
-my $json = from-json slurp('data/nsw25k.json');
-
-for @$json -> $md {
-    my $max_lat = ($md<topleft><lat>, $md<topright><lat>).max;
-    my $min_lat = ($md<bottomleft><lat>, $md<bottomright><lat>).min;
-
-    my $min_lon = ($md<topleft><long>, $md<bottomleft><long>).min;
-    my $max_lon = ($md<topright><long>, $md<bottomright><long>).min;
-
-    if ((in_box($pban, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-        (in_box($pban, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-        (in_box($pbax, $pbon, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-        (in_box($pbax, $pbox, $min_lat, $min_lon, $max_lat, $max_lon)) ||
-
-        (in_box($min_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
-        (in_box($min_lat, $max_lon, $pban, $pbon, $pbax, $pbox)) ||
-        (in_box($max_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
-        (in_box($max_lat, $max_lon, $pban, $pbon, $pbax, $pbox))) {
-
-        @map_data.push: $md;
-    }
-}
-
-my $tilex = Bounds.new;
-my $tiley = Bounds.new;
-
-for @map_data -> $md {
-    $tilex.add($md<tilex>);
-    $tiley.add($md<tiley>);
-}
 
 say q:to/END/;
   window.onload = function(e) {
@@ -226,20 +186,15 @@ say '</head>';
 say '<body style="margin:0px;overflow:hidden;">';
 
 
-my $tile_x = 2000;
-my $tile_y = 2000;
-
-#$width = ($tilex.max - $tilex.min + 1) * 2000;
-#$height = ($tiley.max - $tiley.min + 1) * 2000;
-my ($bxn, $byn) = coords($ban, $bon, @map_data[0]);
-my ($bxx, $byx) = coords($bax, $box, @map_data[0]);
+my ($bxn, $byn) = $maps.coords($track.bounds<lat>.min, $track.bounds<lon>.min);
+my ($bxx, $byx) = $maps.coords($track.bounds<lat>.max, $track.bounds<lon>.max);
 say '<div id="plotmap-wrapper" style="position:relative;" width="100%" height="100%">';
 say '<svg id="plotmap" width="100%" height="100%" viewBox="' ~ $bxn-100 ~ ' ' ~ $byx-100 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+200 ~ '">';
 
-for @map_data -> $md {
-    say '<image xlink:href="' ~ tile_ref($md<filename>) ~
-    '" width="2000px" height="2000px" x="' ~ ($md<tilex> - $tilex.min)*2000 ~
-    '" y="' ~ ($md<tiley> - $tiley.min)*2000  ~ '" style="z-index:0;opacity:1;"/>';
+for $maps.list -> $md {
+    say '<image xlink:href="' ~ $md<tile_ref> ~
+    '" width="2000px" height="2000px" x="' ~ ($md<tilex> - $maps.x_bounds.min)*2000 ~
+    '" y="' ~ ($md<tiley> - $maps.y_bounds.min)*2000  ~ '" style="z-index:0;opacity:1;"/>';
 }
 
 
@@ -267,7 +222,7 @@ my $dist_mark_count = 0;
 my $time_mark_count = 0;
 
 for $track.points.kv -> $ix, $p {
-    my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
+    my ($x, $y) = $maps.coords($p<lat>, $p<lon>);
     if $lastp {
 	$total_dist += $p<dst>;
 
@@ -327,8 +282,13 @@ for $track.points.kv -> $ix, $p {
 
 for $markers.points -> $p {
     my $tim = DateTime.new($p<time>).Instant.Rat;
-    if $track.bounds<tim>.include($tim) && in_box($p<lat>, $p<lon>, $ban, $bon, $bax, $box) {
-	my ($x, $y) = coords($p<lat>, $p<lon>, @map_data[0]);
+    if $track.bounds<tim>.include($tim) && $maps.in_box($p<lat>, $p<lon>,
+                                                        $track.bounds<lat>.min,
+                                                        $track.bounds<lon>.min,
+                                                        $track.bounds<lat>.max,
+                                                        $track.bounds<lon>.max) {
+
+	my ($x, $y) = $maps.coords($p<lat>, $p<lon>);
 	my $text_x = $x.Int-10;
 	if (%images{$p<name>}) {
 	    my $audio_attr = %audio{$p<name>} ?? ' x-audio="' ~ %audio{$p<name>} ~ '"' !! '';
@@ -965,33 +925,3 @@ sub svg_line($x1, $y1, $x2, $y2, :%style is copy) {
 
     $out;
 }
-
-
-sub coords($lat, $lon, %tile) {
-    my $x_t = (($lon - %tile<topleft><long>) / (%tile<topright><long> - %tile<topleft><long>)) * $tile_x;
-    my $x_b = (($lon - %tile<bottomleft><long>) / (%tile<bottomright><long> - %tile<bottomleft><long>)) * $tile_x;
-    my $y_l = (($lat - %tile<topleft><lat>) / (%tile<bottomleft><lat> - %tile<topleft><lat>)) * $tile_y;
-    my $y_r = (($lat - %tile<topright><lat>) / (%tile<bottomright><lat> - %tile<topright><lat>)) * $tile_y;
-
-    my $x_slope = ($x_b - $x_t) / $tile_y;
-    my $y_slope = ($y_r - $y_l) / $tile_x;
-
-    my $x = ($y_l * $x_slope + $x_t) / (1 - $x_slope * $y_slope);
-    my $y = ($x_t * $y_slope + $y_l) / (1 - $y_slope * $x_slope);
-    
-    ($x.Int, $y.Int);
-}
-
-
-sub in_range($x, $min, $max) {
-    $x >= $min && $x <= $max;
-}
-
-sub in_box($x, $y, $xmin, $ymin, $xmax, $ymax) {
-    in_range($x, $xmin, $xmax) && in_range($y, $ymin, $ymax);
-}
-
-sub tile_ref($name) {
-    $tile_url ~ '/' ~ $name;
-}
-
