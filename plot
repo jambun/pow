@@ -1,16 +1,13 @@
 #!/usr/bin/env perl6
 
 use lib 'lib';
-use Bounds;
-use Track;
+
 use Markers;
 use Maps;
+use GPXParser;
 
 use JSON::Tiny;
-
-# <trkpt lat="-35.7237188" lon="148.8175634">
-# <ele>1283.370</ele>
-# <time>2016-10-28T00:46:10.000Z</time>
+use Template::Mustache;
 
 # i'll be needing a main - parses switches
 # this example from stackoverflow
@@ -24,13 +21,18 @@ use JSON::Tiny;
 #     $verbose.say;
 # }
 
+my $markers = Markers.new(json_file => './data/points.json');
+my $track = GPXParser.new(file => @*ARGS.shift, markers => $markers).track;
+
+$markers.save;
+
+
+my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
+my $js_templ = Template::Mustache.new: :from<./templates/js>, :extension<.js>;
+
 my %buttons;
 my $button_group;
-my $points_file = './data/points.json';
 my $rest_threshold = 5 * 60; # 5 minutes
-
-my $markers = Markers.new(json_file => $points_file);
-$markers.load;
 
 
 my $images_dir = 'html/img'; #
@@ -51,49 +53,6 @@ for dir($audio_dir) -> $d {
     %audio{$d.basename.chop(4)} = $audio_html_dir ~ '/' ~ $d.basename;
 }
 
-my $track = Track.new;
-
-my %pt;
-
-for slurp.lines -> $line {
-    given $line {
-        when /'<wpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-            %pt = lat => $0.Rat, lon => $1.Rat;
-        }
-	      when /'<trkpt' \s+ 'lat="' (.*) '"' \s+ 'lon="' (.*) '">'/ {
-            if %pt<name> {
-	              $track.title = %pt<name>;
-	              $track.desc = %pt<desc>;
-                %pt<name>:delete;
-                %pt<desc>:delete;
-            }
-	          %pt = lat => $0.Rat, lon => $1.Rat;
-	      }
-	      when /'<ele>' (.*) '</ele>'/ {
-	          %pt<ele> = $0.Rat;
-	      }
-	      when /'<time>' (.*) '</time>'/ {
-	          %pt<time> = DateTime.new($0.Str);
-	      }
-	      when /'<name>' '<![CDATA['? (.+?) ']]>'? '</name>'/ {
-            %pt<name> = $0.Str;
-	      }
-	      when /'<desc>' '<![CDATA['? (.+?) ']]>'? '</desc>'/ {
-            %pt<desc> = $0.Str;
-	      }
-	      when /'</trkpt>'/ {
-            $track.add_point(%pt);
-            %pt = < >;
-        }
-	      when /'</wpt>'/ {
-            $markers.add(%pt);
-            %pt = < >;
-        }
-    }
-}
-
-$markers.save;
-
 
 say qq:to/END/;
 <html>
@@ -105,7 +64,7 @@ END
 
 say slurp('templates/js/head.js');
 
-$track.points_to_js;
+say $track.points_to_js($js_templ);
 
 say '</script>';
 say '</head>';
