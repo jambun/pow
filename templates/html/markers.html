@@ -1,0 +1,20 @@
+{{#markers}}
+  {{#image}}
+  <image class="waypoint-mark waypoint-image"
+         xlink:href="{{image}}"
+         {{#audio}}
+         x-audio="{{audio}}"
+         {{/audio}}
+	       width="22" height="22"
+         x="{{image_x}}" y="{{image_y}}" style="opacity:1;"/>
+  {{/image}}
+
+  <polygon class="waypoint-mark"
+           points="{{polygon}}"
+           style="stroke:black;stroke-width:1px;fill:lime;"/>
+
+  <text class="waypoint-mark"
+        x="{{text_x}}" y="{{text_y}}"
+        font-size="28" font-family="Times" font-weight="normal"
+        stroke="black" fill="black" style="z-index=1;">{{name}}</text>
+{{/markers}}

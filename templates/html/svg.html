@@ -1,0 +1,24 @@
+<svg id="plotmap" width="100%" height="100%" viewBox="{{view_box}}">
+
+  {{#maps}}
+    <image xlink:href="{{tile_ref}}"
+           width="{{tile_x}}px"
+           height="{{tile_y}}px"
+           x="{{x}}"
+           y="{{y}}"
+           style="z-index:0;opacity:1;"/>
+  {{/maps}}
+
+  {{> svg_points}}
+
+  {{> rests}}
+
+  {{> time_intervals}}
+
+  {{> distance_intervals}}
+
+  {{> markers}}
+
+  {{> target}}
+
+</svg>

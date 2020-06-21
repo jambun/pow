@@ -1,0 +1,12 @@
+{{#button_groups}}
+  <div id="{{name}}-button-group" {{^base}}class="button-group"{{/base}} {{^display}}style="display:none;"{{/display}}>
+
+  {{#buttons}}
+    <button type="button" id="{{id}}-button" title="{{title}}"
+            style="position:absolute;font-size:large;top:{{top}}px;left:10px;width:30px;text-align:center;padding:2px 2px;background-color:#333;color:{{#on}}lime{{/on}}{{^on}}white{{/on}};opacity:0.8;">
+      {{{label}}}
+    </button>
+  {{/buttons}}
+
+  </div>
+{{/button_groups}}

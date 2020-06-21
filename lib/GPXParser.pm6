@@ -1,5 +1,6 @@
 use Track;
 use Markers;
+use Maps;
 
 use XML;
 
@@ -7,17 +8,13 @@ class GPXParser {
     has Str $.file;
     has Markers $.markers;
     has Track $.track;
-
+    has Maps $.maps;
 
     submethod BUILD(:$file, :$markers) {
         $!file = $file;
         $!markers = $markers;
         $!track = Track.new;
-        self.parse;
-    }
 
-
-    method parse {
         my $xml = from-xml-file($!file);
 
         for $xml.getElementsByTagName('trk') -> $trk {
@@ -51,7 +48,9 @@ class GPXParser {
             $!track.add_point(%p);
         }
 
-        $!track.post_process;
+        $!maps = Maps.new(track => $!track);
+
+        $!track.post_process($!maps);
     }
 
 

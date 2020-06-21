@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <title>{{title}}</title>
+
+    <script>
+      {{> js_head}}
+    </script>
+  </head>
+
+  <body style="margin:0px;overflow:hidden;">
+    <div id="plotmap-wrapper" style="position:relative;" width="100%" height="100%">
+      {{> svg}}
+
+      {{> point_detail}}
+
+      {{> graph}}
+
+      {{> buttons}}
+    </div>
+
+    {{> summary}}
+
+    {{> image_viewer}}
+
+    {{> help}}
+
+    <script>
+      {{> js_body}}
+    </script>
+  </body>
+</html>

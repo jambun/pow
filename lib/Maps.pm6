@@ -47,12 +47,15 @@ class Maps {
                     $md<tile_ref> = self.tile_ref($md<filename>);
 
                     @!metadata.push: $md;
+
+                    $!x_bounds.add($md<tilex>);
+                    $!y_bounds.add($md<tiley>);
                 }
             }
 
             for @!metadata -> $md {
-                $!x_bounds.add($md<tilex>);
-                $!y_bounds.add($md<tiley>);
+                $md<x> = (($md<tilex> - $!x_bounds.min) * $!tile_x).Str;
+                $md<y> = (($md<tiley> - $!y_bounds.min) * $!tile_y).Str;
             }
 
             self.cache_tiles;
@@ -67,7 +70,7 @@ class Maps {
         for @!metadata -> $md {
             my $file_path = $!maps_dir ~ '/' ~ $md<filename>;
             if $file_path.IO.e {
-                note $md<filename> ~ ' already in cache';
+#                note $md<filename> ~ ' already in cache';
             } else {
                 note 'Caching ' ~ $md<filename>;
                 my $resp = $http.request(HTTP::Request.new(:GET($!tile_source_url ~ '/' ~ $md<filename>)));

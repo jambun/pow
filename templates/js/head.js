@@ -4,6 +4,8 @@ var mark_ix = 0;
 var animation_rate = 1;
 var keep_point_centered = false;
 
+{{> js_points}}
+
 window.onload = function(e) {
     var wrap = document.getElementById("plotmap-wrapper");
     var vb = viewbox_to_a();
@@ -55,7 +57,7 @@ function show_point(ix, loop_around) {
     document.getElementById("point-lat").innerHTML = "Lat: " + points[ix].lat;
     document.getElementById("point-lon").innerHTML = "Lon: " + points[ix].lon;
     document.getElementById("point-ele").innerHTML = "Ele: " + points[ix].ele + "m";
-    document.getElementById("point-spd").innerHTML = points[ix].spd;
+    document.getElementById("point-spd").innerHTML = points[ix].spd_kph;
 
     updateGraph(ix);
 

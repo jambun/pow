@@ -1,4 +1,4 @@
-class Bounds {
+class Bounds is Associative {
     has $.min;
     has $.max;
 
@@ -18,5 +18,23 @@ class Bounds {
     method scale($val) {
 	      return unless self.include($val);
 	      ($val - $!min) / self.range;
+    }
+
+    method AT-KEY(\k) {
+        given \k {
+            when 'range' {
+                self.range;
+            }
+            when 'min' {
+                self.min;
+            }
+            when 'max' {
+                self.max;
+            }
+        }
+    }
+
+    method EXISTS-KEY(\k) {
+        \k ~~ /range|min|max/ ?? True  !! False;
     }
 }

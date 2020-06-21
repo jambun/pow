@@ -5,35 +5,13 @@ var pm = document.getElementById("plotmap");
 
 document.onkeydown = function(e) {
     if (!(document.getElementById("help-detail").style.display == 'none')) { document.getElementById("help-button").click(); }
-    else if (e.key == ';') { document.getElementById("select-button").click(); }
-    else if (e.key == '0') { document.getElementById("reset-button").click(); }
-    else if (e.key == '=') { document.getElementById("zoom-in-button").click(); }
-    else if (e.key == '-') { document.getElementById("zoom-out-button").click(); }
-    else if (e.key == 'd') { document.getElementById("dist-button").click(); }
-    else if (e.key == 't') { document.getElementById("time-button").click(); }
-    else if (e.key == 'r') { document.getElementById("rest-button").click(); }
-    else if (e.key == 's') { document.getElementById("summary-button").click(); }
-    else if (e.key == 'g') { document.getElementById("graph-button").click(); }
-    else if (e.key == 'w') { document.getElementById("waypoint-button").click(); }
-    else if (e.key == 'l') { document.getElementById("trail-button").click(); }
-    else if (e.key == 'k') { document.getElementById("trail-half-button").click(); }
-    else if (e.key == 'c') { document.getElementById("trail-color-button").click(); }
-    else if (e.key == 'ArrowLeft') { document.getElementById("move-west-button").click(); }
-    else if (e.key == 'ArrowRight') { document.getElementById("move-east-button").click(); }
-    else if (e.key == 'ArrowUp') { document.getElementById("move-north-button").click(); }
-    else if (e.key == 'ArrowDown') { document.getElementById("move-south-button").click(); }
-    else if (e.key == ' ') { document.getElementById("step-fwd-button").click(); }
-    else if (e.key == 'b') { document.getElementById("step-bwd-button").click(); }
-    else if (e.key == 'Enter') { document.getElementById("goto-start-button").click(); }
-    else if (e.key == '\'') { document.getElementById("goto-end-button").click(); }
-    else if (e.key == ']') { document.getElementById("animate-fwd-button").click(); }
-    else if (e.key == '[') { document.getElementById("animate-bwd-button").click(); }
-    else if (e.key == 'q') { document.getElementById("stop-button").click(); }
-    else if (e.key == 'p') { document.getElementById("slower-button").click(); }
-    else if (e.key == '\\\\') { document.getElementById("faster-button").click(); }
-    else if (e.key == 'o') { document.getElementById("original-speed-button").click(); }
-    else if (e.key == '/') { document.getElementById("follow-button").click(); }
-    else if (e.key == 'h') { document.getElementById("help-button").click(); }
+
+    {{#button_groups}}
+      {{#buttons}}
+        else if (e.key == '{{key}}') { document.getElementById("{{id}}-button").click(); }
+      {{/buttons}}
+    {{/button_groups}}
+
     e.preventDefault();
 };
 
