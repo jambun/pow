@@ -54,8 +54,11 @@ class Markers {
     }
 
 
-    method select(:$track, :$maps) {
-        my @out = $!points.grep({$track.bounds<tim>.include(DateTime.new($_<time>).Instant.Int)});
+    method select(:$track, :$maps, :$all_markers) {
+        my @out = $all_markers ?? $!points.grep({$maps.in_box($_<lat>, $_<lon>,
+                                                              $maps.lat_bounds.min, $maps.lon_bounds.min,
+                                                              $maps.lat_bounds.max, $maps.lon_bounds.max)})
+                               !! $!points.grep({$track.bounds<tim>.include(DateTime.new($_<time>).Instant.Int)});
 
         for @out -> $p {
             ($p<x>, $p<y>) = $maps.coords($p<lat>, $p<lon>);

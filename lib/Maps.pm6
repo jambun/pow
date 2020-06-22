@@ -14,6 +14,8 @@ class Maps {
     has $.tile_y = 2000;
     has Bounds $.x_bounds = Bounds.new;
     has Bounds $.y_bounds = Bounds.new;
+    has Bounds $.lat_bounds = Bounds.new;
+    has Bounds $.lon_bounds = Bounds.new;
     has Rat $.lat_padding = 0.06;
     has Rat $.lon_padding = 0.06;
     has Hash @.metadata;
@@ -50,6 +52,11 @@ class Maps {
 
                     $!x_bounds.add($md<tilex>);
                     $!y_bounds.add($md<tiley>);
+
+                    $!lat_bounds.add($max_lat);
+                    $!lat_bounds.add($min_lat);
+                    $!lon_bounds.add($max_lon);
+                    $!lon_bounds.add($min_lon);
                 }
             }
 

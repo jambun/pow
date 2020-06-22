@@ -9,55 +9,48 @@ use Commands;
 use JSON::Tiny;
 use Template::Mustache;
 
-# i'll be needing a main - parses switches
-# this example from stackoverflow
-# sub MAIN ( Str  :f(:$file)    = "file.dat"
-#          , Num  :l(:$length)  = Num(24)
-#          , Bool :v(:$verbose) = False
-#          )
-# {
-#     $file.say;
-#     $length.say;
-#     $verbose.say;
-# }
 
-my $markers = Markers.new(json_file => './data/points.json');
-my $gpx = GPXParser.new(file => @*ARGS.shift, markers => $markers);
-my $track = $gpx.track;
-my $maps = $gpx.maps;
-my $commands = Commands.new;
+sub MAIN (Str $file where *.IO.f,
+          Bool :a(:$all_markers) = False) {
 
-my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
-my $js_templ = Template::Mustache.new: :from<./templates/js>, :extension<.js>;
+    my $markers = Markers.new(json_file => './data/points.json');
+    my $gpx = GPXParser.new(file => $file, markers => $markers);
+    my $track = $gpx.track;
+    my $maps = $gpx.maps;
+    my $commands = Commands.new;
 
-my %ctx = title => $track.title,
-          date => $track.date,
-          desc => ($track.desc eq 'Your Track' ?? '' !! $track.desc),
-          image => $markers.images{$track.title},
-          points => $track.points,
-          rests => $track.rests.list,
-          bounds => $track.bounds,
-          summary => $track.summary_display,
-          total_rest_time => $track.rests.total_rest_time,
-          time_intervals => $track.intervals.times,
-          distance_intervals => $track.intervals.distances,
-          view_box => $track.view_box,
-          mark_radius => 12,
-          tile_x => $maps.tile_x,
-          tile_y => $maps.tile_y,
-          markers => $markers.select(:$maps, :$track),
-          maps => $maps.list,
-          button_groups => $commands.list_grouped,
-          help => help;
+    my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
+    my $js_templ = Template::Mustache.new: :from<./templates/js>, :extension<.js>;
 
-my %parts = js_head => slurp('templates/js/head.js'),
-            js_body => slurp('templates/js/body.js'),
-            js_points => slurp('./templates/js/js_points.js'),
-            svg => slurp('./templates/html/svg.html');
+    my %ctx = title => $track.title,
+              date => $track.date,
+              desc => ($track.desc eq 'Your Track' ?? '' !! $track.desc),
+              image => $markers.images{$track.title},
+              points => $track.points,
+              rests => $track.rests.list,
+              bounds => $track.bounds,
+              summary => $track.summary_display,
+              total_rest_time => $track.rests.total_rest_time,
+              time_intervals => $track.intervals.times,
+              distance_intervals => $track.intervals.distances,
+              view_box => $track.view_box,
+              mark_radius => 12,
+              tile_x => $maps.tile_x,
+              tile_y => $maps.tile_y,
+              markers => $markers.select(:$maps, :$track, :$all_markers),
+              maps => $maps.list,
+              button_groups => $commands.list_grouped,
+              help => help;
 
-say $html_templ.render('page', %ctx, :from(%parts));
+    my %parts = js_head => slurp('templates/js/head.js'),
+                js_body => slurp('templates/js/body.js'),
+                js_points => slurp('./templates/js/js_points.js'),
+                svg => slurp('./templates/html/svg.html');
 
-$markers.save;
+    say $html_templ.render('page', %ctx, :from(%parts));
+
+    $markers.save;
+}
 
 
 sub help {
