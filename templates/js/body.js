@@ -2,6 +2,7 @@ var zoom_factor = 0.8;
 var move_step = 50;
 var keep_animating = false;;
 var pm = document.getElementById("plotmap");
+var map_drag = false;
 
 document.onkeydown = function(e) {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
@@ -16,6 +17,28 @@ document.onkeydown = function(e) {
       {{/buttons}}
     {{/button_groups}}
 
+    e.preventDefault();
+};
+
+pm.onmousedown = function(e) {
+    map_drag = true;    
+    e.preventDefault();
+};
+
+pm.onmousemove = function(e) {
+    if (map_drag) {
+        move_map((e.movementX * -2), (e.movementY * -2));
+    }
+    e.preventDefault();
+};
+
+pm.onmouseup = function(e) {
+    map_drag = false;
+    e.preventDefault();
+};
+
+pm.onmouseleave = function(e) {
+    map_drag = false;
     e.preventDefault();
 };
 
@@ -62,7 +85,8 @@ function center_on_point() {
     document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
 }
 
-pm.onclick = function(e){
+pm.ondblclick = function(e){
+    map_drag = false;
     var wrap = document.getElementById("plotmap-wrapper");
     var vb = viewbox_to_a();
     var vx = (e.pageX - wrap.offsetLeft) / wrap.offsetWidth * vb[2];
@@ -70,6 +94,7 @@ pm.onclick = function(e){
     vb[0] = vx + vb[0] - vb[2]/2;
     vb[1] = vy + vb[1] - vb[3]/2;
     this.setAttribute("viewBox", a_to_viewbox(vb));
+    e.preventDefault();
 };
 
 var button_groups = ['display', 'navigation', 'animation'];

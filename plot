@@ -99,7 +99,7 @@ sub help {
         { help_item('?', 'Show this help') }
         { help_item('&hellip;', 'Next button group') }
         { help_item() }
-        { help_item('Map', 'Click to centre') }
+        { help_item('Map', 'Drag to move. Double click to centre') }
         { help_item('Trail', 'Red = climb, Blue = descend. Click to move target') }
         { help_item('Graph', 'White = elevation, Blue = speed. Click to move target') }
         { help_item('Summary', 'Click to see detail') }
