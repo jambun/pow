@@ -349,18 +349,23 @@ function setGraphMark(id, opacity) {
 }
 
 function updateGraph(ix) {
-    setGraphMark(ix, 1.0);
     setGraphMark(point_ix, 0.0);
+    setGraphMark(ix, 1.0);
 
     if (isNaN(mark_ix)) {
 	      document.getElementById("graph-mark-to-point").setAttribute("visibility", 'hidden');
     } else {
-	      var mark = document.getElementById("graph-mark-to-point");
-	      mark.setAttribute("visibility", 'visible');
+	      var mark_to_point = document.getElementById("graph-mark-to-point");
+	      mark_to_point.setAttribute("visibility", 'visible');
 	      var left_x = document.getElementById("graph-bar-" + Math.min(mark_ix, ix)).getAttribute("x");
 	      var right_x = document.getElementById("graph-bar-" + Math.max(mark_ix, ix)).getAttribute("x");
-	      mark.setAttribute("x", left_x);
-	      mark.setAttribute("width", right_x - left_x);
+	      mark_to_point.setAttribute("x", left_x);
+	      mark_to_point.setAttribute("width", right_x - left_x);
+
+	      var mark = document.getElementById("graph-mark");
+	      var x = document.getElementById("graph-bar-" + mark_ix).getAttribute("x");
+        mark.setAttribute("x1", x);
+        mark.setAttribute("x2", x);
     }
 }
 

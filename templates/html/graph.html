@@ -2,16 +2,14 @@
      style="position:absolute;top:50px;left:50px;width:60%;opacity:0.75;background-color:#333;border-style:solid;border-width:1px;border-color:#000;border-radius:2px;padding:4px;color:#fff;">
   <svg width="100%" height="40" viewBox="0 0 1000 100" preserveAspectRatio="none">
 
+    <rect class="graph-mark" id="graph-mark-to-point" x="0" y="0" width="200" height="100" style="opacity:0.4;" fill="red"/>
+    <line class="graph-mark" id="graph-mark" x1="1" y1="0" x2="1" y2="100" style="stroke:red;opacity:1.0;stroke-width:3;"/>
+
     {{#points}}
       <circle cx="{{graph_x_str}}" cy="{{graph_ele_y_str}}" r="2" fill="white" style="z-index:1;opacity=0.9;"/>
       <rect class="graph-bar" id="graph-bar-{{ix}}" onclick="show_point({{ix}});"
             x="{{graph_lastx_str}}" y="0" width="{{graph_width}}" height="100" style="opacity:0.0;" fill="yellow"/>
       <circle cx="{{graph_x_str}}" cy="{{graph_spd_y_str}}" r="2" fill="#8080ff"/>
     {{/points}}
-
-
-    <rect class="graph-mark" id="graph-mark-to-point" x="0" y="0" width="200" height="100" style="opacity:0.4;" fill="green"/>
-    <line class="graph-mark" id="graph-mark" x1="0" y1="0" x2="0" y2="100" style="stroke:green;opacity:1.0;stroke-width:8;z-index:3;"/>
-
   </svg>
 </div>
