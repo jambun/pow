@@ -4,6 +4,10 @@ var keep_animating = false;;
 var pm = document.getElementById("plotmap");
 
 document.onkeydown = function(e) {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        return;
+    }
+
     if (!(document.getElementById("help-detail").style.display == 'none')) { document.getElementById("help-button").click(); }
 
     {{#button_groups}}
