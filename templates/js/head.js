@@ -27,6 +27,7 @@ window.onload = function(e) {
     toggleMark('dist-mark', document.getElementById("dist-button"));
     toggleMark('time-mark', document.getElementById("time-button"));
     toggleMark('rest-mark', document.getElementById("rest-button"));
+    updateMeasureMarks();
     show_point(point_ix);
 }
 
@@ -67,4 +68,6 @@ function show_point(ix, loop_around) {
     point_ix = ix;
 
     if (keep_point_centered) { center_on_point(); }
+
+    updateMeasureMarks();
 }

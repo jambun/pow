@@ -91,6 +91,8 @@ sub help {
         { help_item('w', 'Toggle waypoints') }
         { help_item('g', 'Toggle graph') }
         { help_item('s', 'Toggle summary detail') }
+        { help_item('Tab', 'Toggle measure detail') }
+        { help_item('`', 'Set measure mark (current/start)') }
         { help_item('c', 'Next trail color map') }
         { help_item('h', 'Show this help') }
         { help_item() }

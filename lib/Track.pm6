@@ -52,15 +52,17 @@ class Track {
                 %pt<climb_color> = '#3333ff';
             }
             $!total_distance += %pt<dst>;
-            %pt<total_distance> = $!total_distance;
-            $!total_time = %pt<tim> - $!start_time;;
-            %pt<total_time> = $!total_time;;
+            $!total_time = %pt<tim> - $!start_time;
 	          if %pt<tim> > @!points.tail<tim> {
 	              %pt<spd> = %pt<dst> / (%pt<tim> - @!points.tail<tim>);
 	          }
         } else {
             $!start_time = %pt<tim>;
         }
+
+        %pt<total_distance> = $!total_distance;
+        %pt<total_distance_round> = (sprintf '%.2f', %pt<total_distance>.round(.01)).Str;
+        %pt<total_time> = $!total_time;
 
         @!points.push(%pt);
 

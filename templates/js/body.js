@@ -179,6 +179,79 @@ document.getElementById("time-button").onclick = function(e) {
     toggleMark("time-mark", this);
 };
 
+document.getElementById("measure-mark-button").onclick = function(e) {
+    toggleMeasureMark(this);
+};
+
+function toggleMeasureMark(button) {
+    if (mark_ix == point_ix) {
+        mark_ix = 0;
+    } else {
+        mark_ix = point_ix;
+    }
+    switchButton(button, mark_ix != 0);
+
+    updateMeasureMarks();
+
+    updateGraph(point_ix);
+}
+
+function updateMeasureMarks() {
+    var pl = document.getElementById("line-" + mark_ix)
+    var pt = document.getElementById("mark-target-inner");
+    pt.setAttribute("cx", pl.getAttribute("x2"));
+    pt.setAttribute("cy", pl.getAttribute("y2"));
+
+    pt = document.getElementById("mark-target-outer");
+    pt.setAttribute("cx", pl.getAttribute("x2"));
+    pt.setAttribute("cy", pl.getAttribute("y2"));
+
+    pt = document.getElementById("mark-target-back");
+    pt.setAttribute("cx", pl.getAttribute("x2"));
+    pt.setAttribute("cy", pl.getAttribute("y2"));
+
+    var trailMarks = document.getElementsByClassName("trail-mark");
+    for (i = 0; i < trailMarks.length; i++) {
+        var ix = parseInt(trailMarks[i].getAttribute('ix'))
+        if (ix >= Math.min(point_ix, mark_ix) && ix <= Math.max(point_ix, mark_ix)) {
+            trailMarks[i].style.opacity = '0.5';
+        } else {
+            trailMarks[i].style.opacity = '0.17';
+        }
+    }
+
+    var mfrom = points[Math.min(point_ix, mark_ix)];
+    var mto = points[Math.max(point_ix, mark_ix)];
+    var mtim = mto.tstamp - mfrom.tstamp;
+    var mhms = new Date(mtim).toISOString().substr(11, 8);
+    var mdst = parseFloat(mto.total_dst) - parseFloat(mfrom.total_dst);
+    var mspd = mtim == 0 ? 0 : mdst / (mtim / 1000);
+
+    document.getElementById("measure-tim").innerHTML = "Time: " + mhms;
+    document.getElementById("measure-dst").innerHTML = "Dist: " + (Math.round(mdst/10) / 100) + " km";
+    document.getElementById("measure-ele").innerHTML = "Ele: " + (mto.ele - mfrom.ele) + "m";
+    document.getElementById("measure-spd").innerHTML = (Math.round(mspd * 360) / 100) + " kph";
+}
+
+document.getElementById("measure-button").onclick = function(e) {
+    toggleMeasure(this);
+};
+
+document.getElementById("measure-detail").onclick = function(e) {
+    toggleMeasure(document.getElementById("measure-button"));
+};
+
+function toggleMeasure(button) {
+    var measure = document.getElementById("measure-detail");
+    measure.style.display = measure.style.display == 'none' ? 'inherit' : 'none';
+    var graphMarks = document.getElementsByClassName("graph-mark");
+    for (i = 0; i < graphMarks.length; i++) {
+        graphMarks[i].style.display = measure.style.display;
+    }
+
+    switchButton(button, measure.style.display != 'none');
+}
+
 document.getElementById("summary-button").onclick = function(e) {
     toggleSummary(this);
 };
