@@ -39,8 +39,10 @@ pm.onmousemove = function(e) {
             panel.style.left = e.x + 10;
         }
         if (panel.dataset.lock == 'false') {
-            document.getElementById("coords-lat").innerHTML = "Lat: " + e.x;
-            document.getElementById("coords-lon").innerHTML = "Lon: " + e.y;
+            var lon = e.x / window.innerWidth * vbh().width + vbh().left;
+            var lat = e.y / window.innerHeight * vbh().height + vbh().top;
+            document.getElementById("coords-lat").innerHTML = "Lat: " + lat.toFixed();
+            document.getElementById("coords-lon").innerHTML = "Lon: " + lon.toFixed();
         }
     }
 };
@@ -501,4 +503,13 @@ function viewbox_to_s() {
 
 function set_viewbox() {
     pm.setAttribute('viewBox', viewbox_to_s());
+}
+
+function vbh() {
+    return {
+        left: vb[0],
+        top: vb[1],
+        width: vb[2],
+        height: vb[3]
+    };
 }
