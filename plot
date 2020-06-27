@@ -67,6 +67,7 @@ sub help {
         { help_item('=', 'Zoom in') }
         { help_item('-', 'Zoom out') }
         { help_item('Arrows', 'Move map position') }
+        { help_item('@', 'Toggle coordinates follow/fix/lock/hide') }
         { help_item() }
         <span style="font-size:large;">Animation</span>
         { help_item('Space', 'Step forward') }

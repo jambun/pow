@@ -16,6 +16,7 @@ class Commands {
           {id => 'move-west', key => 'ArrowLeft', group => 'navigation', label => '&#8592;', title => 'Move west', :!on},
           {id => 'move-east', key => 'ArrowRight', group => 'navigation', label => '&#8594;', title => 'Move east', :!on},
           {id => 'move-south', key => 'ArrowDown', group => 'navigation', label => '&#8595;', title => 'Move south', :!on},
+          {id => 'coords', key => '2', group => 'navigation', label => '@', title => 'Show coordinates', :!on},
 
           {id => 'goto-start', key => 'Enter', group => 'animation', label => '&larrb;', title => 'Go to start', :!on},
           {id => 'goto-end', key => '\\\'', group => 'animation', label => '&rarrb;', title => 'Go to end', :!on},

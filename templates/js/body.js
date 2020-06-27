@@ -26,10 +26,23 @@ pm.onmousedown = function(e) {
 };
 
 pm.onmousemove = function(e) {
+    e.preventDefault();
+
     if (map_drag) {
         move_map((e.movementX * -2), (e.movementY * -2));
     }
-    e.preventDefault();
+
+    var panel = document.getElementById("coords-panel");
+    if (panel.style.display != 'none') {
+        if (panel.dataset.follow == 'true' && panel.dataset.lock == 'false') {
+            panel.style.top = e.y + 10;
+            panel.style.left = e.x + 10;
+        }
+        if (panel.dataset.lock == 'false') {
+            document.getElementById("coords-lat").innerHTML = "Lat: " + e.x;
+            document.getElementById("coords-lon").innerHTML = "Lon: " + e.y;
+        }
+    }
 };
 
 pm.onmouseup = function(e) {
@@ -279,6 +292,33 @@ function toggleMeasure(button) {
     }
 
     switchButton(button, measure.style.display != 'none');
+}
+
+document.getElementById("coords-button").onclick = function(e) {
+    toggleCoords(this);
+};
+
+function toggleCoords(button) {
+    var panel = document.getElementById("coords-panel");
+    if (panel.style.display == 'none') {
+        panel.style.display = 'inherit';
+        panel.dataset.follow = 'true';
+    } else {
+        if (panel.dataset.follow == 'true') {
+            panel.style.removeProperty('top');
+            panel.style.removeProperty('left');
+            panel.dataset.follow = 'false';
+        } else {
+            if (panel.dataset.lock == 'false') {
+                panel.dataset.lock = 'true';
+                panel.style.borderColor = '#F00';
+            } else {
+                panel.dataset.lock = 'false';
+                panel.style.borderColor = '#000';
+                panel.style.display = 'none';
+            }
+        }
+    }
 }
 
 document.getElementById("summary-button").onclick = function(e) {

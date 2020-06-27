@@ -106,7 +106,7 @@ class Maps {
         my $y = ($x_t * $y_slope + $y_l) / (1 - $y_slope * $x_slope);
     
         ($x.Int, $y.Int);
-}
+    }
 
     sub in_range($x, $min, $max) {
         $x >= $min && $x <= $max;
