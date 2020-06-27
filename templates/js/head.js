@@ -8,7 +8,7 @@ var keep_point_centered = false;
 
 window.onload = function(e) {
     var wrap = document.getElementById("plotmap-wrapper");
-    var vb = viewbox_to_a();
+    vb = viewbox_to_a();
 
     var left_padding = vb[2] / wrap.clientWidth * 40;
     vb[0] -= left_padding;
@@ -21,8 +21,9 @@ window.onload = function(e) {
     var aspect = wrap.clientWidth / wrap.clientHeight;
     if (aspect > 1) { vb[0] -= (vb[3] * aspect - vb[2])/2; vb[2] = vb[3] * aspect; }
     if (aspect < 1) { vb[1] -= (vb[2] * aspect - vb[3])/2; vb[3] = vb[2] / aspect; }
-    document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
-    original_viewbox = document.getElementById("plotmap").getAttribute("viewBox");
+
+    set_viewbox();
+    original_viewbox = vb.map((x) => x);
 
     toggleMark('dist-mark', document.getElementById("dist-button"));
     toggleMark('time-mark', document.getElementById("time-button"));

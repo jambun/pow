@@ -56,10 +56,9 @@ pm.onmouseleave = function(e) {
 };
 
 function move_map(x, y) {
-    var vb = viewbox_to_a();
     vb[0] += x;
     vb[1] += y;
-    pm.setAttribute("viewBox", a_to_viewbox(vb));
+    set_viewbox();
 }
 
 function sleep(ms) {
@@ -91,23 +90,21 @@ function center_on_point() {
     var pl = document.getElementById("line-" + point_ix);
     if (pl == null) { return; }
 
-    var vb = viewbox_to_a();
     vb[0] = pl.getAttribute("x2") - vb[2]/2;
     vb[1] = pl.getAttribute("y2") - vb[3]/2;
 
-    document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
+    set_viewbox();
 }
 
 pm.ondblclick = function(e){
+    e.preventDefault();
     map_drag = false;
     var wrap = document.getElementById("plotmap-wrapper");
-    var vb = viewbox_to_a();
     var vx = (e.pageX - wrap.offsetLeft) / wrap.offsetWidth * vb[2];
     var vy = (e.pageY - wrap.offsetTop) / wrap.offsetHeight * vb[3];
     vb[0] = vx + vb[0] - vb[2]/2;
     vb[1] = vy + vb[1] - vb[3]/2;
-    this.setAttribute("viewBox", a_to_viewbox(vb));
-    e.preventDefault();
+    set_viewbox();
 };
 
 var button_groups = ['display', 'navigation', 'animation'];
@@ -122,10 +119,9 @@ document.getElementById("select-button").onclick = function(e) {
     document.getElementById(button_groups[button_group_ix] + '-button-group').style.display = 'inherit';
 };
 
-var original_viewbox = pm.getAttribute("viewBox");
-
 document.getElementById("reset-button").onclick = function(e) {
-    pm.setAttribute("viewBox", original_viewbox);
+    vb = original_viewbox.map((x) => x);
+    set_viewbox();
 };
 
 document.getElementById("zoom-in-button").onclick = function(e) {
@@ -478,27 +474,31 @@ function colorTrail() {
 }
 
 function viewbox_to_a() {
-    var vb = document.getElementById("plotmap").getAttribute("viewBox").split(" ");
+    var vb = pm.getAttribute("viewBox").split(" ");
     for (i = 0; i < vb.length; i++) {
         vb[i] = parseInt(vb[i]);
     }
     return vb;
 }
 
-function a_to_viewbox(vb) {
-    for (i = 0; i < vb.length; i++) {
-        vb[i] = Math.round(vb[i]);
-    }
-    return vb.join(" ");
-}
-
 function zoom(factor) {
-    var vb = viewbox_to_a();
     var vw = vb[2] * factor;
     var vh = vb[3] * factor;
     vb[0] = vb[0] + (vb[2]-vw)/2;
     vb[1] = vb[1] + (vb[3]-vh)/2;
     vb[2] = vw;
     vb[3] = vh;
-    document.getElementById("plotmap").setAttribute("viewBox", a_to_viewbox(vb));
+
+    set_viewbox();
+}
+
+function viewbox_to_s() {
+    for (i = 0; i < vb.length; i++) {
+        vb[i] = Math.round(vb[i]);
+    }
+    return vb.join(" ");
+}
+
+function set_viewbox() {
+    pm.setAttribute('viewBox', viewbox_to_s());
 }
