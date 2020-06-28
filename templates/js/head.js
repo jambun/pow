@@ -8,22 +8,50 @@ var keep_point_centered = false;
 
 window.onload = function(e) {
     var wrap = document.getElementById("plotmap-wrapper");
-    vb = viewbox_to_a();
 
-    var left_padding = vb[2] / wrap.clientWidth * 40;
-    vb[0] -= left_padding;
-    vb[2] += left_padding;
+    vb = {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+        plotmap: pm, 
+        load: function() {
+            var vb = plotmap.getAttribute("viewBox").split(" ");
+            this.left = parseInt(vb[0]);
+            this.top = parseInt(vb[1]);
+            this.width = parseInt(vb[2]);
+            this.height = parseInt(vb[3]);
+        },
+        to_s: function() {
+            return [this.left, this.top, this.width, this.height].join(' ');
+        },
+        set: function() {
+            this.plotmap.setAttribute('viewBox', this.to_s());
+        },
+        mark_origin: function() {
+            this.origin = this.to_s();
+        },
+        set_origin: function() {
+            this.plotmap.setAttribute('viewBox', this.origin);
+            this.load();
+        }
+    }
+    vb.load();
 
-    var top_padding = vb[3] / wrap.clientHeight * 120;
-    vb[1] -= top_padding;
-    vb[3] += top_padding;
+    var left_padding = vb.width / wrap.clientWidth * 40;
+    vb.left -= left_padding;
+    vb.width += left_padding;
+
+    var top_padding = vb.height / wrap.clientHeight * 120;
+    vb.top -= top_padding;
+    vb.height += top_padding;
 
     var aspect = wrap.clientWidth / wrap.clientHeight;
-    if (aspect > 1) { vb[0] -= (vb[3] * aspect - vb[2])/2; vb[2] = vb[3] * aspect; }
-    if (aspect < 1) { vb[1] -= (vb[2] * aspect - vb[3])/2; vb[3] = vb[2] / aspect; }
+    if (aspect > 1) { vb.left -= (vb.height * aspect - vb.width)/2; vb.width = vb.height * aspect; }
+    if (aspect < 1) { vb.top -= (vb.width * aspect - vb.height)/2; vb.height = vb.width / aspect; }
 
-    set_viewbox();
-    original_viewbox = vb.map((x) => x);
+    vb.set();
+    vb.mark_origin();
 
     toggleMark('dist-mark', document.getElementById("dist-button"));
     toggleMark('time-mark', document.getElementById("time-button"));

@@ -39,10 +39,10 @@ pm.onmousemove = function(e) {
             panel.style.left = e.x + 10;
         }
         if (panel.dataset.lock == 'false') {
-            var lon = e.x / window.innerWidth * vbh().width + vbh().left;
-            var lat = e.y / window.innerHeight * vbh().height + vbh().top;
-            document.getElementById("coords-lat").innerHTML = "Lat: " + lat.toFixed();
-            document.getElementById("coords-lon").innerHTML = "Lon: " + lon.toFixed();
+            var lon = e.x / window.innerWidth * vb.width + vb.left;
+            var lat = e.y / window.innerHeight * vb.height + vb.top;
+            document.getElementById("coords-lat").innerHTML = "Lat: " + Math.round(lat);
+            document.getElementById("coords-lon").innerHTML = "Lon: " + Math.round(lon);
         }
     }
 };
@@ -58,9 +58,9 @@ pm.onmouseleave = function(e) {
 };
 
 function move_map(x, y) {
-    vb[0] += x;
-    vb[1] += y;
-    set_viewbox();
+    vb.left += x;
+    vb.top += y;
+    vb.set();
 }
 
 function sleep(ms) {
@@ -92,21 +92,21 @@ function center_on_point() {
     var pl = document.getElementById("line-" + point_ix);
     if (pl == null) { return; }
 
-    vb[0] = pl.getAttribute("x2") - vb[2]/2;
-    vb[1] = pl.getAttribute("y2") - vb[3]/2;
+    vb.left = pl.getAttribute("x2") - vb.width/2;
+    vb.top = pl.getAttribute("y2") - vb.height/2;
 
-    set_viewbox();
+    vb.set();
 }
 
 pm.ondblclick = function(e){
     e.preventDefault();
     map_drag = false;
     var wrap = document.getElementById("plotmap-wrapper");
-    var vx = (e.pageX - wrap.offsetLeft) / wrap.offsetWidth * vb[2];
-    var vy = (e.pageY - wrap.offsetTop) / wrap.offsetHeight * vb[3];
-    vb[0] = vx + vb[0] - vb[2]/2;
-    vb[1] = vy + vb[1] - vb[3]/2;
-    set_viewbox();
+    var vx = (e.pageX - wrap.offsetLeft) / wrap.offsetWidth * vb.width;
+    var vy = (e.pageY - wrap.offsetTop) / wrap.offsetHeight * vb.height;
+    vb.left = vx + vb.left - vb.width/2;
+    vb.top = vy + vb.top - vb.height/2;
+    vb.set();
 };
 
 var button_groups = ['display', 'navigation', 'animation'];
@@ -122,8 +122,7 @@ document.getElementById("select-button").onclick = function(e) {
 };
 
 document.getElementById("reset-button").onclick = function(e) {
-    vb = original_viewbox.map((x) => x);
-    set_viewbox();
+    vb.set_origin();
 };
 
 document.getElementById("zoom-in-button").onclick = function(e) {
@@ -475,41 +474,13 @@ function colorTrail() {
     }
 }
 
-function viewbox_to_a() {
-    var vb = pm.getAttribute("viewBox").split(" ");
-    for (i = 0; i < vb.length; i++) {
-        vb[i] = parseInt(vb[i]);
-    }
-    return vb;
-}
-
 function zoom(factor) {
-    var vw = vb[2] * factor;
-    var vh = vb[3] * factor;
-    vb[0] = vb[0] + (vb[2]-vw)/2;
-    vb[1] = vb[1] + (vb[3]-vh)/2;
-    vb[2] = vw;
-    vb[3] = vh;
+    var vw = vb.width * factor;
+    var vh = vb.height * factor;
+    vb.left = vb.left + (vb.width-vw)/2;
+    vb.top = vb.top + (vb.height-vh)/2;
+    vb.width = vw;
+    vb.height = vh;
 
-    set_viewbox();
-}
-
-function viewbox_to_s() {
-    for (i = 0; i < vb.length; i++) {
-        vb[i] = Math.round(vb[i]);
-    }
-    return vb.join(" ");
-}
-
-function set_viewbox() {
-    pm.setAttribute('viewBox', viewbox_to_s());
-}
-
-function vbh() {
-    return {
-        left: vb[0],
-        top: vb[1],
-        width: vb[2],
-        height: vb[3]
-    };
+    vb.set();
 }
