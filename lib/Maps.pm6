@@ -20,6 +20,23 @@ class Maps {
     has Rat $.lon_padding = 0.06;
     has Hash @.metadata;
 
+    method metadata {
+        my $tl = @!metadata.head;
+        my $br = @!metadata.tail;
+
+        my $tr = @!metadata.grep({$_<tilex> eq $!x_bounds.max}).head;
+        my $bl = @!metadata.grep({$_<tiley> eq $!y_bounds.max}).head;
+
+        to-json {
+            width => $br<x>.Int + $!tile_x,
+            height => $br<y>.Int + $!tile_y,
+            topleft => { lon => $tl<topleft><long>, lat => $tl<topleft><lat> },
+            topright => { lon => $tr<topright><long>, lat => $tr<topright><lat> },
+            bottomleft => { lon => $bl<bottomleft><long>, lat => $bl<bottomleft><lat> },
+            bottomright => { lon => $br<bottomright><long>, lat => $br<bottomright><lat> }
+        };
+    }
+
     method list {
         unless @!metadata {
             my $pban = $!track.bounds<lat>.min - $!lat_padding;

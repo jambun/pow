@@ -35,17 +35,35 @@ pm.onmousemove = function(e) {
     var panel = document.getElementById("coords-panel");
     if (panel.style.display != 'none') {
         if (panel.dataset.follow == 'true' && panel.dataset.lock == 'false') {
-            panel.style.top = e.y + 10;
-            panel.style.left = e.x + 10;
+            if (e.y > 100 && e.y < window.innerHeight - 50) {
+                panel.style.top = e.y + 10;
+            }
+            if (e.x > 40 && e.x < window.innerWidth - 300) {
+                panel.style.left = e.x + 10;
+            }
         }
         if (panel.dataset.lock == 'false') {
-            var lon = e.x / window.innerWidth * vb.width + vb.left;
-            var lat = e.y / window.innerHeight * vb.height + vb.top;
-            document.getElementById("coords-lat").innerHTML = "Lat: " + Math.round(lat);
-            document.getElementById("coords-lon").innerHTML = "Lon: " + Math.round(lon);
+            const [lat, lon] = coords(e.x, e.y);
+            document.getElementById("coords-lat").innerHTML = "Lat: " + lat.toFixed(6);
+            document.getElementById("coords-lon").innerHTML = "Lon: " + lon.toFixed(6);
         }
     }
 };
+
+function coords(x, y) {
+    var map_x = x / window.innerWidth * vb.width + vb.left;
+    var map_y = y / window.innerHeight * vb.height + vb.top;
+
+    var lon_t = map_x / map_metadata.width * (map_metadata.topright.lon - map_metadata.topleft.lon) + map_metadata.topleft.lon;
+    var lon_b = map_x / map_metadata.width * (map_metadata.bottomright.lon - map_metadata.bottomleft.lon) + map_metadata.bottomleft.lon;
+    var lat_l = map_y / map_metadata.height * (map_metadata.bottomleft.lat - map_metadata.topleft.lat) + map_metadata.topleft.lat;
+    var lat_r = map_y / map_metadata.height * (map_metadata.bottomright.lat - map_metadata.topright.lat) + map_metadata.topright.lat;
+
+    var lon = lon_t + ((lon_b - lon_t) / (map_metadata.bottomleft.lat - map_metadata.topleft.lat) * (lat_l - map_metadata.topleft.lat));
+    var lat = lat_l + ((lat_r - lat_l) / (map_metadata.topright.lon - map_metadata.topleft.lon) * (lon_t - map_metadata.topleft.lon));
+
+    return [lat, lon];
+}
 
 pm.onmouseup = function(e) {
     map_drag = false;

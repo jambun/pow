@@ -3,6 +3,9 @@ var point_ix = 0;
 var mark_ix = 0;
 var animation_rate = 1;
 var keep_point_centered = false;
+var tile_x = {{tile_x}};
+var tile_y = {{tile_y}};
+var map_metadata = JSON.parse('{{{map_metadata}}}');
 
 {{> js_points}}
 

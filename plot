@@ -39,6 +39,7 @@ sub MAIN (Str $file where *.IO.f,
               tile_y => $maps.tile_y,
               markers => $markers.select(:$maps, :$track, :$all_markers),
               maps => $maps.list,
+              map_metadata => $maps.metadata,
               button_groups => $commands.list_grouped,
               help => help;
 
