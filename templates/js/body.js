@@ -34,6 +34,7 @@ pm.onmousemove = function(e) {
 
     var panel = document.getElementById("coords-panel");
     if (panel.style.display != 'none') {
+
         if (panel.dataset.follow == 'true' && panel.dataset.lock == 'false') {
             if (e.y > 100 && e.y < window.innerHeight - 50) {
                 panel.style.top = e.y + 10;
@@ -42,7 +43,14 @@ pm.onmousemove = function(e) {
                 panel.style.left = e.x + 10;
             }
         }
+
         if (panel.dataset.lock == 'false') {
+            var target = document.getElementById("coords-target");
+            const [target_x, target_y] = window_to_svg(e.x, e.y);
+            target.style.display = 'inherit';
+            target.setAttribute('x', target_x - 42);
+            target.setAttribute('y', target_y - 42);
+
             const [lat, lon] = coords(e.x, e.y);
             document.getElementById("coords-lat").innerHTML = "Lat: " + lat.toFixed(6);
             document.getElementById("coords-lon").innerHTML = "Lon: " + lon.toFixed(6);
@@ -50,9 +58,12 @@ pm.onmousemove = function(e) {
     }
 };
 
+function window_to_svg(x, y) {
+    return [x / window.innerWidth * vb.width + vb.left, y / window.innerHeight * vb.height + vb.top];
+}
+
 function coords(x, y) {
-    var map_x = x / window.innerWidth * vb.width + vb.left;
-    var map_y = y / window.innerHeight * vb.height + vb.top;
+    const [map_x, map_y] = window_to_svg(x, y);
 
     var lon_t = map_x / map_metadata.width * (map_metadata.topright.lon - map_metadata.topleft.lon) + map_metadata.topleft.lon;
     var lon_b = map_x / map_metadata.width * (map_metadata.bottomright.lon - map_metadata.bottomleft.lon) + map_metadata.bottomleft.lon;
@@ -315,8 +326,10 @@ document.getElementById("coords-button").onclick = function(e) {
 
 function toggleCoords(button) {
     var panel = document.getElementById("coords-panel");
+    var target = document.getElementById("coords-target");
     if (panel.style.display == 'none') {
         panel.style.display = 'inherit';
+        target.style.display = 'inherit';
         panel.dataset.follow = 'true';
     } else {
         if (panel.dataset.follow == 'true') {
@@ -331,6 +344,7 @@ function toggleCoords(button) {
                 panel.dataset.lock = 'false';
                 panel.style.borderColor = '#000';
                 panel.style.display = 'none';
+                target.style.display = 'none';
             }
         }
     }
