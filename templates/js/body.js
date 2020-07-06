@@ -259,12 +259,12 @@ function toggleMeasureMark(button) {
     }
     switchButton(button, mark_ix != 0);
 
-    updateMeasureMarks();
+    resetMeasureMarks();
 
     updateGraph(point_ix);
 }
 
-function updateMeasureMarks() {
+function resetMeasureMarks() {
     var pl = document.getElementById("line-" + mark_ix)
     var pt = document.getElementById("mark-target-inner");
     pt.setAttribute("cx", pl.getAttribute("x2"));
@@ -288,8 +288,27 @@ function updateMeasureMarks() {
         }
     }
 
-    var mfrom = points[Math.min(point_ix, mark_ix)];
-    var mto = points[Math.max(point_ix, mark_ix)];
+    updateMeasureStats(point_ix);
+}
+
+function updateMeasureMarks(new_ix) {
+    var trailMarks = document.getElementsByClassName("trail-mark");
+    var fwd = point_ix < new_ix;
+
+    for (i = point_ix + (fwd ? 1 : 0); (fwd ? i <= new_ix : i > new_ix); i += (fwd ? 1 : -1)) {
+        if (trailMarks[i].style.opacity == '0.17' || point_ix == mark_ix) {
+            trailMarks[i].style.opacity = '0.5';
+        } else {
+            trailMarks[i].style.opacity = '0.17';
+        }
+    }
+
+    updateMeasureStats(new_ix);
+}
+
+function  updateMeasureStats(new_ix) {
+    var mfrom = points[Math.min(new_ix, mark_ix)];
+    var mto = points[Math.max(new_ix, mark_ix)];
     var mtim = mto.tstamp - mfrom.tstamp;
     var mhms = new Date(mtim).toISOString().substr(11, 8);
     var mdst = parseFloat(mto.total_dst) - parseFloat(mfrom.total_dst);

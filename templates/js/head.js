@@ -59,7 +59,7 @@ window.onload = function(e) {
     toggleMark('dist-mark', document.getElementById("dist-button"));
     toggleMark('time-mark', document.getElementById("time-button"));
     toggleMark('rest-mark', document.getElementById("rest-button"));
-    updateMeasureMarks();
+    resetMeasureMarks();
     show_point(point_ix);
 }
 
@@ -94,12 +94,12 @@ function show_point(ix, loop_around) {
 
     updateGraph(ix);
 
+    updateMeasureMarks(ix);
+
     document.getElementById("line-" + point_ix).style.strokeWidth = 12;
     pl.style.strokeWidth = 40;
     
     point_ix = ix;
 
     if (keep_point_centered) { center_on_point(); }
-
-    updateMeasureMarks();
 }
