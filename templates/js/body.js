@@ -3,6 +3,8 @@ var move_step = 50;
 var keep_animating = false;;
 var pm = document.getElementById("plotmap");
 var map_drag = false;
+var wrap = document.getElementById("plotmap-wrapper");
+
 
 document.onkeydown = function(e) {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
@@ -161,6 +163,14 @@ document.getElementById("zoom-in-button").onclick = function(e) {
 document.getElementById("zoom-out-button").onclick = function(e) {
     zoom(1/zoom_factor);
 };
+
+wrap.addEventListener("DOMMouseScroll", function(e) {
+    if (e.detail > 0) {
+        document.getElementById("zoom-out-button").click();
+    } else {
+        document.getElementById("zoom-in-button").click();
+    }
+});
 
 document.getElementById("move-north-button").onclick = function(e) {
     move_map(0, move_step*-1);

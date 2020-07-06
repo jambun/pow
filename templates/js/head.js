@@ -10,8 +10,6 @@ var map_metadata = JSON.parse('{{{map_metadata}}}');
 {{> js_points}}
 
 window.onload = function(e) {
-    var wrap = document.getElementById("plotmap-wrapper");
-
     vb = {
         left: 0,
         top: 0,
