@@ -165,7 +165,7 @@ document.getElementById("zoom-out-button").onclick = function(e) {
     zoom(1/zoom_factor);
 };
 
-wrap.addEventListener("DOMMouseScroll", function(e) {
+pm.addEventListener("DOMMouseScroll", function(e) {
     if (e.detail > 0) {
         document.getElementById("zoom-out-button").click();
     } else {
