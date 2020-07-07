@@ -165,13 +165,13 @@ document.getElementById("zoom-out-button").onclick = function(e) {
     zoom(1/zoom_factor);
 };
 
-pm.addEventListener("DOMMouseScroll", function(e) {
-    if (e.detail > 0) {
+pm.onwheel = function(e) {
+    if (e.deltaY > 2) {
         document.getElementById("zoom-out-button").click();
-    } else {
+    } else if (e.deltaY < -2) {
         document.getElementById("zoom-in-button").click();
     }
-});
+};
 
 document.getElementById("move-north-button").onclick = function(e) {
     move_map(0, move_step*-1);
