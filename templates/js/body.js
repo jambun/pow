@@ -31,7 +31,7 @@ pm.onmousemove = function(e) {
     e.preventDefault();
 
     if (map_drag) {
-        var scale = vb.width / window.innerWidth * -1.25;
+        var scale = vb.width / window.innerWidth * -1;
         move_map((e.movementX * scale), (e.movementY * scale));
     }
 
