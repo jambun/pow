@@ -31,7 +31,8 @@ pm.onmousemove = function(e) {
     e.preventDefault();
 
     if (map_drag) {
-        move_map((e.movementX * -2), (e.movementY * -2));
+        var scale = vb.width / window.innerWidth * -1.25;
+        move_map((e.movementX * scale), (e.movementY * scale));
     }
 
     var panel = document.getElementById("coords-panel");
