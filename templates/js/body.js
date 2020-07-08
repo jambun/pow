@@ -166,10 +166,10 @@ document.getElementById("zoom-out-button").onclick = function(e) {
 };
 
 pm.onwheel = function(e) {
-    if (e.deltaY > 2) {
-        document.getElementById("zoom-out-button").click();
-    } else if (e.deltaY < -2) {
-        document.getElementById("zoom-in-button").click();
+    if (e.deltaY > 0) {
+        zoom(1/0.98);
+    } else if (e.deltaY < 0) {
+        zoom(0.98);
     }
 };
 
