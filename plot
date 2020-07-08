@@ -20,7 +20,6 @@ sub MAIN (Str $file where *.IO.f,
     my $commands = Commands.new;
 
     my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
-    my $js_templ = Template::Mustache.new: :from<./templates/js>, :extension<.js>;
 
     my %ctx = title => $track.title,
               date => $track.date,
@@ -43,12 +42,11 @@ sub MAIN (Str $file where *.IO.f,
               button_groups => $commands.list_grouped,
               help => help;
 
-    my %parts = js_head => slurp('templates/js/head.js'),
-                js_body => slurp('templates/js/body.js'),
-                js_points => slurp('./templates/js/js_points.js'),
-                svg => slurp('./templates/html/svg.html');
+    my %js_parts = js_head => slurp('templates/js/head.js'),
+                   js_body => slurp('templates/js/body.js'),
+                   js_points => slurp('./templates/js/js_points.js');
 
-    say $html_templ.render('page', %ctx, :from(%parts));
+    say $html_templ.render('page', %ctx, :from(%js_parts));
 
     $markers.save;
 }
