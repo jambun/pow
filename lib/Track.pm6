@@ -39,7 +39,9 @@ class Track {
         %pt<ix> = @!points.elems.Str;
 
         if @!points.tail {
-	          %pt<dst> = calculate_distance(@!points.tail, %pt);
+            return if (%pt<tim> - @!points.tail<tim>) == 1;
+
+            %pt<dst> = calculate_distance(@!points.tail, %pt);
             if %pt<ele> && @!points.tail<ele> {
                 my $climb = %pt<ele> - @!points.tail<ele>;
                 if $climb > 0 {
