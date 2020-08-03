@@ -10,6 +10,8 @@ var map_metadata = JSON.parse('{{{map_metadata}}}');
 {{> js_points}}
 
 window.onload = function(e) {
+    const url_params = new URLSearchParams(window.location.search);
+
     vb = {
         left: 0,
         top: 0,
@@ -39,17 +41,25 @@ window.onload = function(e) {
     }
     vb.load();
 
-    var left_padding = vb.width / wrap.clientWidth * 40;
-    vb.left -= left_padding;
-    vb.width += left_padding;
+    if (url_params.has('v')) {
+        var va = url_params.get('v').split(',');
+        vb.left = va[0];
+        vb.top = va[1];
+        vb.width = va[2];
+        vb.height = va[3];
+    } else {
+        var left_padding = vb.width / wrap.clientWidth * 40;
+        vb.left -= left_padding;
+        vb.width += left_padding;
 
-    var top_padding = vb.height / wrap.clientHeight * 120;
-    vb.top -= top_padding;
-    vb.height += top_padding;
+        var top_padding = vb.height / wrap.clientHeight * 120;
+        vb.top -= top_padding;
+        vb.height += top_padding;
 
-    var aspect = wrap.clientWidth / wrap.clientHeight;
-    if (aspect > 1) { vb.left -= (vb.height * aspect - vb.width)/2; vb.width = vb.height * aspect; }
-    if (aspect < 1) { vb.top -= (vb.width * aspect - vb.height)/2; vb.height = vb.width / aspect; }
+        var aspect = wrap.clientWidth / wrap.clientHeight;
+        if (aspect > 1) { vb.left -= (vb.height * aspect - vb.width)/2; vb.width = vb.height * aspect; }
+        if (aspect < 1) { vb.top -= (vb.width * aspect - vb.height)/2; vb.height = vb.width / aspect; }
+    }
 
     vb.set();
     vb.mark_origin();
