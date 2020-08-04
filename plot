@@ -86,6 +86,7 @@ sub help {
       </td>
       <td width="50%" valign="top">
         <span style="font-size:large;">Display</span>
+        { help_item('!', 'Set querystring for current state') }
         { help_item('l', 'Toggle trail') }
         { help_item('k', 'Show trail out/back/all') }
         { help_item('d', 'Toggle km marks') }

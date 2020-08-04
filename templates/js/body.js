@@ -380,6 +380,21 @@ function toggleCoords(button) {
     }
 }
 
+document.getElementById("set-querystring-button").onclick = function(e) {
+    url_params.set('v', vb.to_q());
+    url_params.set('p', point_ix);
+    url_params.set('m', mark_ix);
+
+    var flags = '';
+    if (buttonState('measure')) { flags += 'm'; }
+
+    if (flags.length > 0) {
+        url_params.set('f', flags);
+    }
+
+    window.location.search = url_params.toString();
+};
+
 document.getElementById("summary-button").onclick = function(e) {
     toggleSummary(this);
 };
@@ -445,6 +460,10 @@ document.getElementById("help-overlay").onclick = function(e) {
 
 function switchButton(button, on) {
     button.style.color = on ? 'lime' : 'white';
+}
+
+function buttonState(buttonName) {
+    return document.getElementById(buttonName + '-button').style.color == 'lime';
 }
 
 function toggleHelp() {

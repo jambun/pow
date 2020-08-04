@@ -6,11 +6,18 @@ var keep_point_centered = false;
 var tile_x = {{tile_x}};
 var tile_y = {{tile_y}};
 var map_metadata = JSON.parse('{{{map_metadata}}}');
+const url_params = new URLSearchParams(window.location.search);
 
 {{> js_points}}
 
 window.onload = function(e) {
-    const url_params = new URLSearchParams(window.location.search);
+    if (url_params.has('p')) {
+        point_ix = parseInt(url_params.get('p'));
+    }
+
+    if (url_params.has('m')) {
+        mark_ix = parseInt(url_params.get('m'));
+    }
 
     vb = {
         left: 0,
@@ -18,15 +25,24 @@ window.onload = function(e) {
         width: 0,
         height: 0,
         plotmap: pm, 
+        from_array: function(a) {
+            this.left = parseInt(a[0]);
+            this.top = parseInt(a[1]);
+            this.width = parseInt(a[2]);
+            this.height = parseInt(a[3]);
+        },
         load: function() {
-            var vb = plotmap.getAttribute("viewBox").split(" ");
-            this.left = parseInt(vb[0]);
-            this.top = parseInt(vb[1]);
-            this.width = parseInt(vb[2]);
-            this.height = parseInt(vb[3]);
+            this.from_array(plotmap.getAttribute("viewBox").split(" "));
         },
         to_s: function() {
             return [this.left, this.top, this.width, this.height].join(' ');
+        },
+        to_q: function() {
+            return [this.left.toFixed(), this.top.toFixed(), this.width.toFixed(), this.height.toFixed()].join('-');
+        },
+        from_q: function(q) {
+            this.from_array(q.split('-'));
+            this.set();
         },
         set: function() {
             this.plotmap.setAttribute('viewBox', this.to_s());
@@ -42,11 +58,7 @@ window.onload = function(e) {
     vb.load();
 
     if (url_params.has('v')) {
-        var va = url_params.get('v').split(',');
-        vb.left = va[0];
-        vb.top = va[1];
-        vb.width = va[2];
-        vb.height = va[3];
+        vb.from_q(url_params.get('v'));
     } else {
         var left_padding = vb.width / wrap.clientWidth * 40;
         vb.left -= left_padding;
@@ -69,6 +81,13 @@ window.onload = function(e) {
     toggleMark('rest-mark', document.getElementById("rest-button"));
     resetMeasureMarks();
     show_point(point_ix);
+
+    if (url_params.has('f')) {
+        var flags = url_params.get('f');
+        if (flags.includes('m')) {
+            document.getElementById("measure-button").click();
+        }
+    }
 }
 
 function show_point(ix, loop_around) {
