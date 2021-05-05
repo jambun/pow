@@ -39,6 +39,8 @@ class GPXParser {
         for $xml.getElementsByTagName('trkpt') -> $trkpt {
             my %p = lat => $trkpt.attribs<lat>.Rat,
                     lon => $trkpt.attribs<lon>.Rat,
+                    dst_err => 5.0,
+                    ele_err => 3.0,
 	                  time => DateTime.new(tag_contents($trkpt, 'time'));
 
             if (has_tag($trkpt, 'ele')) {

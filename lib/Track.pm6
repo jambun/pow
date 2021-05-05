@@ -39,10 +39,22 @@ class Track {
         %pt<ix> = @!points.elems.Str;
 
         if @!points.tail {
-            return if (%pt<tim> - @!points.tail<tim>) == 1;
-
             %pt<dst> = calculate_distance(@!points.tail, %pt);
+	          if %pt<tim> > @!points.tail<tim> {
+	              %pt<spd> = %pt<dst> / (%pt<tim> - @!points.tail<tim>);
+
+                my $avg_spd = self.calculate_recent_average('spd');
+
+                if (%pt<spd> > 2.0 && %pt<spd> > $avg_spd * 2.0) {
+                    %pt<spd> = $avg_spd + (%pt<spd> - $avg_spd) / (%pt<dst_err> + 1);
+                }
+	          }
+
             if %pt<ele> && @!points.tail<ele> {
+
+                # correct elevation using error margin
+                %pt<ele> = @!points.tail<ele> + ((%pt<ele> - @!points.tail<ele>) / (%pt<ele_err> + 1));
+
                 my $climb = %pt<ele> - @!points.tail<ele>;
                 if $climb > 0 {
                     $!total_climb += $climb;
@@ -55,9 +67,9 @@ class Track {
             }
             $!total_distance += %pt<dst>;
             $!total_time = %pt<tim> - $!start_time;
-	          if %pt<tim> > @!points.tail<tim> {
-	              %pt<spd> = %pt<dst> / (%pt<tim> - @!points.tail<tim>);
-	          }
+	          # if %pt<tim> > @!points.tail<tim> {
+	          #     %pt<spd> = %pt<dst> / (%pt<tim> - @!points.tail<tim>);
+	          # }
         } else {
             $!start_time = %pt<tim>;
         }
@@ -71,6 +83,14 @@ class Track {
         for %!bounds.kv -> $k, $v {
             $v.add(%pt{$k});
         }
+    }
+
+
+    method calculate_recent_average($key, $sample = 10) {
+        my $num = ($sample, @!points.elems).min;
+        return 0.0 if $num == 0;
+        my $total = reduce &infix:<+>, @!points[*-$num..*-1].map: {$_{$key}};
+        return $total / $num;
     }
 
 
