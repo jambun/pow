@@ -19,8 +19,8 @@ class CSVParser {
         my $title = $file;
         $title = $title.split('/')[*-1];
         $title.=subst(/.csv$/, '');
-        $title.=subst(/_/, ' ', :g);
-        $!track.title = $title.wordcase;
+        $title ~~ s:g/(<[A .. Z]>)/ $0/;
+        $!track.title = $title.trim;
 
         $!track.desc = '';
 
@@ -33,6 +33,11 @@ class CSVParser {
             @cells = get_line($fh);
 
             next unless @cells;
+
+            if ((@cells[*-1] ~~ m:g/ <["]> /).elems == 1) {
+                @cells[*-1] ~= ' ' ~ get_line($fh).head;
+                @cells[*-1] ~~ s:g/ <["]> //;
+            }
 
             %line = Hash.new(@!headers Z @cells);
 
@@ -49,8 +54,9 @@ class CSVParser {
                         lat => %line<Latitude>.Rat,
                         lon => %line<Longitude>.Rat,
                         ele => %line{'Altitude (m)'},
-	                      time => DateTime.new(%line<Date>.subst(/\s/, 'T')),
-                        desc => %line<Notes>.subst('(null)', '');
+	                      time => DateTime.new(%line<Date>.subst(/\s/, 'T'));
+
+                %p<desc> = %line<Notes>.subst('"(null)"', '') if %line<Notes>.subst('"(null)"', '');
 
                 $!markers.add(%p);
             } elsif ($section eq 'Track') {
