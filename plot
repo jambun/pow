@@ -4,6 +4,7 @@ use lib 'lib';
 
 use Markers;
 use GPXParser;
+use CSVParser;
 use Commands;
 
 use JSON::Tiny;
@@ -14,9 +15,12 @@ sub MAIN (Str $file where *.IO.f,
           Bool :a(:$all_markers) = False) {
 
     my $markers = Markers.new(json_file => './data/points.json');
-    my $gpx = GPXParser.new(file => $file, markers => $markers);
-    my $track = $gpx.track;
-    my $maps = $gpx.maps;
+
+    my $parser = $file.ends-with('.csv') ?? CSVParser.new(file => $file, markers => $markers)
+                                         !! GPXParser.new(file => $file, markers => $markers);
+
+    my $track = $parser.track;
+    my $maps = $parser.maps;
     my $commands = Commands.new;
 
     my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
