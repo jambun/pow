@@ -63,13 +63,13 @@ class Markers {
         for @out -> $p {
             ($p<x>, $p<y>) = $maps.coords($p<lat>, $p<lon>);
 
-            $p<audio> = %!audio{$p<name>};
-            $p<image> = %!images{$p<name>};
+            $p<audio> = %!audio{$p<name>.trim};
+            $p<image> = %!images{$p<name>.trim};
             $p<image_x> = $p<x> - 11;
             $p<image_y> = $p<y> - 55;
 
             $p<polygon> = sprintf('%s,%s %s,%s %s,%s', $p<x>, $p<y>, $p<x> - 10, $p<y> - 30, $p<x> + 10, $p<y> - 30);
-            $p<text_x> = $p<x> - 10 + (%!images{$p<name>} ?? 22 !! 0);
+            $p<text_x> = $p<x> - 10 + ($p<image> ?? 22 !! 0);
             $p<text_y> = $p<y> - 35;
         }
 
