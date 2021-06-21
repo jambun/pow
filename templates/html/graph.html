@@ -8,6 +8,10 @@
     {{#points}}
       <circle cx="{{graph_x_str}}" cy="{{graph_ele_y_str}}" r="2" fill="white" style="z-index:1;opacity=0.9;"/>
       <circle cx="{{graph_x_str}}" cy="{{graph_spd_y_str}}" r="2" fill="#8080ff"/>
+      {{#waypoint}}
+      <rect class="graph-waypoint-bar" id="graph-waypoint-bar-{{ix}}" name="{{waypoint}}"
+            x="{{graph_lastx_str}}" y="0" width="2" height="100" style="opacity:1.0;" fill="lime"/>
+      {{/waypoint}}
       <rect class="graph-bar" id="graph-bar-{{ix}}" onclick="show_point({{ix}});"
             x="{{graph_lastx_str}}" y="0" width="{{graph_width}}" height="100" style="opacity:0.0;" fill="yellow"/>
     {{/points}}

@@ -75,6 +75,7 @@ class Markers {
             my $track_point = $track.points.grep({$_<time> gt $p<time>}).head;
             if ($track_point) {
                 $p<point_ix> = $track_point<ix>;
+                $track_point<waypoint> = $p<name>;
             }
         }
 

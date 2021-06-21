@@ -417,6 +417,7 @@ document.getElementById("graph-button").onclick = function(e) {
 
 document.getElementById("waypoint-button").onclick = function(e) {
     toggleMark("waypoint-mark", this);
+    toggleMark("graph-waypoint-bar", this);
 };
 
 document.getElementById("trail-half-button").onclick = function(e) {
