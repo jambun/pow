@@ -71,6 +71,11 @@ class Markers {
             $p<polygon> = sprintf('%s,%s %s,%s %s,%s', $p<x>, $p<y>, $p<x> - 10, $p<y> - 30, $p<x> + 10, $p<y> - 30);
             $p<text_x> = $p<x> - 10 + ($p<image> ?? 22 !! 0);
             $p<text_y> = $p<y> - 35;
+
+            my $track_point = $track.points.grep({$_<time> gt $p<time>}).head;
+            if ($track_point) {
+                $p<point_ix> = $track_point<ix>;
+            }
         }
 
         @out;

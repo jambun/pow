@@ -11,6 +11,9 @@
 
   <polygon class="waypoint-mark"
            points="{{polygon}}"
+           {{#point_ix}}
+           onclick="show_point({{point_ix}});"
+           {{/point_ix}}
            style="stroke:black;stroke-width:1px;fill:lime;"/>
 
   <text class="waypoint-mark"
