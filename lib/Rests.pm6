@@ -1,6 +1,6 @@
 class Rests {
     has Hash @.list;
-    has Int $.rest_threshold = 5 * 60;
+    has Int $.rest_threshold = 5 * 60; # 3 minutes
     has Int $!current_rest_time = 0;
     has Int $.total_rest_time = 0;
     has Int $!rest_x;
