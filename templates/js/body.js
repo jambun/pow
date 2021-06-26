@@ -480,6 +480,7 @@ function toggleHelp() {
 function toggleMark(cls, button, start_ix, length) {
     start_ix = start_ix || 0;
     var marks = document.getElementsByClassName(cls);
+    if (marks.length == 0) { return }
     length = length || marks.length;
     var set_value = marks[start_ix].getAttribute("visibility") == 'hidden' ? 'visible' : 'hidden';
     switchButton(button, set_value != 'hidden');
