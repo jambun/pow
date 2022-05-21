@@ -27,7 +27,7 @@ class Markers {
 
     method find_images {
         for dir($!images_dir) -> $d {
-            next unless $d.extension eq 'jpg';
+            next unless $d.extension eq 'jpg' || $d.extension eq 'png';
             %!images{$d.basename.chop(4)} = $!images_dir.split('/')[1] ~ '/' ~ $d.basename;
         }
     }
