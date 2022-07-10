@@ -28,6 +28,8 @@ class CSVParser {
         my @cells;
         my %line;
         my $section;
+        my $point_secs = 5.0;
+        my $last_time;
 
         until $fh.eof {
             @cells = get_line($fh);
@@ -60,15 +62,21 @@ class CSVParser {
 
                 $!markers.add(%p);
             } elsif ($section eq 'Track') {
-                my %p = lat => %line<Latitude>.Rat,
-                        lon => %line<Longitude>.Rat,
-                        ele => %line{'Altitude(m)'},
-                        dst_err => %line{'Horizontal Accuracy(m)'},
-                        ele_err => %line{'Vertical Accuracy(m)'},
-	                      time => DateTime.new(%line{'Date(GMT)'}.subst(/\s/, 'T'));
+                my $time = DateTime.new(%line{'Date(GMT)'}.subst(/\s/, 'T'));
 
-                $!track.add_point(%p);
+                if (!$last_time || $time.posix >= $last_time.posix + $point_secs) {
 
+                    my %p = lat => %line<Latitude>.Rat,
+                    lon => %line<Longitude>.Rat,
+                    ele => %line{'Altitude(m)'},
+                    dst_err => %line{'Horizontal Accuracy(m)'},
+                    ele_err => %line{'Vertical Accuracy(m)'},
+	                  time => DateTime.new(%line{'Date(GMT)'}.subst(/\s/, 'T'));
+
+                    $!track.add_point(%p);
+
+                    $last_time = $time;
+                }
             }
         }
 
