@@ -6,9 +6,9 @@ use Markers;
 use GPXParser;
 use CSVParser;
 use Commands;
+use JamMo;
 
 use JSON::Tiny;
-use Template::Mustache;
 
 
 sub MAIN (Str $file where *.IO.f,
@@ -22,8 +22,6 @@ sub MAIN (Str $file where *.IO.f,
     my $track = $parser.track;
     my $maps = $parser.maps;
     my $commands = Commands.new;
-
-    my $html_templ = Template::Mustache.new: :from<./templates/html>, :extension<.html>;
 
     my %ctx = title => $track.title,
               date => $track.date,
@@ -50,7 +48,7 @@ sub MAIN (Str $file where *.IO.f,
                    js_body => slurp('templates/js/body.js'),
                    js_points => slurp('./templates/js/js_points.js');
 
-    say $html_templ.render('page', %ctx, :from(%js_parts));
+    say JamMo::render(:template('page'), :context(%ctx), :dir('./templates/html'), :from(%js_parts));
 
     $markers.save;
 }
