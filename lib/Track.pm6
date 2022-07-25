@@ -97,7 +97,31 @@ class Track {
     method post_process($maps) {
         my ($bxn, $byn) = $maps.coords(%!bounds<lat>.min, %!bounds<lon>.min);
         my ($bxx, $byx) = $maps.coords(%!bounds<lat>.max, %!bounds<lon>.max);
-        $!view_box = $bxn-100 ~ ' ' ~ $byx-100 ~ ' ' ~ $bxx-$bxn+200 ~  ' ' ~ $byn-$byx+200;
+
+        # setting initial viewbox
+        # assume a window aspect ratio of 3:2
+        my $nice_aspect = 3 / 2;
+
+        my $vb_min_x = $bxn - 100;
+        my $vb_min_y = $byx - 100;
+
+        my $vb_width = $bxx - $bxn + 200;
+        my $vb_height = $byn - $byx + 200;
+
+        my $aspect = $vb_width / $vb_height;
+
+        if ($aspect > $nice_aspect) {
+            my $nice_height = $vb_width / $nice_aspect;
+            $vb_min_y -= (($nice_height - $vb_height) / 2).round;
+            $vb_height = $nice_height;
+        } else {
+            my $nice_width = $vb_height * $nice_aspect;
+            $vb_min_x -= (($nice_width - $vb_width) / 2).round;
+            $vb_width = $nice_width;
+        }
+
+        $!view_box = "$vb_min_x $vb_min_y $vb_width $vb_height";
+
 
         my $lastp;
         for @!points -> $p {
