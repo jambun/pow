@@ -1,4 +1,5 @@
 use JSON::Tiny;
+use JSONPretty;
 
 class Markers {
     has $.points;
@@ -35,7 +36,7 @@ class Markers {
 
     method find_audio {
         for dir($!audio_dir) -> $d {
-            next unless $d.extension eq 'mp3';
+            next unless $d.extension eq 'mp3' || $d.extension eq 'm4a';
             %!audio{$d.basename.chop(4)} = $!audio_dir.split('/')[1] ~ '/' ~ $d.basename;
         }
     }
@@ -50,7 +51,7 @@ class Markers {
 
 
     method save() {
-        spurt $!json_file, to-json $!points;
+        spurt $!json_file, JSONPretty::prettify(to-json $!points);
     }
 
 
