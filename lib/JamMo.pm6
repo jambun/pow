@@ -45,11 +45,12 @@ class RenderActions {
         if ($!context{$sname}:exists && $!context{$sname}.so) {
             if ($!context{$sname}.WHAT ~~ List) {
                 make ($!context{$sname}.map: -> $ctx {
-                    my %context = (%$ctx, %$!context);
+                    my %context = (%$!context, %$ctx);
                     JamMo::render(:template($<content>.Str), :context(%context), :dir($!dir), :from($!from), :inline);
                 }).join();
             } else {
-                make JamMo::render(:template($<content>.Str), :context($!context), :dir($!dir), :from($!from), :inline);
+                my %context = $!context{$sname}.WHAT ~~ Hash ?? (%$!context, %$!context{$sname}) !! $!context;
+                make JamMo::render(:template($<content>.Str), :context(%context), :dir($!dir), :from($!from), :inline);
             }
         } else {
             make '';
