@@ -63,23 +63,32 @@ class Maps {
                     (self.in_box($max_lat, $min_lon, $pban, $pbon, $pbax, $pbox)) ||
                     (self.in_box($max_lat, $max_lon, $pban, $pbon, $pbax, $pbox))) {
 
+                    $!x_bounds.add($md<tilex>);
+                    $!y_bounds.add($md<tiley>);
+                }
+            }
+
+            for @$json -> $md {
+                if ($md<tilex> >= $!x_bounds.min && $md<tilex> <= $!x_bounds.max &&
+                    $md<tiley> >= $!y_bounds.min && $md<tiley> <= $!y_bounds.max) {
+
                     $md<tile_ref> = self.tile_ref($md<filename>);
+                    $md<x> = (($md<tilex> - $!x_bounds.min) * $!tile_x).Str;
+                    $md<y> = (($md<tiley> - $!y_bounds.min) * $!tile_y).Str;
 
                     @!metadata.push: $md;
 
-                    $!x_bounds.add($md<tilex>);
-                    $!y_bounds.add($md<tiley>);
+                    my $max_lat = ($md<topleft><lat>, $md<topright><lat>).max;
+                    my $min_lat = ($md<bottomleft><lat>, $md<bottomright><lat>).min;
+
+                    my $min_lon = ($md<topleft><long>, $md<bottomleft><long>).min;
+                    my $max_lon = ($md<topright><long>, $md<bottomright><long>).min;
 
                     $!lat_bounds.add($max_lat);
                     $!lat_bounds.add($min_lat);
                     $!lon_bounds.add($max_lon);
                     $!lon_bounds.add($min_lon);
                 }
-            }
-
-            for @!metadata -> $md {
-                $md<x> = (($md<tilex> - $!x_bounds.min) * $!tile_x).Str;
-                $md<y> = (($md<tiley> - $!y_bounds.min) * $!tile_y).Str;
             }
 
             self.cache_tiles;
