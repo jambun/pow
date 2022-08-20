@@ -51,6 +51,14 @@ class CSVParser {
                 next;
             }
 
+            # latest version of gps tracks doesn't have waypoints
+            # and so no section header rows, so ...
+            if (!$section) {
+                $section = 'Track';
+                @!headers = @cells;
+                next;
+            }
+
             if ($section eq 'Waypoints') {
                 my %p = name => %line<Name>,
                         lat => %line<Latitude>.Rat,
