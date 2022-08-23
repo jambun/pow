@@ -9,6 +9,44 @@ const opts = {
 
 var tiles = [];
 var origin_tile;
+var direction;
+
+function getDirection() {
+    if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
+        DeviceMotionEvent.requestPermission()
+            .then(response => {
+            if (response == 'granted') {
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (event) => {
+                        if (event.webkitCompassHeading) {
+                            direction = event.webkitCompassHeading;  
+                        } else {
+                            direction = event.alpha;
+                        }
+                        document.getElementById('message').innerHTML = direction;
+
+                        const dirr = direction * Math.PI / 180.0;
+
+                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(Math.sin(dirr) * 36) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(Math.cos(dirr) * -36) + 50);
+                    });
+                }
+
+                // window.addEventListener('devicemotion', (event) => {
+                    // not using motion ... yet
+                // })
+            }
+            })
+            .catch(console.error)
+    } else {
+        // alert('DeviceMotionEvent is not defined');
+    }
+}
+
+
+//function getDirection() {
+//};
+
 
 function findTile(lat, lon) {
 //    var tile;
@@ -85,4 +123,8 @@ var gimme = function() {
     } else {
         navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
     }
+
+    document.getElementById('message').ontouchend = function(e) { getDirection();};
+ 
+    getDirection();
 };
