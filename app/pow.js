@@ -11,6 +11,11 @@ var tiles = [];
 var origin_tile;
 var direction;
 var currentPos = {'x': 0, 'y': 0};
+var lastPos = {'x': 0, 'y': 0};
+
+var jitterThreshholdPx = 2;
+
+var pm;
 var vb;
 var tracking = false;
 var trackingSampleRate = 5000; // ms
@@ -112,6 +117,9 @@ function setPos(lat, lon) {
     tileFile = findTile(lat, lon);
     var xy = coords(lat, lon);
 
+    const first = lastPos.x == 0;
+    lastPos.x = currentPos.x;
+    lastPos.y = currentPos.y;
     currentPos.x = xy[0];
     currentPos.y = xy[1];
 
@@ -136,6 +144,7 @@ function setPos(lat, lon) {
     vb.height = 400;
     vb.set();
 
+    addPoint(first);
 };
 
 function errPos(err) { console.log(err)};
@@ -149,13 +158,32 @@ async function track() {
     }
 }
 
+function addPoint(force) {
+    if (!tracking) { return; }
+
+    if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
+
+    var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    mark.style.opacity = "0.7";
+    mark.setAttribute("cx", currentPos.x);
+    mark.setAttribute("cy", currentPos.y);
+    mark.setAttribute("r", 6);
+    mark.setAttribute("stroke", "blue");
+    mark.setAttribute("stroke-width", "0");
+    mark.setAttribute("fill", "blue");
+
+    pm.appendChild(mark);
+};
+
+
 window.onload = function(event) {
+    pm = document.getElementById("plotmap");
     vb = {
         left: 0,
         top: 0,
         width: 0,
         height: 0,
-        plotmap: document.getElementById("plotmap"),
+        plotmap: pm,
         from_array: function(a) {
             this.left = parseInt(a[0]);
             this.top = parseInt(a[1]);
@@ -208,6 +236,8 @@ window.onload = function(event) {
     document.getElementById("track-button").onclick = function(e) {
         if (tracking) {
             tracking = false;
+            lastPos.x = 0;
+            lastPos.y = 0;
             this.style.color = 'white';
         } else {
             tracking = true;
