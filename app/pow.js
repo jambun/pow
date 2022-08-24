@@ -140,17 +140,6 @@ function setPos(lat, lon) {
 
 function errPos(err) { console.log(err)};
 
-var gimme = function() {
-    if (url_params.has('lat') && url_params.has('lon')) {
-        setPos(Number(url_params.get('lat')), Number(url_params.get('lon')));
-    } else {
-        navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
-    }
-
-    document.getElementById('message').ontouchend = function(e) { getDirection();};
- 
-    getDirection();
-};
 
 async function track() {
     while(true) {
