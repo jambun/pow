@@ -321,6 +321,4 @@ function zoomTarget() {
     const bearing = document.getElementById("point-target-bearing");
 
     bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
-    // bearing.setAttribute('x1', currentPos.x);
-    // bearing.setAttribute('y1', currentPos.y);
 }
