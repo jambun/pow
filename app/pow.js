@@ -40,13 +40,14 @@ function getDirection() {
                         const dirr = direction * Math.PI / 180.0;
                         const xvec = Math.sin(dirr);
                         const yvec = Math.cos(dirr) * -1;
+                        const rad = 33;
 
-                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * 36) + 50);
-                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * 36) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad) + 50);
 
                         const bearingLine = document.getElementById('point-target-bearing');
-                        bearingLine.setAttribute('x1', parseInt(xvec * 36 + currentPos.x));
-                        bearingLine.setAttribute('y1', parseInt(yvec * 36 + currentPos.y));
+                        bearingLine.setAttribute('x1', parseInt(xvec * rad + currentPos.x));
+                        bearingLine.setAttribute('y1', parseInt(yvec * rad + currentPos.y));
                         bearingLine.setAttribute('x2', parseInt(xvec * 1000 + currentPos.x));
                         bearingLine.setAttribute('y2', parseInt(yvec * 1000 + currentPos.y));
                     });
