@@ -177,6 +177,19 @@ function addPoint(force) {
     mark.setAttribute("fill", "blue");
 
     pm.appendChild(mark);
+
+    if (lastPos.x !== 0) {
+        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.style.opacity = "0.5";
+        line.setAttribute("x1", lastPos.x);
+        line.setAttribute("x2", currentPos.x);
+        line.setAttribute("y1", lastPos.y);
+        line.setAttribute("y2", currentPos.y);
+        mark.setAttribute("stroke", "blue");
+        mark.setAttribute("stroke-width", "3");
+
+        pm.appendChild(line);
+    }
 };
 
 
