@@ -10,6 +10,8 @@ const opts = {
 var tiles = [];
 var origin_tile;
 var direction;
+var currentPos = {'x': 0, 'y': 0};
+var vb;
 
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
@@ -26,9 +28,17 @@ function getDirection() {
                         document.getElementById('message').innerHTML = direction;
 
                         const dirr = direction * Math.PI / 180.0;
+                        const xvec = Math.sin(dirr);
+                        const yvec = Math.cos(dirr) * -1;
 
-                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(Math.sin(dirr) * 36) + 50);
-                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(Math.cos(dirr) * -36) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * 36) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * 36) + 50);
+
+                        const bearingLine = document.getElementById('point-target-bearing');
+                        bearingLine.setAttribute('x1', parseInt(xvec * 36) + currentPos.x);
+                        bearingLine.setAttribute('y1', parseInt(yvec * 36) + currentPos.y);
+                        bearingLine.setAttribute('x2', parseInt(xvec * 1000) + currentPos.x);
+                        bearingLine.setAttribute('y2', parseInt(yvec * 1000) + currentPos.y);
                     });
                 }
 
@@ -99,6 +109,10 @@ function gotPos(pos) {
 function setPos(lat, lon) {
     tileFile = findTile(lat, lon);
     var xy = coords(lat, lon);
+
+    currentPos.x = xy[0];
+    currentPos.y = xy[1];
+
     var tmdix = 0;
 
     for (const maptile of document.getElementsByClassName('map-tile')) {
@@ -111,8 +125,15 @@ function setPos(lat, lon) {
         tmdix++;
     }
 
-    document.getElementById('target').setAttribute('x', xy[0] - 50);
-    document.getElementById('target').setAttribute('y', xy[1] - 50);
+    document.getElementById('target').setAttribute('x', currentPos.x - 50);
+    document.getElementById('target').setAttribute('y', currentPos.y - 50);
+
+    vb.left = currentPos.x - 200;
+    vb.top = currentPos.y - 200;
+    vb.width = 400;
+    vb.height = 400;
+    vb.set();
+
 };
 
 function errPos(err) { console.log(err)};
@@ -127,4 +148,71 @@ var gimme = function() {
     document.getElementById('message').ontouchend = function(e) { getDirection();};
  
     getDirection();
+};
+
+async function track() {
+    while(true) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
+    }
+}
+
+window.onload = function(event) {
+    vb = {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+        plotmap: document.getElementById("plotmap"),
+        from_array: function(a) {
+            this.left = parseInt(a[0]);
+            this.top = parseInt(a[1]);
+            this.width = parseInt(a[2]);
+            this.height = parseInt(a[3]);
+        },
+        load: function() {
+            this.from_array(plotmap.getAttribute("viewBox").split(" "));
+        },
+        to_s: function() {
+            return [this.left, this.top, this.width, this.height].join(' ');
+        },
+        to_q: function() {
+            return [this.left.toFixed(), this.top.toFixed(), this.width.toFixed(), this.height.toFixed()].join('-');
+        },
+        from_q: function(q) {
+            this.from_array(q.split('-'));
+            this.set();
+        },
+        set: function() {
+            this.plotmap.setAttribute('viewBox', this.to_s());
+        },
+        mark_origin: function() {
+            this.origin = this.to_s();
+        },
+        set_origin: function() {
+            this.plotmap.setAttribute('viewBox', this.origin);
+            this.load();
+        }
+    }
+    vb.load();
+
+    vb.left = currentPos.x - 400;
+    vb.top = currentPos.y - 400;
+    vb.width = 800;
+    vb.height = 800;
+    vb.set();
+    vb.mark_origin();
+
+    if (url_params.has('lat') && url_params.has('lon')) {
+        setPos(Number(url_params.get('lat')), Number(url_params.get('lon')));
+    } else {
+        navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
+    }
+
+    document.getElementById('message').ontouchend = function(e) { getDirection();};
+ 
+    getDirection();
+
+    track();
+
 };
