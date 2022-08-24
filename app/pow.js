@@ -17,9 +17,12 @@ var lastPos = {'x': 0, 'y': 0};
 var jitterThreshholdPx = 2;
 
 var pm;
+var wrap;
 var vb;
 var tracking = false;
 var trackingSampleRate = 5000; // ms
+
+var lastZoomBarY = 0;
 
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
@@ -192,9 +195,42 @@ function addPoint(force) {
     }
 };
 
-
 window.onload = function(event) {
+    wrap = document.getElementById("plotmap-wrapper");
     pm = document.getElementById("plotmap");
+
+    const zb = document.getElementById("zoom-bar");
+    zb.style.height = parseInt(wrap.clientHeight/2 - 20);
+
+    zb.addEventListener('touchstart', function(e) {
+        this.style.opacity = 0.6;
+        lastZoomBarY = targetTouches.item(0).pageY;
+    });
+
+    zb.addEventListener('touchend', function(e) {
+        this.style.opacity = 0.3;
+        lastZoomBarY = 0;
+    });
+
+    zb.addEventListener('touchcancel', function(e) {
+        this.style.opacity = 0.3;
+        lastZoomBarY = 0;
+    });
+
+    zb.addEventListener('touchmove', function(e) {
+        const touch = e.changedTouches.item(0);
+
+        deltaY = touch.pageY - lastZoomBarY;
+
+        if (deltaY > 0) {
+            zoom(0.97);
+        } else {
+            zoom(1/0.97);
+        }
+
+        lastZoomBarY = touch.pageY;
+    });
+
     vb = {
         left: 0,
         top: 0,
@@ -263,3 +299,14 @@ window.onload = function(event) {
     };
 
 };
+
+function zoom(factor) {
+    var vw = vb.width * factor;
+    var vh = vb.height * factor;
+    vb.left = vb.left + (vb.width-vw)/2;
+    vb.top = vb.top + (vb.height-vh)/2;
+    vb.width = vw;
+    vb.height = vh;
+
+    vb.set();
+}
