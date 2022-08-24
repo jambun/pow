@@ -63,7 +63,8 @@ function getDirection() {
             })
             .catch(console.error)
     } else {
-        // alert('DeviceMotionEvent is not defined');
+        document.getElementById('point-target-direction').style.display = 'none';
+        document.getElementById('point-target-bearing').style.display = 'none';
     }
 }
 
