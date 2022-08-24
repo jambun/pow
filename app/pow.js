@@ -8,7 +8,8 @@ const opts = {
 };
 
 var tiles = [];
-var origin_tile;
+var originTile;
+var currentTile;
 var direction;
 var currentPos = {'x': 0, 'y': 0};
 var lastPos = {'x': 0, 'y': 0};
@@ -32,7 +33,6 @@ function getDirection() {
                         } else {
                             direction = event.alpha;
                         }
-                        document.getElementById('message').innerHTML = direction;
 
                         const dirr = direction * Math.PI / 180.0;
                         const xvec = Math.sin(dirr);
@@ -61,12 +61,8 @@ function getDirection() {
 }
 
 
-//function getDirection() {
-//};
-
-
-function findTile(lat, lon) {
-//    var tile;
+function findTiles(lat, lon) {
+    const lastTile = currentTile;
 
     // find the tile we're in
     for (const tilemd of metadata) {
@@ -77,23 +73,28 @@ function findTile(lat, lon) {
 
         // a bit of a fudge - might be off by one because of slope, but doesn't matter
         if (lat < max_lat && lat > min_lat && lon < max_lon && lon > min_lon) {
-            origin_tile = tilemd;
+            currentTile = tilemd;
+            originTile ||= currentTile;
             break;
         }
     }
 
-    // remember the tile we're in and the eight surrounding it
-    for (const tilemd of metadata) {
-        if (Math.abs(tilemd.tilex - origin_tile.tilex) <= 1 && Math.abs(tilemd.tiley - origin_tile.tiley) <= 1) {
-            tiles.push(tilemd);
+    if (lastTile !== currentTile) {
+        tiles = [];
+        // remember the tile we're in and the eight surrounding it
+        for (const tilemd of metadata) {
+            if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
+                tiles.push(tilemd);
+            }
         }
+        return true;
+    } else {
+        return false;
     }
-
-    return origin_tile.filename;
 };
 
 function coords(lat, lon) {
-    tilemd = origin_tile;
+    tilemd = originTile;
 
     var x_t = ((lon - tilemd.topleft.long) / (tilemd.topright.long - tilemd.topleft.long)) * 2000;
     var x_b = ((lon - tilemd.bottomleft.long) / (tilemd.bottomright.long - tilemd.bottomleft.long)) * 2000;
@@ -114,7 +115,7 @@ function gotPos(pos) {
 };
 
 function setPos(lat, lon) {
-    tileFile = findTile(lat, lon);
+    const tilesChanged = findTiles(lat, lon);
     var xy = coords(lat, lon);
 
     const first = lastPos.x == 0;
@@ -123,16 +124,19 @@ function setPos(lat, lon) {
     currentPos.x = xy[0];
     currentPos.y = xy[1];
 
-    var tmdix = 0;
 
-    for (const maptile of document.getElementsByClassName('map-tile')) {
-        tmd = tiles[tmdix];
+    if (tilesChanged) {
+        var tmdix = 0;
 
-        maptile.setAttribute('x', (origin_tile.tilex - tmd.tilex) * -2000);
-        maptile.setAttribute('y', (origin_tile.tiley - tmd.tiley) * -2000);
-        maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+        for (const maptile of document.getElementsByClassName('map-tile')) {
+            tmd = tiles[tmdix];
 
-        tmdix++;
+            maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
+            maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
+            maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+
+            tmdix++;
+        }
     }
 
     document.getElementById('target').setAttribute('x', currentPos.x - 50);
@@ -229,8 +233,6 @@ window.onload = function(event) {
         navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
     }
 
-    document.getElementById('message').ontouchend = function(e) { getDirection();};
- 
     getDirection();
 
     document.getElementById("track-button").onclick = function(e) {
@@ -241,6 +243,7 @@ window.onload = function(event) {
             this.style.color = 'white';
         } else {
             tracking = true;
+            getDirection();
             this.style.color = 'lime';
             track();
         }
