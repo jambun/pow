@@ -24,6 +24,7 @@ var trackingSampleRate = 5000; // ms
 
 var lastZoomBarY = 0;
 
+
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -41,15 +42,17 @@ function getDirection() {
                         const xvec = Math.sin(dirr);
                         const yvec = Math.cos(dirr) * -1;
                         const rad = 33;
+                        const scaledRad = rad * vb.height / 400;
+                        const lineLength = 1000 * vb.height / 400;
 
-                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad) + 50);
-                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad) + 50);
+                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
+                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
 
                         const bearingLine = document.getElementById('point-target-bearing');
-                        bearingLine.setAttribute('x1', parseInt(xvec * rad + currentPos.x));
-                        bearingLine.setAttribute('y1', parseInt(yvec * rad + currentPos.y));
-                        bearingLine.setAttribute('x2', parseInt(xvec * 1000 + currentPos.x));
-                        bearingLine.setAttribute('y2', parseInt(yvec * 1000 + currentPos.y));
+                        bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
+                        bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
+                        bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
+                        bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
                     });
                 }
 
@@ -143,8 +146,8 @@ function setPos(lat, lon) {
         }
     }
 
-    document.getElementById('target').setAttribute('x', currentPos.x - 50);
-    document.getElementById('target').setAttribute('y', currentPos.y - 50);
+    document.getElementById('target').setAttribute('x', currentPos.x);
+    document.getElementById('target').setAttribute('y', currentPos.y);
 
     vb.left = currentPos.x - 200;
     vb.top = currentPos.y - 200;
@@ -298,7 +301,6 @@ window.onload = function(event) {
             track();
         }
     };
-
 };
 
 function zoom(factor) {
@@ -308,6 +310,19 @@ function zoom(factor) {
     vb.top = vb.top + (vb.height-vh)/2;
     vb.width = vw;
     vb.height = vh;
-
     vb.set();
+    zoomTarget();
+}
+
+function zoomTarget() {
+    const targetZoom = vb.height / 400;
+
+    document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
+    const bearing = document.getElementById("point-target-bearing");
+
+    bearing.setAttribute('stroke-width', Math.max(2, parseInt(2 * targetZoom)));
+    bearing.setAttribute('x1', currentPos.x);
+    bearing.setAttribute('y1', currentPos.y);
+
+
 }
