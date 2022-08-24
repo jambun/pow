@@ -315,12 +315,12 @@ function zoom(factor) {
 }
 
 function zoomTarget() {
-    const targetZoom = vb.height / 400;
+    const targetZoom = vb.height / 400.0;
 
     document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
     const bearing = document.getElementById("point-target-bearing");
 
     bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
-    bearing.setAttribute('x1', currentPos.x);
-    bearing.setAttribute('y1', currentPos.y);
+    // bearing.setAttribute('x1', currentPos.x);
+    // bearing.setAttribute('y1', currentPos.y);
 }
