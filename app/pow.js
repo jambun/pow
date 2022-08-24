@@ -118,10 +118,10 @@ function coords(lat, lon) {
 };
 
 function gotPos(pos) {
-    setPos(pos.coords.latitude, pos.coords.longitude);
+    setPos(pos.coords.latitude, pos.coords.longitude, pos);
 };
 
-function setPos(lat, lon) {
+function setPos(lat, lon, position = false) {
     const tilesChanged = findTiles(lat, lon);
     var xy = coords(lat, lon);
 
@@ -155,7 +155,7 @@ function setPos(lat, lon) {
     vb.height = 400;
     vb.set();
 
-    addPoint(first);
+    addPoint(position, first);
 };
 
 function errPos(err) { console.log(err)};
@@ -169,7 +169,7 @@ async function track() {
     }
 }
 
-function addPoint(force) {
+function addPoint(position, force) {
     if (!tracking) { return; }
 
     if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
@@ -182,6 +182,19 @@ function addPoint(force) {
     mark.setAttribute("stroke", "blue");
     mark.setAttribute("stroke-width", "0");
     mark.setAttribute("fill", "blue");
+
+    if (position) {
+        mark.classList.add('position-mark');
+        mark.setAttribute('data-lat', position.coords.latitude);
+        mark.setAttribute('data-lon', position.coords.longitude);
+        mark.setAttribute('data-ele', position.coords.altitude);
+        mark.setAttribute('data-spd', position.coords.speed);
+        mark.setAttribute('data-acc', position.coords.accuracy);
+        mark.setAttribute('data-ela', position.coords.altitudeAccuracy);
+        mark.setAttribute('data-spd', position.coords.speed);
+        mark.setAttribute('data-hdg', position.coords.heading);
+        mark.setAttribute('data-tim', position.timestamp);
+    }
 
     pm.appendChild(mark);
 
@@ -294,6 +307,7 @@ window.onload = function(event) {
             lastPos.x = 0;
             lastPos.y = 0;
             this.style.color = 'white';
+            download();
         } else {
             tracking = true;
             getDirection();
@@ -321,4 +335,26 @@ function zoomTarget() {
     const bearing = document.getElementById("point-target-bearing");
 
     bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
+}
+
+function download() {
+    var data = "tim,lat,lon,ele\n";
+
+    for (const mark of document.getElementsByClassName('position-mark')) {
+        data += [mark.dataset.tim, mark.dataset.lat, mark.dataset.lon, mark.dataset.ele].join(',') + "\n";
+    }
+
+    var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
+    var link = document.createElement("a");
+
+    const d = new Date();
+    const filename = 'pow_' + d.toISOString().split('T')[0] + '.csv';
+
+    var url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
