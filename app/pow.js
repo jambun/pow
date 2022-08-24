@@ -320,9 +320,7 @@ function zoomTarget() {
     document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
     const bearing = document.getElementById("point-target-bearing");
 
-    bearing.setAttribute('stroke-width', Math.max(2, parseInt(2 * targetZoom)));
+    bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
     bearing.setAttribute('x1', currentPos.x);
     bearing.setAttribute('y1', currentPos.y);
-
-
 }
