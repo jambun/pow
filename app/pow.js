@@ -12,6 +12,8 @@ var origin_tile;
 var direction;
 var currentPos = {'x': 0, 'y': 0};
 var vb;
+var tracking = false;
+var trackingSampleRate = 5000; // ms
 
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
@@ -35,10 +37,10 @@ function getDirection() {
                         document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * 36) + 50);
 
                         const bearingLine = document.getElementById('point-target-bearing');
-                        bearingLine.setAttribute('x1', parseInt(xvec * 36) + currentPos.x);
-                        bearingLine.setAttribute('y1', parseInt(yvec * 36) + currentPos.y);
-                        bearingLine.setAttribute('x2', parseInt(xvec * 1000) + currentPos.x);
-                        bearingLine.setAttribute('y2', parseInt(yvec * 1000) + currentPos.y);
+                        bearingLine.setAttribute('x1', parseInt(xvec * 36 + currentPos.x));
+                        bearingLine.setAttribute('y1', parseInt(yvec * 36 + currentPos.y));
+                        bearingLine.setAttribute('x2', parseInt(xvec * 1000 + currentPos.x));
+                        bearingLine.setAttribute('y2', parseInt(yvec * 1000 + currentPos.y));
                     });
                 }
 
@@ -152,8 +154,9 @@ var gimme = function() {
 
 async function track() {
     while(true) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        if (!tracking) { break; }
         navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
+        await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
     }
 }
 
@@ -213,6 +216,15 @@ window.onload = function(event) {
  
     getDirection();
 
-    track();
+    document.getElementById("track-button").onclick = function(e) {
+        if (tracking) {
+            tracking = false;
+            this.style.color = 'white';
+        } else {
+            tracking = true;
+            this.style.color = 'lime';
+            track();
+        }
+    };
 
 };
