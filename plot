@@ -5,6 +5,7 @@ use lib 'lib';
 use Markers;
 use GPXParser;
 use CSVParser;
+use PowParser;
 use Commands;
 use JamMo;
 
@@ -16,8 +17,20 @@ sub MAIN (Str $file where *.IO.f,
 
     my $markers = Markers.new(json_file => './data/points.json');
 
-    my $parser = $file.ends-with('.csv') ?? CSVParser.new(file => $file, markers => $markers)
-                                         !! GPXParser.new(file => $file, markers => $markers);
+    my $parser;
+
+    if ($file.ends-with('.pow');) {
+        $parser = PowParser.new(file => $file, markers => $markers);
+    } elsif ($file.ends-with('.csv')) {
+        $parser = CSVParser.new(file => $file, markers => $markers);
+    } elsif ($file.ends-with('.gpx')) {
+        $parser = GPXParser.new(file => $file, markers => $markers);
+    }
+
+    unless ($parser) {
+        say "No parser";
+        exit;
+    }
 
     my $track = $parser.track;
     my $maps = $parser.maps;
