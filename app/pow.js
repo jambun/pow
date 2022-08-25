@@ -24,6 +24,8 @@ var trackingSampleRate = 5000; // ms
 
 var lastZoomBarY = 0;
 
+// https://www.magnetic-declination.com/Australia/Sydney/124736.html
+var magnetic_declination = 12.75;
 
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
@@ -38,7 +40,7 @@ function getDirection() {
                             direction = event.alpha;
                         }
 
-                        const dirr = direction * Math.PI / 180.0;
+                        const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
                         const xvec = Math.sin(dirr);
                         const yvec = Math.cos(dirr) * -1;
                         const rad = 33;
