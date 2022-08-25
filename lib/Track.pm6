@@ -45,7 +45,7 @@ class Track {
 
                 my $avg_spd = self.calculate_recent_average('spd');
 
-                if (%pt<spd> > 2.0 && %pt<spd> > $avg_spd * 2.0) {
+                if (%pt<dst_err> && %pt<spd> > 2.0 && %pt<spd> > $avg_spd * 2.0) {
                     %pt<spd> = $avg_spd + (%pt<spd> - $avg_spd) / (%pt<dst_err> + 1);
                 }
 	          }
@@ -53,7 +53,9 @@ class Track {
             if %pt<ele> && @!points.tail<ele> {
 
                 # correct elevation using error margin
-                %pt<ele> = @!points.tail<ele> + ((%pt<ele> - @!points.tail<ele>) / (%pt<ele_err> + 1));
+                if (%pt<ele_err>) {
+                    %pt<ele> = @!points.tail<ele> + ((%pt<ele> - @!points.tail<ele>) / (%pt<ele_err> + 1));
+                }
 
                 my $climb = %pt<ele> - @!points.tail<ele>;
                 if $climb > 0 {
