@@ -58,6 +58,11 @@
       </svg>
     </div>
 
+    <button type="button" id="pan-button" title="Pan"
+            style="position:absolute;font-size:150;top:20px;left:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
+      P
+    </button>
+
     <button type="button" id="track-button" title="Track"
             style="position:absolute;font-size:150;top:20px;right:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
       T
@@ -66,7 +71,17 @@
     <div id="zoom-bar" title="zoom"
          style="position:absolute;opacity:0.3;bottom:20px;left:20px;width:100px;height:800px;border-radius:20px;background-color:#333">
       &nbsp;
+    </div>
+
+    <div id="text-input-pane"
+         style="display:none;position:absolute;opacity:1;top:20px;left:20px;width:85%;height:20%;border-radius:20px;background-color:#ccc;padding:40px;">
+      <div id="text-input-label" style="height:50%;font-size:80;">
+        label
       </div>
+      <div id="text-input-input" style="height:20%;left-margin:60px;">
+        <input type="text" style="width:98%;left-margin:30px;font-size:80;" size="10">
+      </div>
+    </div>
 
   </body>
 </html>

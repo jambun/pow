@@ -24,8 +24,18 @@ var trackingSampleRate = 5000; // ms
 
 var lastZoomBarY = 0;
 
+var panning = false;
+var lastPanX = 0;
+var lastPanY = 0;
+
+var map_drag = false;
+
+
 // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-var magnetic_declination = 12.75;
+//var magnetic_declination = 12.75;
+// hmm - usually not needed - why does it change?
+var magnetic_declination = 0.0;
+
 
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
@@ -70,6 +80,51 @@ function getDirection() {
     }
 }
 
+
+function loadTiles(x, y) {
+    x ||= vb.left;
+    y ||= vb.top;
+
+    const lastTile = currentTile;
+
+    const centerX = x + vb.width / 2;
+    const centerY = y + vb.height / 2;
+
+    const tilex = originTile.tilex + Math.round(centerX / 2000);
+    const tiley = originTile.tiley + Math.round(centerY / 2000);
+
+    for (const tilemd of metadata) {
+        if (tilex == tilemd.tilex && tiley == tilemd.tiley) {
+            currentTile = tilemd;
+        }
+    }
+
+    if (lastTile !== currentTile) {
+        tiles = [];
+        // remember the tile we're in and the eight surrounding it
+        for (const tilemd of metadata) {
+            if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
+                tiles.push(tilemd);
+            }
+        }
+
+        var tmdix = 0;
+
+        for (const maptile of document.getElementsByClassName('map-tile')) {
+            tmd = tiles[tmdix];
+
+            maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
+            maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
+            maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+
+            tmdix++;
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+};
 
 function findTiles(lat, lon) {
     const lastTile = currentTile;
@@ -134,7 +189,6 @@ function setPos(lat, lon, position = false) {
     currentPos.x = xy[0];
     currentPos.y = xy[1];
 
-
     if (tilesChanged) {
         var tmdix = 0;
 
@@ -152,16 +206,28 @@ function setPos(lat, lon, position = false) {
     document.getElementById('target').setAttribute('x', currentPos.x);
     document.getElementById('target').setAttribute('y', currentPos.y);
 
-    vb.left = currentPos.x - 200;
-    vb.top = currentPos.y - 200;
-    vb.width = 400;
-    vb.height = 400;
-    vb.set();
+    centreOnPos();
 
     addPoint(position, first);
 };
 
 function errPos(err) { console.log(err)};
+
+function centreOnPos(pos = false) {
+    pos ||= currentPos;
+
+    vb.left = pos.x - parseInt(vb.width / 2);
+    vb.top = pos.y - parseInt(vb.height / 2);
+    vb.set();
+    loadTiles();
+};
+
+function pan(deltaX, deltaY) {
+    vb.left = vb.left - (vb.width / 500.0) * deltaX;
+    vb.top = vb.top - (vb.height / 500.0) * deltaY;
+    vb.set();
+    loadTiles();
+}
 
 
 async function track() {
@@ -251,6 +317,68 @@ window.onload = function(event) {
         lastZoomBarY = touch.pageY;
     });
 
+    pm.addEventListener('touchstart', function(e) {
+        if (!panning) { return; };
+    });
+
+    pm.addEventListener('touchend', function(e) {
+        lastPanX = 0;
+        lastPanY = 0;
+    });
+
+    pm.addEventListener('touchcancel', function(e) {
+        lastPanX = 0;
+        lastPanY = 0;
+    });
+
+    pm.addEventListener('touchmove', function(e) {
+        if (!panning) { return; };
+
+        const touch = e.changedTouches.item(0);
+
+        if (lastPanX > 0) {
+            deltaX = touch.pageX - lastPanX;
+            deltaY = touch.pageY - lastPanY;
+
+            pan(deltaX, deltaY);
+        }
+
+        lastPanX = touch.pageX;
+        lastPanY = touch.pageY;
+    });
+
+    pm.onmousedown = function(e) {
+        map_drag = true;    
+        e.preventDefault();
+    };
+
+    pm.onmouseup = function(e) {
+        map_drag = false;
+        e.preventDefault();
+    };
+
+    pm.onmouseleave = function(e) {
+        map_drag = false;
+        e.preventDefault();
+    };
+
+    pm.onmousemove = function(e) {
+        e.preventDefault();
+
+        if (map_drag && panning) {
+            pan((e.movementX), (e.movementY));
+        }
+    };
+
+    pm.onwheel = function(e) {
+        if (e.deltaY > 0) {
+            zoom(1/0.98);
+        } else if (e.deltaY < 0) {
+            zoom(0.98);
+        }
+    };
+
+
     vb = {
         left: 0,
         top: 0,
@@ -316,6 +444,19 @@ window.onload = function(event) {
             getDirection();
             this.style.color = 'lime';
             track();
+        }
+    };
+
+    document.getElementById("pan-button").onclick = function(e) {
+        if (panning) {
+            panning = false;
+            this.style.color = 'white';
+            lastPanX = 0;
+            lastPanY = 0;
+            centreOnPos();
+        } else {
+            panning = true;
+            this.style.color = 'lime';
         }
     };
 };
