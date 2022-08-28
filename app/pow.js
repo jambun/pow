@@ -226,8 +226,8 @@ window.onload = function(event) {
     };
 
     function pan(deltaX, deltaY) {
-        vb.left = vb.left - (vb.width / homeWidth) * deltaX;
-        vb.top = vb.top - (vb.width / homeWidth * wrapAspect()) * deltaY;
+        vb.left = vb.left - (vb.width / homeWidth) * (deltaX / 2);
+        vb.top = vb.top - (vb.width / homeWidth) * (deltaY / 2);
         vb.set();
         loadTiles();
     }
