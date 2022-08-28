@@ -473,7 +473,6 @@ window.onload = function(event) {
         } else {
             vw = homeWidth;;
         }
-        console.log(wrapAspect());
         var vh = vw / wrapAspect();
 
         vb.left = vb.left + (vb.width-vw)/2;
