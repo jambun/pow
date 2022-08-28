@@ -1,288 +1,289 @@
+window.onload = function(event) {
 
-const url_params = new URLSearchParams(window.location.search);
+    const url_params = new URLSearchParams(window.location.search);
 
-const opts = {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 0
-};
+    const opts = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
 
-const homeWidth = 400;
-const maps_url = 'https://james.whaite.com/pow/maps'
-var tiles = [];
-var originTile;
-var currentTile;
-var direction;
-var currentPos = {'x': 0, 'y': 0};
-var lastPos = {'x': 0, 'y': 0};
+    const homeWidth = 400;
+    const maps_url = 'https://james.whaite.com/pow/maps'
+    var tiles = [];
+    var originTile;
+    var currentTile;
+    var direction;
+    var currentPos = {'x': 0, 'y': 0};
+    var lastPos = {'x': 0, 'y': 0};
 
-var jitterThreshholdPx = 2;
+    var jitterThreshholdPx = 2;
 
-var pm;
-var wrap;
-var vb;
-var tracking = false;
-var trackingSampleRate = 5000; // ms
+    var pm;
+    var wrap;
+    var vb;
+    var tracking = false;
+    var trackingSampleRate = 5000; // ms
 
-var lastZoomBarY = 0;
+    var lastZoomBarY = 0;
 
-var panning = false;
-var lastPanX = 0;
-var lastPanY = 0;
+    var panning = false;
+    var lastPanX = 0;
+    var lastPanY = 0;
+    var lastPinchDist = 0;
 
-var map_drag = false;
+    var map_drag = false;
 
 
-// https://www.magnetic-declination.com/Australia/Sydney/124736.html
-//var magnetic_declination = 12.75;
-// hmm - usually not needed - why does it change?
-var magnetic_declination = 0.0;
+    // https://www.magnetic-declination.com/Australia/Sydney/124736.html
+    //var magnetic_declination = 12.75;
+    // hmm - usually not needed - why does it change?
+    var magnetic_declination = 0.0;
 
-function getDirection() {
-    if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
-        DeviceMotionEvent.requestPermission()
-            .then(response => {
-            if (response == 'granted') {
-                if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', (event) => {
-                        if (event.webkitCompassHeading) {
-                            direction = event.webkitCompassHeading;  
-                        } else {
-                            direction = event.alpha;
+    function getDirection() {
+        if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
+            DeviceMotionEvent.requestPermission()
+                .then(response => {
+                    if (response == 'granted') {
+                        if (window.DeviceOrientationEvent) {
+                            window.addEventListener('deviceorientation', (event) => {
+                                if (event.webkitCompassHeading) {
+                                    direction = event.webkitCompassHeading;  
+                                } else {
+                                    direction = event.alpha;
+                                }
+
+                                const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
+                                const xvec = Math.sin(dirr);
+                                const yvec = Math.cos(dirr) * -1;
+                                const rad = 33;
+                                const scaledRad = rad * vb.width / homeWidth;
+                                const lineLength = 1000 * vb.width / homeWidth;
+
+                                document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
+                                document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
+
+                                const bearingLine = document.getElementById('point-target-bearing');
+                                bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
+                                bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
+                                bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
+                                bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
+                            });
                         }
 
-                        const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
-                        const xvec = Math.sin(dirr);
-                        const yvec = Math.cos(dirr) * -1;
-                        const rad = 33;
-                        const scaledRad = rad * vb.width / homeWidth;
-                        const lineLength = 1000 * vb.width / homeWidth;
+                        // window.addEventListener('devicemotion', (event) => {
+                        // not using motion ... yet
+                        // })
+                    }
+                })
+                .catch(console.error)
+        } else {
+            document.getElementById('point-target-direction').style.display = 'none';
+            document.getElementById('point-target-bearing').style.display = 'none';
+        }
+    }
 
-                        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
-                        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
 
-                        const bearingLine = document.getElementById('point-target-bearing');
-                        bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
-                        bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
-                        bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
-                        bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
-                    });
+    function loadTiles(x, y) {
+        x ||= vb.left;
+        y ||= vb.top;
+
+        const lastTile = currentTile;
+
+        const centerX = x + vb.width / 2;
+        const centerY = y + vb.height / 2;
+
+        const tilex = originTile.tilex + Math.round(centerX / 2000);
+        const tiley = originTile.tiley + Math.round(centerY / 2000);
+
+        for (const tilemd of metadata) {
+            if (tilex == tilemd.tilex && tiley == tilemd.tiley) {
+                currentTile = tilemd;
+            }
+        }
+
+        if (lastTile !== currentTile) {
+            tiles = [];
+            // remember the tile we're in and the eight surrounding it
+            for (const tilemd of metadata) {
+                if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
+                    tiles.push(tilemd);
                 }
-
-                // window.addEventListener('devicemotion', (event) => {
-                    // not using motion ... yet
-                // })
             }
-            })
-            .catch(console.error)
-    } else {
-        document.getElementById('point-target-direction').style.display = 'none';
-        document.getElementById('point-target-bearing').style.display = 'none';
-    }
-}
 
+            var tmdix = 0;
 
-function loadTiles(x, y) {
-    x ||= vb.left;
-    y ||= vb.top;
+            for (const maptile of document.getElementsByClassName('map-tile')) {
+                tmd = tiles[tmdix];
 
-    const lastTile = currentTile;
+                maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
+                maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
+                maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
 
-    const centerX = x + vb.width / 2;
-    const centerY = y + vb.height / 2;
+                tmdix++;
+            }
 
-    const tilex = originTile.tilex + Math.round(centerX / 2000);
-    const tiley = originTile.tiley + Math.round(centerY / 2000);
-
-    for (const tilemd of metadata) {
-        if (tilex == tilemd.tilex && tiley == tilemd.tiley) {
-            currentTile = tilemd;
+            return true;
+        } else {
+            return false;
         }
-    }
+    };
 
-    if (lastTile !== currentTile) {
-        tiles = [];
-        // remember the tile we're in and the eight surrounding it
+    function findTiles(lat, lon) {
+        const lastTile = currentTile;
+
+        // find the tile we're in
         for (const tilemd of metadata) {
-            if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
-                tiles.push(tilemd);
+            var min_lon = Math.min(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
+            var max_lon = Math.max(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
+            var min_lat = Math.min(tilemd.topleft.lat, tilemd.topright.lat, tilemd.bottomleft.lat, tilemd.bottomright.lat);
+            var max_lat = Math.max(tilemd.topleft.lat, tilemd.topright.lat, tilemd.bottomleft.lat, tilemd.bottomright.lat);
+
+            // a bit of a fudge - might be off by one because of slope, but doesn't matter
+            if (lat < max_lat && lat > min_lat && lon < max_lon && lon > min_lon) {
+                currentTile = tilemd;
+                originTile ||= currentTile;
+                break;
             }
         }
 
-        var tmdix = 0;
-
-        for (const maptile of document.getElementsByClassName('map-tile')) {
-            tmd = tiles[tmdix];
-
-            maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
-            maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
-            maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
-
-            tmdix++;
+        if (lastTile !== currentTile) {
+            tiles = [];
+            // remember the tile we're in and the eight surrounding it
+            for (const tilemd of metadata) {
+                if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
+                    tiles.push(tilemd);
+                }
+            }
+            return true;
+        } else {
+            return false;
         }
+    };
 
-        return true;
-    } else {
-        return false;
-    }
-};
+    function coords(lat, lon) {
+        tilemd = originTile;
 
-function findTiles(lat, lon) {
-    const lastTile = currentTile;
+        var x_t = ((lon - tilemd.topleft.long) / (tilemd.topright.long - tilemd.topleft.long)) * 2000;
+        var x_b = ((lon - tilemd.bottomleft.long) / (tilemd.bottomright.long - tilemd.bottomleft.long)) * 2000;
+        var y_l = ((lat - tilemd.topleft.lat) / (tilemd.bottomleft.lat - tilemd.topleft.lat)) * 2000;
+        var y_r = ((lat - tilemd.topright.lat) / (tilemd.bottomright.lat - tilemd.topright.lat)) * 2000;
 
-    // find the tile we're in
-    for (const tilemd of metadata) {
-        var min_lon = Math.min(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
-        var max_lon = Math.max(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
-        var min_lat = Math.min(tilemd.topleft.lat, tilemd.topright.lat, tilemd.bottomleft.lat, tilemd.bottomright.lat);
-        var max_lat = Math.max(tilemd.topleft.lat, tilemd.topright.lat, tilemd.bottomleft.lat, tilemd.bottomright.lat);
+        var x_slope = (x_b - x_t) / 2000;
+        var y_slope = (y_r - y_l) / 2000;
 
-        // a bit of a fudge - might be off by one because of slope, but doesn't matter
-        if (lat < max_lat && lat > min_lat && lon < max_lon && lon > min_lon) {
-            currentTile = tilemd;
-            originTile ||= currentTile;
-            break;
-        }
-    }
+        var x = Math.round((y_l * x_slope + x_t) / (1 - x_slope * y_slope));
+        var y = Math.round((x_t * y_slope + y_l) / (1 - y_slope * x_slope));
 
-    if (lastTile !== currentTile) {
-        tiles = [];
-        // remember the tile we're in and the eight surrounding it
-        for (const tilemd of metadata) {
-            if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
-                tiles.push(tilemd);
+        return [x, y];
+    };
+
+    function gotPos(pos) {
+        setPos(pos.coords.latitude, pos.coords.longitude, pos);
+    };
+
+    function setPos(lat, lon, position = false) {
+        const tilesChanged = findTiles(lat, lon);
+        var xy = coords(lat, lon);
+
+        const first = lastPos.x == 0;
+        lastPos.x = currentPos.x;
+        lastPos.y = currentPos.y;
+        currentPos.x = xy[0];
+        currentPos.y = xy[1];
+
+        if (tilesChanged) {
+            var tmdix = 0;
+
+            for (const maptile of document.getElementsByClassName('map-tile')) {
+                tmd = tiles[tmdix];
+
+                maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
+                maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
+                maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+
+                tmdix++;
             }
         }
-        return true;
-    } else {
-        return false;
+
+        document.getElementById('target').setAttribute('x', currentPos.x);
+        document.getElementById('target').setAttribute('y', currentPos.y);
+
+        centreOnPos();
+
+        addPoint(position, first);
+    };
+
+    function errPos(err) { console.log(err)};
+
+    function centreOnPos(pos = false) {
+        pos ||= currentPos;
+
+        vb.left = pos.x - parseInt(vb.width / 2);
+        vb.top = pos.y - parseInt(vb.height / 2);
+        vb.set();
+        loadTiles();
+    };
+
+    function pan(deltaX, deltaY) {
+        vb.left = vb.left - (vb.width / homeWidth) * deltaX;
+        vb.top = vb.top - (vb.width / homeWidth * wrapAspect()) * deltaY;
+        vb.set();
+        loadTiles();
     }
-};
 
-function coords(lat, lon) {
-    tilemd = originTile;
 
-    var x_t = ((lon - tilemd.topleft.long) / (tilemd.topright.long - tilemd.topleft.long)) * 2000;
-    var x_b = ((lon - tilemd.bottomleft.long) / (tilemd.bottomright.long - tilemd.bottomleft.long)) * 2000;
-    var y_l = ((lat - tilemd.topleft.lat) / (tilemd.bottomleft.lat - tilemd.topleft.lat)) * 2000;
-    var y_r = ((lat - tilemd.topright.lat) / (tilemd.bottomright.lat - tilemd.topright.lat)) * 2000;
-
-    var x_slope = (x_b - x_t) / 2000;
-    var y_slope = (y_r - y_l) / 2000;
-
-    var x = Math.round((y_l * x_slope + x_t) / (1 - x_slope * y_slope));
-    var y = Math.round((x_t * y_slope + y_l) / (1 - y_slope * x_slope));
-
-    return [x, y];
-};
-
-function gotPos(pos) {
-    setPos(pos.coords.latitude, pos.coords.longitude, pos);
-};
-
-function setPos(lat, lon, position = false) {
-    const tilesChanged = findTiles(lat, lon);
-    var xy = coords(lat, lon);
-
-    const first = lastPos.x == 0;
-    lastPos.x = currentPos.x;
-    lastPos.y = currentPos.y;
-    currentPos.x = xy[0];
-    currentPos.y = xy[1];
-
-    if (tilesChanged) {
-        var tmdix = 0;
-
-        for (const maptile of document.getElementsByClassName('map-tile')) {
-            tmd = tiles[tmdix];
-
-            maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
-            maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
-            maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
-
-            tmdix++;
+    async function track() {
+        while(true) {
+            if (!tracking) { break; }
+            navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
+            await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
         }
     }
 
-    document.getElementById('target').setAttribute('x', currentPos.x);
-    document.getElementById('target').setAttribute('y', currentPos.y);
+    function addPoint(position, force) {
+        if (!tracking) { return; }
 
-    centreOnPos();
+        if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
 
-    addPoint(position, first);
-};
+        var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        mark.style.opacity = "0.7";
+        mark.setAttribute("cx", currentPos.x);
+        mark.setAttribute("cy", currentPos.y);
+        mark.setAttribute("r", 6);
+        mark.setAttribute("stroke", "blue");
+        mark.setAttribute("stroke-width", "0");
+        mark.setAttribute("fill", "blue");
 
-function errPos(err) { console.log(err)};
+        if (position) {
+            mark.classList.add('position-mark');
+            mark.setAttribute('data-lat', position.coords.latitude);
+            mark.setAttribute('data-lon', position.coords.longitude);
+            mark.setAttribute('data-ele', position.coords.altitude);
+            mark.setAttribute('data-spd', position.coords.speed);
+            mark.setAttribute('data-acc', position.coords.accuracy);
+            mark.setAttribute('data-ela', position.coords.altitudeAccuracy);
+            mark.setAttribute('data-spd', position.coords.speed);
+            mark.setAttribute('data-hdg', position.coords.heading);
+            mark.setAttribute('data-tim', position.timestamp);
+        }
 
-function centreOnPos(pos = false) {
-    pos ||= currentPos;
+        pm.appendChild(mark);
 
-    vb.left = pos.x - parseInt(vb.width / 2);
-    vb.top = pos.y - parseInt(vb.height / 2);
-    vb.set();
-    loadTiles();
-};
+        if (lastPos.x) {
+            var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.style.opacity = "0.5";
+            line.setAttribute("x1", lastPos.x);
+            line.setAttribute("x2", currentPos.x);
+            line.setAttribute("y1", lastPos.y);
+            line.setAttribute("y2", currentPos.y);
+            line.setAttribute("stroke", "blue");
+            line.setAttribute("stroke-width", "3");
 
-function pan(deltaX, deltaY) {
-    vb.left = vb.left - (vb.width / 500.0) * deltaX;
-    vb.top = vb.top - (vb.height / 500.0) * deltaY;
-    vb.set();
-    loadTiles();
-}
+            pm.appendChild(line);
+        }
+    };
 
-
-async function track() {
-    while(true) {
-        if (!tracking) { break; }
-        navigator.geolocation.getCurrentPosition(gotPos, errPos, opts);
-        await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
-    }
-}
-
-function addPoint(position, force) {
-    if (!tracking) { return; }
-
-    if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
-
-    var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    mark.style.opacity = "0.7";
-    mark.setAttribute("cx", currentPos.x);
-    mark.setAttribute("cy", currentPos.y);
-    mark.setAttribute("r", 6);
-    mark.setAttribute("stroke", "blue");
-    mark.setAttribute("stroke-width", "0");
-    mark.setAttribute("fill", "blue");
-
-    if (position) {
-        mark.classList.add('position-mark');
-        mark.setAttribute('data-lat', position.coords.latitude);
-        mark.setAttribute('data-lon', position.coords.longitude);
-        mark.setAttribute('data-ele', position.coords.altitude);
-        mark.setAttribute('data-spd', position.coords.speed);
-        mark.setAttribute('data-acc', position.coords.accuracy);
-        mark.setAttribute('data-ela', position.coords.altitudeAccuracy);
-        mark.setAttribute('data-spd', position.coords.speed);
-        mark.setAttribute('data-hdg', position.coords.heading);
-        mark.setAttribute('data-tim', position.timestamp);
-    }
-
-    pm.appendChild(mark);
-
-    if (lastPos.x) {
-        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.style.opacity = "0.5";
-        line.setAttribute("x1", lastPos.x);
-        line.setAttribute("x2", currentPos.x);
-        line.setAttribute("y1", lastPos.y);
-        line.setAttribute("y2", currentPos.y);
-        line.setAttribute("stroke", "blue");
-        line.setAttribute("stroke-width", "3");
-
-        pm.appendChild(line);
-    }
-};
-
-window.onload = function(event) {
     wrap = document.getElementById("plotmap-wrapper");
     pm = document.getElementById("plotmap");
 
@@ -309,6 +310,7 @@ window.onload = function(event) {
 
     zb.addEventListener('touchmove', function(e) {
         e.preventDefault();
+
         const touch = e.changedTouches.item(0);
 
         deltaY = touch.pageY - lastZoomBarY;
@@ -329,27 +331,46 @@ window.onload = function(event) {
     pm.addEventListener('touchend', function(e) {
         lastPanX = 0;
         lastPanY = 0;
+        lastPinchDist = 0;
     });
 
     pm.addEventListener('touchcancel', function(e) {
         lastPanX = 0;
         lastPanY = 0;
+        lastPinchDist = 0;
     });
 
     pm.addEventListener('touchmove', function(e) {
         if (!panning) { return; };
 
-        const touch = e.changedTouches.item(0);
+        e.preventDefault();
 
-        if (lastPanX > 0) {
-            deltaX = touch.pageX - lastPanX;
-            deltaY = touch.pageY - lastPanY;
+        if (e.targetTouches.length > 1) {
+            const t1 = e.targetTouches.item(0);
+            const t2 = e.targetTouches.item(1);
 
-            pan(deltaX, deltaY);
+            dist = Math.abs(t1.clientX - t2.clientX) + Math.abs(t1.clientY - t2.clientY);
+
+            if (lastPinchDist) {
+                zoom(lastPinchDist / dist);
+            }
+
+            lastPinchDist = dist;
+        } else {
+            const touch = e.changedTouches.item(0);
+
+            if (lastPanX > 0) {
+                deltaX = touch.pageX - lastPanX;
+                deltaY = touch.pageY - lastPanY;
+
+                pan(deltaX, deltaY);
+            }
+
+            lastPanX = touch.pageX;
+            lastPanY = touch.pageY;
+
+            lastPinchDist = 0;
         }
-
-        lastPanX = touch.pageX;
-        lastPanY = touch.pageY;
     });
 
     pm.onmousedown = function(e) {
