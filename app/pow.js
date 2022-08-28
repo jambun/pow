@@ -7,6 +7,8 @@ const opts = {
     maximumAge: 0
 };
 
+const homeWidth = 400;
+const maps_url = 'https://james.whaite.com/pow/maps'
 var tiles = [];
 var originTile;
 var currentTile;
@@ -36,7 +38,6 @@ var map_drag = false;
 // hmm - usually not needed - why does it change?
 var magnetic_declination = 0.0;
 
-
 function getDirection() {
     if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -54,8 +55,8 @@ function getDirection() {
                         const xvec = Math.sin(dirr);
                         const yvec = Math.cos(dirr) * -1;
                         const rad = 33;
-                        const scaledRad = rad * vb.height / 400;
-                        const lineLength = 1000 * vb.height / 400;
+                        const scaledRad = rad * vb.width / homeWidth;
+                        const lineLength = 1000 * vb.width / homeWidth;
 
                         document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
                         document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
@@ -115,7 +116,7 @@ function loadTiles(x, y) {
 
             maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
             maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
-            maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+            maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
 
             tmdix++;
         }
@@ -289,21 +290,25 @@ window.onload = function(event) {
     zb.style.height = parseInt(wrap.clientHeight/2 - 20);
 
     zb.addEventListener('touchstart', function(e) {
+        e.preventDefault();
         this.style.opacity = 0.6;
         lastZoomBarY = targetTouches.item(0).pageY;
     });
 
     zb.addEventListener('touchend', function(e) {
+        e.preventDefault();
         this.style.opacity = 0.3;
         lastZoomBarY = 0;
     });
 
     zb.addEventListener('touchcancel', function(e) {
+        e.preventDefault();
         this.style.opacity = 0.3;
         lastZoomBarY = 0;
     });
 
     zb.addEventListener('touchmove', function(e) {
+        e.preventDefault();
         const touch = e.changedTouches.item(0);
 
         deltaY = touch.pageY - lastZoomBarY;
@@ -366,7 +371,7 @@ window.onload = function(event) {
         e.preventDefault();
 
         if (map_drag && panning) {
-            pan((e.movementX), (e.movementY));
+            pan(e.movementX, e.movementY);
         }
     };
 
@@ -417,11 +422,8 @@ window.onload = function(event) {
     }
     vb.load();
 
-    vb.left = currentPos.x - 400;
-    vb.top = currentPos.y - 400;
-    vb.width = 800;
-    vb.height = 800;
-    vb.set();
+    zoom();
+
     vb.mark_origin();
 
     if (url_params.has('lat') && url_params.has('lon')) {
@@ -459,46 +461,57 @@ window.onload = function(event) {
             this.style.color = 'lime';
         }
     };
-};
 
-function zoom(factor) {
-    var vw = vb.width * factor;
-    var vh = vb.height * factor;
-    vb.left = vb.left + (vb.width-vw)/2;
-    vb.top = vb.top + (vb.height-vh)/2;
-    vb.width = vw;
-    vb.height = vh;
-    vb.set();
-    zoomTarget();
-}
+    function wrapAspect() {
+        return wrap.clientWidth / wrap.clientHeight;
+    };
 
-function zoomTarget() {
-    const targetZoom = vb.height / 400.0;
+    function zoom(factor = false) {
+        var vw;
+        if (factor) {
+            vw = vb.width * factor;
+        } else {
+            vw = homeWidth;;
+        }
+        console.log(wrapAspect());
+        var vh = vw / wrapAspect();
 
-    document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
-    const bearing = document.getElementById("point-target-bearing");
-
-    bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
-}
-
-function download() {
-    var data = "tim,lat,lon,ele\n";
-
-    for (const mark of document.getElementsByClassName('position-mark')) {
-        data += [mark.dataset.tim, mark.dataset.lat, mark.dataset.lon, mark.dataset.ele].join(',') + "\n";
+        vb.left = vb.left + (vb.width-vw)/2;
+        vb.top = vb.top + (vb.height-vh)/2;
+        vb.width = vw;
+        vb.height = vh;
+        vb.set();
+        zoomTarget();
     }
 
-    var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
-    var link = document.createElement("a");
+    function zoomTarget() {
+        const targetZoom = vb.width / homeWidth;
 
-    const d = new Date();
-    const filename = 'pow_' + d.toISOString().split('T')[0] + '.csv';
+        document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
+        const bearing = document.getElementById("point-target-bearing");
 
-    var url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+        bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
+    }
+
+    function download() {
+        var data = "tim,lat,lon,ele\n";
+
+        for (const mark of document.getElementsByClassName('position-mark')) {
+            data += [mark.dataset.tim, mark.dataset.lat, mark.dataset.lon, mark.dataset.ele].join(',') + "\n";
+        }
+
+        var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
+        var link = document.createElement("a");
+
+        const d = new Date();
+        const filename = 'pow_' + d.toISOString().split('T')[0] + '.csv';
+
+        var url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
