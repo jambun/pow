@@ -201,7 +201,7 @@ window.onload = function(event) {
 
                 maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
                 maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
-                maptile.setAttribute('xlink:href', 'https://home.whaite.com/fet/imgraw/NSW_25k_Coast_South/' + tmd.filename);
+                maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
 
                 tmdix++;
             }
