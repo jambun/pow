@@ -34,6 +34,7 @@ window.onload = function(event) {
 
     var map_drag = false;
 
+    var entryCallback;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
     //var magnetic_declination = 12.75;
@@ -323,6 +324,47 @@ window.onload = function(event) {
 
         lastZoomBarY = touch.pageY;
     });
+
+    const eb = document.getElementById("entry-bar");
+
+    eb.addEventListener('touchstart', function(e) {
+        openEntryForm();
+    });
+
+    eb.onclick = function(e) {
+        openEntryForm();
+    };
+
+    document.getElementById("entry-input").onkeydown = function(e) {
+        if (e.key == 'Enter') {
+            closeEntry();
+            if (entryCallback) { entryCallback(); }
+        }
+    };
+
+    document.getElementById("entry-cancel").onclick = function(e) {
+        closeEntry();
+    }
+
+    document.getElementById("entry-cancel").addEventListener('touchend', function(e) {
+        closeEntry();
+    });
+
+    function closeEntry() {
+        document.getElementById("entry-pane").style.display = 'none';
+        document.getElementById("entry-input").blur();
+    };
+
+    function openEntryForm(label, opts, callback) {
+        label ||= 'Add a point';
+        document.getElementById("entry-label").innerHTML = label;
+        document.getElementById("entry-input").value = '';
+
+        document.getElementById("entry-pane").style.display = 'inherit';
+        document.getElementById("entry-input").focus();
+
+        entryCallback = callback;
+    };
 
     pm.addEventListener('touchstart', function(e) {
         if (!panning) { return; };

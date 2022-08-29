@@ -73,13 +73,22 @@
       &nbsp;
     </div>
 
-    <div id="text-input-pane"
-         style="display:none;position:absolute;opacity:1;top:20px;left:20px;width:85%;height:20%;border-radius:20px;background-color:#ccc;padding:40px;">
-      <div id="text-input-label" style="height:50%;font-size:80;">
-        label
+    <div id="entry-bar" title="entry"
+         style="position:absolute;opacity:0.3;top:22px;left:240px;right:240px;height:100px;border-radius:20px;background-color:#333">
+      &nbsp;
+    </div>
+
+    <div id="entry-pane"
+         style="display:none;position:absolute;opacity:1;top:0px;left:0px;width:100%;height:400px;background-color:#ccc;padding:40px;">
+      <button type="button" id="entry-cancel" title="Cancel"
+              style="position:absolute;font-size:100;top:20px;right:120px;width:120px;text-align:center;border-radius:12px;padding:2px;background-color:#aaa;color:#333">
+        X
+      </button>
+      <div id="entry-label" style="width:90%;height:50%;font-size:60;">
+        Add a point
       </div>
-      <div id="text-input-input" style="height:20%;left-margin:60px;">
-        <input type="text" style="width:98%;left-margin:30px;font-size:80;" size="10">
+      <div id="entry-form" style="height:20%;left-margin:60px;">
+        <input id="entry-input" type="text" style="width:90%;left-margin:30px;font-size:80;" size="10">
       </div>
     </div>
 
