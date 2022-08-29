@@ -332,13 +332,19 @@ window.onload = function(event) {
     });
 
     eb.onclick = function(e) {
-        openEntryForm();
+        openEntryForm('Add a marker', addMarker);
     };
+
+    function addMarker(label) {
+        alert('Adding marker with label ' + label);
+    };
+
 
     document.getElementById("entry-input").onkeydown = function(e) {
         if (e.key == 'Enter') {
             closeEntry();
-            if (entryCallback) { entryCallback(); }
+            if (entryCallback) { entryCallback(document.getElementById("entry-input").value); }
+            entryCallback = null;
         }
     };
 
@@ -355,7 +361,7 @@ window.onload = function(event) {
         document.getElementById("entry-input").blur();
     };
 
-    function openEntryForm(label, opts, callback) {
+    function openEntryForm(label, callback) {
         label ||= 'Add a point';
         document.getElementById("entry-label").innerHTML = label;
         document.getElementById("entry-input").value = '';
