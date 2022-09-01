@@ -20,7 +20,7 @@ window.onload = function(event) {
     };
 
     const homeWidth = 400;
-    const maps_url = 'https://james.whaite.com/pow/maps'
+    const maps_url = 'https://hudmol.com/pow/maps'
     var tiles = [];
     var originTile;
     var currentTile;
@@ -52,59 +52,53 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-    magnetic_declination = -12.75;
+    magnetic_declination = 12.75;
+
+    function handleOrientation(event) {
+        if (event.webkitCompassHeading) {
+            direction = event.webkitCompassHeading;
+        } else {
+            direction = event.alpha;
+        }
+
+        const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
+        const xvec = Math.sin(dirr);
+        const yvec = Math.cos(dirr) * -1;
+        const rad = 33;
+        const scaledRad = rad * vb.width / homeWidth;
+        const lineLength = 1000 * vb.width / homeWidth;
+
+        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
+        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
+
+        const bearingLine = document.getElementById('point-target-bearing');
+        bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
+        bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
+        bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
+        bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
+
+    }
+
 
     function getDirection() {
-    //     // if (typeof(DeviceMotionEvent) !== 'undefined' && typeof(DeviceMotionEvent.requestPermission) === 'function') {
-    //     //     DeviceMotionEvent.requestPermission()
-
-        // if (typeof(DeviceOrientationEvent) !== 'undefined' && typeof(DeviceOrientationEvent.requestPermission) === 'function') {
-        //     DeviceOrientationEvent.requestPermission()
-        //         .then(response => {
-        //             if (response == 'granted') {
-
-
-
-
+        if (typeof(DeviceOrientationEvent) !== 'undefined' && typeof(DeviceOrientationEvent.requestPermission) === 'function') {
+            DeviceOrientationEvent.requestPermission()
+               .then(response => {
+                   if (response == 'granted') {
                         if (window.DeviceOrientationEvent) {
-                            window.addEventListener('deviceorientation', (event) => {
-//                            window.addEventListener('deviceorientationabsolute', (event) => {
-                                if (event.webkitCompassHeading) {
-                                    direction = event.webkitCompassHeading;  
-                                } else {
-                                    direction = event.alpha;
-                                }
-
-                                const flipMe = event.absolute ? -1 : 1;
-
-                                const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
-                                const xvec = Math.sin(dirr);
-                                const yvec = Math.cos(dirr) * flipMe;
-                                const rad = 33;
-                                const scaledRad = rad * vb.width / homeWidth;
-                                const lineLength = 1000 * vb.width / homeWidth;
-
-                                document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
-                                document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
-
-                                const bearingLine = document.getElementById('point-target-bearing');
-                                bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
-                                bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
-                                bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
-                                bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
-                            });
+                            window.addEventListener('deviceorientation', handleOrientation, true);
                         }
 
-        //                 // window.addEventListener('devicemotion', (event) => {
-        //                 // not using motion ... yet
-        //                 // })
-        //             }
-        //         })
-        //         .catch(console.error)
-        // } else {
-        //     document.getElementById('point-target-direction').style.display = 'none';
-        //     document.getElementById('point-target-bearing').style.display = 'none';
-        // }
+//                        window.addEventListener('devicemotion', (event) => {
+                            // not using motion ... yet
+//                        });
+                   }
+               })
+               .catch(console.error)
+       } else {
+           document.getElementById('point-target-direction').style.display = 'none';
+           document.getElementById('point-target-bearing').style.display = 'none';
+       }
     }
 
 
