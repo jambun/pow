@@ -532,7 +532,6 @@ window.onload = function(event) {
             download();
         } else {
             tracking = true;
-            getDirection();
             this.style.color = 'lime';
             track();
         }
