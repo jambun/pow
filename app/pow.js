@@ -384,12 +384,10 @@ window.onload = function(event) {
     };
 
     document.getElementById("entry-cancel").onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         closeEntry();
     }
-
-    document.getElementById("entry-cancel").addEventListener('touchend', function(e) {
-        closeEntry();
-    });
 
     function closeEntry() {
         document.getElementById("entry-pane").style.display = 'none';
