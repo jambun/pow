@@ -41,6 +41,8 @@ window.onload = function(event) {
         maximumAge: 0
     };
 
+    const earthRadiusM = 6371000.0;
+
     const homeWidth = 400;
     const maps_url = 'https://hudmol.com/pow/maps'
     var tiles = [];
@@ -75,7 +77,9 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-    magnetic_declination = 12.75;
+//    magnetic_declination = 12.75;
+
+    function toRadians(degrees) { return degrees * Math.PI / 180.0 }
 
     function handleOrientation(event) {
         if (event.webkitCompassHeading) {
@@ -84,7 +88,7 @@ window.onload = function(event) {
             direction = event.alpha;
         }
 
-        const dirr = (direction + magnetic_declination) % 360 * Math.PI / 180.0;
+        const dirr = toRadians(direction + magnetic_declination);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
         const rad = 33;
@@ -629,6 +633,19 @@ window.onload = function(event) {
             navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
         }
     };
+
+    function calculateDistance(aLat, aLon, bLat, bLon) {
+        const from_lat = toRadians(aLat);
+        const to_lat = toRadians(bLat);
+        const lat_d = toRadians(bLat - aLat);
+        const lon_d = toRadians(bLon - aLon);
+
+        const a = Math.sin(lat_d/2) ** 2 + Math.cos(from_lat) * Math.cos(to_lat) * Math.sin(lon_d/2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return earthRadiusM * c;
+    }
+
 
     init();
 };
