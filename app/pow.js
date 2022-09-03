@@ -1,3 +1,25 @@
+
+const registerServiceWorker = async () => {
+  if ("serviceWorker" in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register("/pow/cache.js", {
+        scope: "/pow/",
+      });
+      if (registration.installing) {
+        console.log("Service worker installing");
+      } else if (registration.waiting) {
+        console.log("Service worker installed");
+      } else if (registration.active) {
+        console.log("Service worker active");
+      }
+    } catch (error) {
+      console.error(`Registration failed with ${error}`);
+    }
+  }
+};
+
+registerServiceWorker();
+
 window.onload = function(event) {
 
     function init() {
@@ -272,7 +294,7 @@ window.onload = function(event) {
             mark.setAttribute('data-ele', position.coords.altitude);
             mark.setAttribute('data-spd', position.coords.speed);
             mark.setAttribute('data-acc', position.coords.accuracy);
-            mark.setAttribute('data-ela', position.coords.altitudeAccuracy);
+            mark.setAttribute('data-eac', position.coords.altitudeAccuracy);
             mark.setAttribute('data-spd', position.coords.speed);
             mark.setAttribute('data-hdg', position.coords.heading);
             mark.setAttribute('data-tim', position.timestamp);
@@ -336,16 +358,20 @@ window.onload = function(event) {
 
     const eb = document.getElementById("entry-bar");
 
-    eb.addEventListener('touchstart', function(e) {
-        openEntryForm();
-    });
-
     eb.onclick = function(e) {
+        // calling getDirection here just as a way of getting permission
+        // apparently it has to be in a click or touchend handler
+        getDirection();
         openEntryForm('Add a marker', addMarker);
     };
 
     function addMarker(label) {
-        alert('Adding marker with label ' + label);
+        if (tracking && !panning) {
+            const pms = document.getElementsByClassName('position-mark');
+            const pm = pms[pms.length - 1];
+            pm.setAttribute('data-tag', label);
+            alert('Added mark with label ' + label);
+        }
     };
 
 
@@ -562,17 +588,23 @@ window.onload = function(event) {
     }
 
     function download() {
-        var data = "tim,lat,lon,ele\n";
+        var data = "tim,lat,lon,ele,acc,eac,tag\n";
 
         for (const mark of document.getElementsByClassName('position-mark')) {
-            data += [mark.dataset.tim, mark.dataset.lat, mark.dataset.lon, mark.dataset.ele].join(',') + "\n";
+            data += [mark.dataset.tim,
+                     mark.dataset.lat,
+                     mark.dataset.lon,
+                     mark.dataset.ele,
+                     mark.dataset.acc,
+                     mark.dataset.eac,
+                     mark.dataset.tag].join(',') + "\n";
         }
 
         var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
         var link = document.createElement("a");
 
         const d = new Date();
-        const filename = 'pow_' + d.toISOString().split('T')[0] + '.csv';
+        const filename = 'pow_' + d.toISOString().split('T')[0] + '.pow';
 
         var url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
@@ -601,8 +633,5 @@ window.onload = function(event) {
         }
     };
 
-
-
     init();
-
 };
