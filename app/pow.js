@@ -47,6 +47,7 @@ window.onload = function(event) {
     var originTile;
     var currentTile;
     var direction;
+    var directionInitialized = false;
     var currentPos = {'x': 0, 'y': 0};
     var lastPos = {'x': 0, 'y': 0};
     var currentEle;
@@ -107,13 +108,12 @@ window.onload = function(event) {
             DeviceOrientationEvent.requestPermission()
                .then(response => {
                    if (response == 'granted') {
-                        if (window.DeviceOrientationEvent) {
-                            window.addEventListener('deviceorientation', handleOrientation, true);
-                        }
-
-//                        window.addEventListener('devicemotion', (event) => {
-                            // not using motion ... yet
-//                        });
+                       if (window.DeviceOrientationEvent && !directionInitialized) {
+                           window.addEventListener('deviceorientation', handleOrientation, true);
+                           directionInitialized = true;
+                       }
+                   } else {
+                       alert('orientation permission denied');
                    }
                })
                .catch(console.error)
