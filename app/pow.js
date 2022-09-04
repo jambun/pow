@@ -95,14 +95,14 @@ window.onload = function(event) {
         const scaledRad = rad * vb.width / homeWidth;
         const lineLength = 1000 * vb.width / homeWidth;
 
-        document.getElementById('point-target-direction').setAttribute('cx', parseInt(xvec * rad));
-        document.getElementById('point-target-direction').setAttribute('cy', parseInt(yvec * rad));
+        document.getElementById('point-target-direction').setAttribute('cx', Math.round(xvec * rad));
+        document.getElementById('point-target-direction').setAttribute('cy', Math.round(yvec * rad));
 
         const bearingLine = document.getElementById('point-target-bearing');
-        bearingLine.setAttribute('x1', parseInt(xvec * scaledRad + currentPos.x));
-        bearingLine.setAttribute('y1', parseInt(yvec * scaledRad + currentPos.y));
-        bearingLine.setAttribute('x2', parseInt(xvec * lineLength + currentPos.x));
-        bearingLine.setAttribute('y2', parseInt(yvec * lineLength + currentPos.y));
+        bearingLine.setAttribute('x1', Math.round(xvec * scaledRad + currentPos.x));
+        bearingLine.setAttribute('y1', Math.round(yvec * scaledRad + currentPos.y));
+        bearingLine.setAttribute('x2', Math.round(xvec * lineLength + currentPos.x));
+        bearingLine.setAttribute('y2', Math.round(yvec * lineLength + currentPos.y));
 
     }
 
