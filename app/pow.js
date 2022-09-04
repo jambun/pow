@@ -1,4 +1,6 @@
 
+const VERSION = 'v1.1';
+
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
     try {
@@ -23,6 +25,8 @@ registerServiceWorker();
 window.onload = function(event) {
 
     function init() {
+        document.getElementById('version-bug').textContent = VERSION;
+
         vb.load();
         zoom();
         vb.mark_origin();
