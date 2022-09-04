@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.3';
+const VERSION = 'v1.1.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -218,18 +218,22 @@ window.onload = function(event) {
 
         const first = lastPos.x == 0;
 
-        lastPos.x = currentPos.x;
-        lastPos.y = currentPos.y;
-        lastPos.lat = currentPos.lat;
-        lastPos.lon = currentPos.lon;
+        if (!first) {
+            lastPos.x = currentPos.x;
+            lastPos.y = currentPos.y;
+            lastPos.lat = currentPos.lat;
+            lastPos.lon = currentPos.lon;
+        }
 
         currentPos.x = xy[0];
         currentPos.y = xy[1];
         currentPos.lat = lat;
         currentPos.lon = lon;
 
-        if (!first && position) {
-            lastPos.ele = currentPos.ele;
+        if (position) {
+            if (!first) {
+                lastPos.ele = currentPos.ele;
+            }
             currentPos.ele = position.coords.altitude;
         }
 
