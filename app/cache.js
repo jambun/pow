@@ -2,6 +2,7 @@ const version = 'v5';
 
 const netFirstResources = [
     "/pow",
+    "/pow/",
     "/pow/index.html",
     "/pow/pow.js"
 ];
@@ -110,6 +111,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     addResourcesToCache([
       "/pow",
+      "/pow/",
       "/pow/index.html",
       "/pow/pow.js",
       "/pow/nsw25k.js",
