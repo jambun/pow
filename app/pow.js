@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.2';
+const VERSION = 'v1.1.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -54,10 +54,10 @@ window.onload = function(event) {
     var currentTile;
     var direction;
     var directionInitialized = false;
-    var currentPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0};
-    var lastPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0};
-    var currentEle;
-    var lastEle;
+    var currentPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
+    var lastPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
+    var trackDistance = 0.0;
+    var trackClimb = 0.0;
 
     var jitterThreshholdPx = 2;
 
@@ -216,28 +216,30 @@ window.onload = function(event) {
     function setPos(lat, lon, position = false) {
         var xy = coords(lat, lon);
 
-        if (position) {
-            lastEle = currentEle;
-            currentEle = position.coords.altitude;
-        }
-
         const first = lastPos.x == 0;
+
         lastPos.x = currentPos.x;
         lastPos.y = currentPos.y;
         lastPos.lat = currentPos.lat;
         lastPos.lon = currentPos.lon;
+
         currentPos.x = xy[0];
         currentPos.y = xy[1];
         currentPos.lat = lat;
         currentPos.lon = lon;
+
+        if (!first && position) {
+            lastPos.ele = currentPos.ele;
+            currentPos.ele = position.coords.altitude;
+        }
 
         loadTiles(currentPos.x, currentPos.y);
 
         document.getElementById('target').setAttribute('x', currentPos.x);
         document.getElementById('target').setAttribute('y', currentPos.y);
 
-        if (currentEle) {
-            document.getElementById('point-target-elev').textContent = `${parseInt(currentEle)}m`;
+        if (currentPos.ele) {
+            document.getElementById('point-target-elev').textContent = `${Math.round(currentPos.ele)}m`;
 
             // bbox is zeroes when display is none, so make it visible first
             document.getElementById('target-ele-group').style.display = 'inherit';
@@ -324,7 +326,12 @@ window.onload = function(event) {
             line.setAttribute("stroke", "blue");
             line.setAttribute("stroke-width", "3");
 
-            mark.setAttribute('data-dst', calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon));
+            const dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
+            mark.setAttribute('data-dst', dst);
+            trackDistance += dst;
+            if (currentPos.ele && lastPos.ele && currentPos.ele > lastPos.ele) {
+                trackClimb += currentPos.ele - lastPos.ele;
+            }
 
             pm.insertBefore(line, document.getElementById("target"));
         }
