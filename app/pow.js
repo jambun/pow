@@ -304,10 +304,9 @@ window.onload = function(event) {
             mark.setAttribute('data-tim', position.timestamp);
         }
 
-        pm.appendChild(mark);
-
         if (lastPos.x) {
             var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.classList.add('no-zoom');
             line.style.opacity = "0.5";
             line.setAttribute("x1", lastPos.x);
             line.setAttribute("x2", currentPos.x);
@@ -316,8 +315,10 @@ window.onload = function(event) {
             line.setAttribute("stroke", "blue");
             line.setAttribute("stroke-width", "3");
 
-            pm.appendChild(line);
+            pm.insertBefore(line, document.getElementById("target"));
         }
+
+        pm.insertBefore(mark, document.getElementById("target"));
     };
 
     wrap = document.getElementById("plotmap-wrapper");
