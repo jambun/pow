@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1';
+const VERSION = 'v1.1.2';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -54,8 +54,8 @@ window.onload = function(event) {
     var currentTile;
     var direction;
     var directionInitialized = false;
-    var currentPos = {'x': 0, 'y': 0};
-    var lastPos = {'x': 0, 'y': 0};
+    var currentPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0};
+    var lastPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0};
     var currentEle;
     var lastEle;
 
@@ -224,8 +224,13 @@ window.onload = function(event) {
         const first = lastPos.x == 0;
         lastPos.x = currentPos.x;
         lastPos.y = currentPos.y;
+        lastPos.lat = currentPos.lat;
+        lastPos.lon = currentPos.lon;
         currentPos.x = xy[0];
         currentPos.y = xy[1];
+        currentPos.lat = lat;
+        currentPos.lon = lon;
+
         loadTiles(currentPos.x, currentPos.y);
 
         document.getElementById('target').setAttribute('x', currentPos.x);
@@ -318,6 +323,8 @@ window.onload = function(event) {
             line.setAttribute("y2", currentPos.y);
             line.setAttribute("stroke", "blue");
             line.setAttribute("stroke-width", "3");
+
+            mark.setAttribute('data-dst', calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon));
 
             pm.insertBefore(line, document.getElementById("target"));
         }
@@ -594,7 +601,7 @@ window.onload = function(event) {
     }
 
     function download() {
-        var data = "tim,lat,lon,ele,acc,eac,tag\n";
+        var data = "tim,lat,lon,ele,acc,eac,dst,tag\n";
 
         for (const mark of document.getElementsByClassName('position-mark')) {
             data += [mark.dataset.tim,
@@ -603,6 +610,7 @@ window.onload = function(event) {
                      mark.dataset.ele,
                      mark.dataset.acc,
                      mark.dataset.eac,
+                     mark.dataset.dst,
                      mark.dataset.tag].join(',') + "\n";
         }
 
