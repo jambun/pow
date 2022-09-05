@@ -660,7 +660,7 @@ window.onload = function(event) {
         bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
 
         if (!distRadius) {
-            distRadius = Math.round(Math.min(vb.width, vb.height) * distanceRadiusFraction);
+            distRadius = Math.round(vb.width * distanceRadiusFraction);
             document.getElementById('point-target-distance').setAttribute('r', distRadius);
 
             document.getElementById('point-target-dst-box').setAttribute('x', distRadius);
