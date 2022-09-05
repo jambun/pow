@@ -88,6 +88,13 @@ window.onload = function(event) {
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
 
+
+    function message(s) {
+        document.getElementById('entry-bar').style.opacity = '0.9';
+        document.getElementById('entry-bar').textContent = s;
+    }
+
+
     function toRadians(degrees) { return degrees * Math.PI / 180.0 }
 
     function handleOrientation(event) {
@@ -96,7 +103,7 @@ window.onload = function(event) {
         } else {
             direction = event.alpha;
         }
-
+        message(direction.toFixed());
         const dirr = toRadians(direction + magnetic_declination);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
