@@ -27,11 +27,12 @@ window.onload = function(event) {
     function init() {
         document.getElementById('version-bug').textContent = VERSION;
 
-        vb.load();
-        zoom();
-        vb.mark_origin();
+        buildTileMatrix();
 
         findOriginTile();
+
+        vb.load();
+        vb.mark_origin();
 
         getDirection();
     };
@@ -46,6 +47,8 @@ window.onload = function(event) {
     };
 
     const earthRadiusM = 6371000.0;
+    const tileSize = 2000; // x and y pixels for map tiles
+    const tileMatrix = Array(); // 2 dim array of tile md for easier lookups
 
     const homeWidth = 400;
     const maps_url = 'https://hudmol.com/pow/maps'
@@ -58,6 +61,8 @@ window.onload = function(event) {
     var lastPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
     var trackDistance = 0.0;
     var trackClimb = 0.0;
+    var distRadius;
+    const distanceRadiusFraction = 1/3;
 
     var jitterThreshholdPx = 2;
 
@@ -141,8 +146,8 @@ window.onload = function(event) {
         const centerX = x + vb.width / 2;
         const centerY = y + vb.height / 2;
 
-        const tilex = originTile.tilex + Math.round(centerX / 2000);
-        const tiley = originTile.tiley + Math.round(centerY / 2000);
+        const tilex = originTile.tilex + Math.round(centerX / tileSize);
+        const tiley = originTile.tiley + Math.round(centerY / tileSize);
 
         for (const tilemd of metadata) {
             if (tilex == tilemd.tilex && tiley == tilemd.tiley) {
@@ -164,8 +169,8 @@ window.onload = function(event) {
             for (const maptile of document.getElementsByClassName('map-tile')) {
                 tmd = tiles[tmdix];
 
-                maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * -2000);
-                maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * -2000);
+                maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * tileSize * -1);
+                maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * tileSize * -1);
                 maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
 
                 tmdix++;
@@ -176,6 +181,26 @@ window.onload = function(event) {
             return false;
         }
     };
+
+    function buildTileMatrix() {
+        for (const tilemd of metadata) {
+            tileMatrix[tilemd.tilex] ||= Array();
+            tileMatrix[tilemd.tilex][tilemd.tiley] = tilemd;
+        }
+    };
+
+    function findTileXY(x, y) {
+        if (!originTile) {
+            console.error('call to findTileXY before originTile is set!');
+            return;
+        }
+
+        const tilex = originTile.tilex + parseInt(x / tileSize);
+        const tiley = originTile.tiley + parseInt(y / tileSize);
+
+        return tileMatrix[tilex][tiley];
+    }
+
 
     function findTile(lat, lon) {
         for (const tilemd of metadata) {
@@ -192,22 +217,46 @@ window.onload = function(event) {
     };
 
 
+    // lat lon to x y
     function coords(lat, lon) {
         tilemd = originTile;
 
-        var x_t = ((lon - tilemd.topleft.long) / (tilemd.topright.long - tilemd.topleft.long)) * 2000;
-        var x_b = ((lon - tilemd.bottomleft.long) / (tilemd.bottomright.long - tilemd.bottomleft.long)) * 2000;
-        var y_l = ((lat - tilemd.topleft.lat) / (tilemd.bottomleft.lat - tilemd.topleft.lat)) * 2000;
-        var y_r = ((lat - tilemd.topright.lat) / (tilemd.bottomright.lat - tilemd.topright.lat)) * 2000;
+        var x_t = ((lon - tilemd.topleft.long) / (tilemd.topright.long - tilemd.topleft.long)) * tileSize;
+        var x_b = ((lon - tilemd.bottomleft.long) / (tilemd.bottomright.long - tilemd.bottomleft.long)) * tileSize;
+        var y_l = ((lat - tilemd.topleft.lat) / (tilemd.bottomleft.lat - tilemd.topleft.lat)) * tileSize;
+        var y_r = ((lat - tilemd.topright.lat) / (tilemd.bottomright.lat - tilemd.topright.lat)) * tileSize;
 
-        var x_slope = (x_b - x_t) / 2000;
-        var y_slope = (y_r - y_l) / 2000;
+        var x_slope = (x_b - x_t) / tileSize;
+        var y_slope = (y_r - y_l) / tileSize;
 
         var x = Math.round((y_l * x_slope + x_t) / (1 - x_slope * y_slope));
         var y = Math.round((x_t * y_slope + y_l) / (1 - y_slope * x_slope));
 
         return [x, y];
     };
+
+
+    function window_to_svg(x, y) {
+        return [x / window.innerWidth * vb.width + vb.left, y / window.innerHeight * vb.height + vb.top];
+    }
+
+    // x y to lat lon
+    function toLatLon(x, y) {
+//        const [map_x, map_y] = window_to_svg(x, y);
+
+        const tile = findTileXY(x, y);
+
+        var lon_t = x % tileSize / tileSize * (tile.topright.long - tile.topleft.long) + tile.topleft.long;
+        var lon_b = x % tileSize / tileSize * (tile.bottomright.long - tile.bottomleft.long) + tile.bottomleft.long;
+        var lat_l = y % tileSize / tileSize * (tile.bottomleft.lat - tile.topleft.lat) + tile.topleft.lat;
+        var lat_r = y % tileSize / tileSize * (tile.bottomright.lat - tile.topright.lat) + tile.topright.lat;
+
+        var lon = lon_t + ((lon_b - lon_t) / (tile.bottomleft.lat - tile.topleft.lat) * (lat_l - tile.topleft.lat));
+        var lat = lat_l + ((lat_r - lat_l) / (tile.topright.long - tile.topleft.long) * (lon_t - tile.topleft.long));
+
+        return [lat, lon];
+    }
+
 
     function gotPos(pos) {
         setPos(pos.coords.latitude, pos.coords.longitude, pos);
@@ -586,7 +635,7 @@ window.onload = function(event) {
         if (factor) {
             vw = vb.width * factor;
         } else {
-            vw = homeWidth;;
+            vw = homeWidth;
         }
         var vh = vw / wrapAspect();
 
@@ -609,6 +658,34 @@ window.onload = function(event) {
 
         const bearing = document.getElementById("point-target-bearing");
         bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
+
+        if (!distRadius) {
+            distRadius = Math.round(Math.min(vb.width, vb.height) * distanceRadiusFraction);
+            document.getElementById('point-target-distance').setAttribute('r', distRadius);
+
+            document.getElementById('point-target-dst-box').setAttribute('x', distRadius);
+            document.getElementById('point-target-dst').setAttribute('x', distRadius);
+        }
+
+        const [lat, lon] = toLatLon(currentPos.x + Math.round(vb.width * distanceRadiusFraction), currentPos.y);
+
+        var dst = calculateDistance(currentPos.lat, currentPos.lon, lat, lon);
+
+        if (dst >= 1000) {
+            dst = (dst / 1000).toFixed(2) + 'km';
+        } else {
+            dst = dst.toFixed() + 'm';
+        }
+
+        document.getElementById('point-target-dst').textContent = dst;
+
+        const dbox = document.getElementById('point-target-dst-box');
+        const bbox = document.getElementById('point-target-dst').getBBox();
+
+        dbox.setAttribute('x', bbox.x - 2);
+        dbox.setAttribute('y', bbox.y);
+        dbox.setAttribute('width', bbox.width + 4);
+        dbox.setAttribute('height', bbox.height);
     }
 
     function download() {
@@ -644,6 +721,7 @@ window.onload = function(event) {
     function gotPosForOrigin(pos) {
         originTile = findTile(pos.coords.latitude, pos.coords.longitude);
         setPos(pos.coords.latitude, pos.coords.longitude, pos);
+        zoom();
     };
 
 
@@ -653,6 +731,7 @@ window.onload = function(event) {
         if (url_params.has('lat') && url_params.has('lon')) {
             originTile = findTile(Number(url_params.get('lat')), Number(url_params.get('lon')));
             setPos(Number(url_params.get('lat')), Number(url_params.get('lon')));
+            zoom();
         } else {
             navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
         }
