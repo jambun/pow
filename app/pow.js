@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.4';
+const VERSION = 'v1.1.5';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -86,7 +86,7 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-//    magnetic_declination = 12.75;
+    magnetic_declination = 12.75;
 
 
     function message(s) {
