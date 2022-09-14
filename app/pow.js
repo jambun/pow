@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.11';
+const VERSION = 'v1.1.12';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -331,10 +331,19 @@ window.onload = function(event) {
         loadTiles();
     };
 
+
+    function centrePanTarget() {
+        const pt = document.getElementById('pan-target');
+        pt.setAttribute('x', vb.position().x);
+        pt.setAttribute('y', vb.position().y);
+    }
+
+
     function pan(deltaX, deltaY) {
         vb.left = vb.left - (vb.width / homeWidth) * (deltaX / 2);
         vb.top = vb.top - (vb.width / homeWidth) * (deltaY / 2);
         vb.set();
+        centrePanTarget();
         loadTiles();
     }
 
@@ -618,6 +627,9 @@ window.onload = function(event) {
         set_origin: function() {
             this.plotmap.setAttribute('viewBox', this.origin);
             this.load();
+        },
+        position: function() {
+            return {x: Math.round(this.left + this.width / 2), y: Math.round(this.top + this.height / 2)};
         }
     }
 
@@ -638,12 +650,15 @@ window.onload = function(event) {
     document.getElementById("pan-button").onclick = function(e) {
         if (panning) {
             panning = false;
+            document.getElementById('pan-target').style.display = 'none';
             this.style.color = 'white';
             lastPanX = 0;
             lastPanY = 0;
             centreOnPos();
         } else {
             panning = true;
+            centrePanTarget();
+            document.getElementById('pan-target').style.display = 'inherit';
             this.style.color = 'lime';
         }
     };
@@ -673,6 +688,7 @@ window.onload = function(event) {
         const targetZoom = vb.width / homeWidth;
 
         document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
+        document.getElementById("pan-group").setAttribute('transform', `scale(${targetZoom})`);
 
         // for (const elt of document.getElementsByClassName('no-zoom')) {
         //     elt.setAttribute('transform', `scale(${targetZoom})`);
