@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.5';
+const VERSION = 'v1.1.11';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -438,6 +438,21 @@ window.onload = function(event) {
 
         lastZoomBarY = touch.pageY;
     });
+
+    const vbug = document.getElementById('version-bug');
+
+    vbug.addEventListener('touchstart', function(e) {
+        document.getElementById('controls-pane').style.display = 'none';
+    });
+
+    vbug.addEventListener('touchend', function(e) {
+        document.getElementById('controls-pane').style.display = 'inherit';
+    });
+
+    vbug.addEventListener('touchcancel', function(e) {
+        document.getElementById('controls-pane').style.display = 'inherit';
+    });
+
 
     const eb = document.getElementById("entry-bar");
 

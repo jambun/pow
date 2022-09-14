@@ -69,45 +69,46 @@
       </svg>
     </div>
 
-    <button type="button" id="pan-button" title="Pan"
-            style="position:absolute;font-size:150;top:20px;left:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-      P
-    </button>
+    <div id="controls-pane">
+      <button type="button" id="pan-button" title="Pan"
+              style="position:absolute;font-size:150;top:20px;left:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
+        P
+      </button>
 
-    <button type="button" id="track-button" title="Track"
-            style="position:absolute;font-size:150;top:20px;right:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-      T
-    </button>
+      <button type="button" id="track-button" title="Track"
+              style="position:absolute;font-size:150;top:20px;right:20px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
+        T
+      </button>
 
-    <div id="zoom-bar" title="zoom"
-         style="position:absolute;opacity:0.3;bottom:20px;left:20px;width:100px;height:800px;border-radius:20px;background-color:#333">
-      &nbsp;
-    </div>
+      <div id="zoom-bar" title="zoom"
+           style="position:absolute;opacity:0.3;bottom:20px;left:20px;width:100px;height:800px;border-radius:20px;background-color:#333">
+        &nbsp;
+      </div>
 
-    <div id="entry-bar" title="entry"
-         style="position:absolute;opacity:0.3;top:22px;left:240px;right:240px;height:100px;border-radius:20px;background-color:#333;color:#fff;font-size:60;text-align:center;">
-      &nbsp;
+      <div id="entry-bar" title="entry"
+           style="position:absolute;opacity:0.3;top:22px;left:240px;right:240px;height:100px;border-radius:20px;background-color:#333;color:#fff;font-size:60;text-align:center;">
+        &nbsp;
+      </div>
+
+      <div id="entry-pane"
+           style="display:none;position:absolute;opacity:1;top:0px;left:0px;width:100%;height:400px;background-color:#ccc;padding:40px;">
+        <button type="button" id="entry-cancel" title="Cancel"
+                style="position:absolute;font-size:100;top:20px;right:120px;width:120px;text-align:center;border-radius:12px;padding:2px;background-color:#aaa;color:#333">
+          X
+        </button>
+
+        <div id="entry-label" style="width:90%;height:50%;font-size:60;">
+          Add a point
+        </div>
+        <div id="entry-form" style="height:20%;left-margin:60px;">
+          <input id="entry-input" type="text" style="width:90%;left-margin:30px;font-size:80;" size="10">
+        </div>
+      </div>
     </div>
 
     <div id="version-bug" title="version"
-         style="position:absolute;opacity:0.8;bottom:20px;right:20px;height:40px;width:120px;border-radius:8px;font-size:30;padding-top:6px;background-color:#999;color:#fff;text-align:center;">
+         style="position:absolute;opacity:0.8;bottom:20px;right:20px;height:40px;width:120px;border-radius:8px;font-size:30;padding-top:6px;background-color:#999;color:#fff;text-align:center;user-select:none;-webkit-touch-callout:none;-webkit-user-select:none;">
     </div>
-
-    <div id="entry-pane"
-         style="display:none;position:absolute;opacity:1;top:0px;left:0px;width:100%;height:400px;background-color:#ccc;padding:40px;">
-      <button type="button" id="entry-cancel" title="Cancel"
-              style="position:absolute;font-size:100;top:20px;right:120px;width:120px;text-align:center;border-radius:12px;padding:2px;background-color:#aaa;color:#333">
-        X
-      </button>
-      <div id="entry-label" style="width:90%;height:50%;font-size:60;">
-        Add a point
-      </div>
-      <div id="entry-form" style="height:20%;left-margin:60px;">
-        <input id="entry-input" type="text" style="width:90%;left-margin:30px;font-size:80;" size="10">
-      </div>
-    </div>
-
-
   </body>
 </html>
 
