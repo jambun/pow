@@ -703,9 +703,6 @@ window.onload = function(event) {
     function zoomTarget() {
         const targetZoom = vb.width / homeWidth;
 
-        document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
-        document.getElementById("pan-group").setAttribute('transform', `scale(${targetZoom})`);
-
         for (const elt of document.getElementsByClassName('no-zoom')) {
             elt.setAttribute('transform', `scale(${targetZoom})`);
         }
