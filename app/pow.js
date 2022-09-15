@@ -356,11 +356,25 @@ window.onload = function(event) {
         }
     }
 
+    function addObjectiveMark(label) {
+        const omTemplate = document.getElementsByClassName('objective-mark')[0];
+        const om = omTemplate.cloneNode(true);
+
+        om.setAttribute('x', vb.position().x);
+        om.setAttribute('y', vb.position().y);
+        om.getElementsByClassName('objective-text')[0].textContent = label;
+        om.style.display = 'inherit';
+
+        pm.insertBefore(om, omTemplate.nextSibling);
+
+    }
+
     function addPoint(position, force) {
         if (!tracking) { return; }
 
         if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
 
+        // FIXME: put all this inside an svg element so that no-zoom doesn't shift the position
         var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         mark.style.opacity = "0.7";
         mark.setAttribute("cx", currentPos.x);
@@ -469,9 +483,11 @@ window.onload = function(event) {
         // calling getDirection here just as a way of getting permission
         // apparently it has to be in a click or touchend handler
         getDirection();
-        openEntryForm('Add a marker', addMarker);
+
+        openEntryForm('Add a marker', addObjectiveMark);
     };
 
+    // FIXME: not currently used since addObjectiveMark
     function addMarker(label) {
         if (tracking && !panning) {
             const pms = document.getElementsByClassName('position-mark');
@@ -690,9 +706,9 @@ window.onload = function(event) {
         document.getElementById("target-group").setAttribute('transform', `scale(${targetZoom})`);
         document.getElementById("pan-group").setAttribute('transform', `scale(${targetZoom})`);
 
-        // for (const elt of document.getElementsByClassName('no-zoom')) {
-        //     elt.setAttribute('transform', `scale(${targetZoom})`);
-        // }
+        for (const elt of document.getElementsByClassName('no-zoom')) {
+            elt.setAttribute('transform', `scale(${targetZoom})`);
+        }
 
         const bearing = document.getElementById("point-target-bearing");
         bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
