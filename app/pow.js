@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.1.12';
+const VERSION = 'v1.2.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -64,6 +64,8 @@ window.onload = function(event) {
     var distRadius;
     const distanceRadiusFraction = 1/3;
 
+    var trueBearing;
+
     var jitterThreshholdPx = 2;
 
     var pm;
@@ -86,7 +88,7 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-    magnetic_declination = 12.75;
+//    magnetic_declination = 12.75;
 
 
     function message(s) {
@@ -96,6 +98,9 @@ window.onload = function(event) {
 
 
     function toRadians(degrees) { return degrees * Math.PI / 180.0 }
+
+    // HELPME: math brainmelt
+    function XYtoDegrees(dx, dy) { return (Math.atan2(dy, dx) / Math.PI * 180  - 450) % 360 * -1 }
 
     function handleOrientation(event) {
         if (event.webkitCompassHeading) {
@@ -367,6 +372,22 @@ window.onload = function(event) {
 
         pm.insertBefore(om, omTemplate.nextSibling);
 
+        const dx = om.getAttribute('x') - currentPos.x;
+        const dy = om.getAttribute('y') - currentPos.y;
+
+        const tbl = document.getElementById('true-bearing-line');
+
+        tbl.setAttribute('x2', dx);
+        tbl.setAttribute('y2', dy);
+
+        const tb = document.getElementById('true-bearing')
+        tb.setAttribute('x', currentPos.x);
+        tb.setAttribute('y', currentPos.y);
+        tb.style.display = 'inherit';
+
+        trueBearing = XYtoDegrees(dx, dy * -1);
+        
+        message(trueBearing);
     }
 
     function addPoint(position, force) {
@@ -707,8 +728,9 @@ window.onload = function(event) {
             elt.setAttribute('transform', `scale(${targetZoom})`);
         }
 
-        const bearing = document.getElementById("point-target-bearing");
-        bearing.setAttribute('stroke-width', Math.max(0.1, (2.0 * targetZoom)));
+        for (const elt of document.getElementsByClassName('no-stroke-zoom')) {
+            elt.style.strokeWidth = `${elt.dataset.stroke * targetZoom}px`;
+        }
 
         if (!distRadius) {
             distRadius = Math.round(vb.width * distanceRadiusFraction);

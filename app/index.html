@@ -44,6 +44,11 @@
                width="2000px" height="2000px" x="0" y="0" class="map-tile"
                style="z-index:0;opacity:1;"/>
 
+        <svg x="100" y="100" id="true-bearing" style="display:none;overflow:visible;">
+          <g id="true-bearing-group" class="no-stroke-zoom" data-stroke="6" style="stroke:cyan;opacity:0.6;stroke-width:6;">
+            <line id="true-bearing-line" x1="0" y1="0" x2="0" y2="0" style="">
+          </g>
+        </svg>
 
         <svg x="100" y="100" class="objective-mark" style="display:none;overflow:visible;">
           <g id="objective-group" class="no-zoom" style="stroke:black;opacity:0.9;stroke-width:1;">
@@ -76,7 +81,7 @@
           </g>
         </svg>
 
-        <line id="point-target-bearing" x1="100" y1="15" x2="100" y2="15" stroke="red" stroke-width="2" style="opacity:0.9;"/>
+        <line id="point-target-bearing" x1="100" y1="15" x2="100" y2="15" class="no-stroke-zoom" stroke="red" data-stroke="2" stroke-width="2" style="opacity:0.9;"/>
 
 
         <svg x="100" y="100" id="pan-target" style="display:none;overflow:visible;">
