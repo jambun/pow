@@ -395,6 +395,15 @@ document.getElementById("set-querystring-button").onclick = function(e) {
     window.location.search = url_params.toString();
 };
 
+document.getElementById("download-data-button").onclick = function(e) {
+    const path = this.getAttribute('href');
+
+    const link = document.createElement('a');
+    link.href = path;
+    link.download = path.substr(path.lastIndexOf('/') + 1);
+    link.click();
+};
+
 document.getElementById("summary-button").onclick = function(e) {
     toggleSummary(this);
 };

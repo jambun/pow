@@ -55,6 +55,7 @@ sub MAIN (Str $file where *.IO.f,
               maps => $maps.list,
               map_metadata => $maps.metadata,
               button_groups => $commands.list_grouped,
+              file_path => $file,
               help => help;
 
     my %js_parts = js_head => slurp('templates/js/head.js'),
@@ -102,6 +103,7 @@ sub help {
       <td width="50%" valign="top">
         <span style="font-size:large;">Display</span>
         { help_item('!', 'Set querystring for current state') }
+        { help_item('v', 'Download raw plot data') }
         { help_item('l', 'Toggle trail') }
         { help_item('k', 'Show trail out/back/all') }
         { help_item('d', 'Toggle km marks') }

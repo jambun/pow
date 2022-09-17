@@ -31,6 +31,7 @@ class Commands {
           {id => 'stop', key => 'q', group => 'animation', label => '!', title => 'Stop animation', :!on},
 
           {id => 'set-querystring', key => '1', group => 'display', label => '!', title => 'Set querystring for current state'},
+          {id => 'download-data', key => 'v', group => 'display', label => 'V', title => 'Download plot data'},
           {id => 'trail-half', key => 'k', group => 'display', label => '&half;', title => 'Show trail out/back/all', :!on},
           {id => 'trail-color', key => 'c', group => 'display', label => 'C', title => 'Next trail color map', :!on},
           {id => 'trail', key => 'l', group => 'display', label => 'L', title => 'Toggle trail marks', :on},

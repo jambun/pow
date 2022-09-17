@@ -88,6 +88,9 @@ window.onload = function(e) {
             document.getElementById("measure-button").click();
         }
     }
+
+    document.getElementById('download-data-button').setAttribute('href', '{{file_path}}');
+
 }
 
 function show_point(ix, loop_around) {
