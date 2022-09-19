@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.2.2';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -64,6 +64,7 @@ window.onload = function(event) {
     var distRadius;
     const distanceRadiusFraction = 1/3;
 
+    var currentObjective;
     var trueBearing;
 
     var jitterThreshholdPx = 2;
@@ -88,12 +89,12 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-//    magnetic_declination = 12.75;
+    magnetic_declination = 12.75;
 
 
     function message(s) {
         document.getElementById('entry-bar').style.opacity = '0.9';
-        document.getElementById('entry-bar').textContent = s;
+        document.getElementById('entry-bar').innerHTML = s;
     }
 
 
@@ -108,7 +109,7 @@ window.onload = function(event) {
         } else {
             direction = event.alpha;
         }
-        message(direction.toFixed());
+//        message(direction.toFixed());
         const dirr = toRadians(direction + magnetic_declination);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
@@ -124,6 +125,15 @@ window.onload = function(event) {
         bearingLine.setAttribute('y1', Math.round(yvec * scaledRad + currentPos.y));
         bearingLine.setAttribute('x2', Math.round(xvec * lineLength + currentPos.x));
         bearingLine.setAttribute('y2', Math.round(yvec * lineLength + currentPos.y));
+
+        if (trueBearing) {
+            const bdiff = Math.abs(direction - trueBearing);
+            if (bdiff > 180) { bdiff = 180 - bdiff % 180; }
+
+            if (bdiff < 5) {
+                //message(Math.round(bdiff));
+            }
+        }
 
     }
 
@@ -322,6 +332,8 @@ window.onload = function(event) {
 
         if (!panning) { centreOnPos(); }
 
+        updateCurrentObjective();
+
         addPoint(position, first);
     };
 
@@ -385,9 +397,50 @@ window.onload = function(event) {
         tb.setAttribute('y', currentPos.y);
         tb.style.display = 'inherit';
 
-        trueBearing = XYtoDegrees(dx, dy * -1);
-        
-        message(trueBearing);
+        const [lat, lon] = toLatLon(om.getAttribute('x'), om.getAttribute('y'));
+
+        om.setAttribute('data-lat', lat);
+        om.setAttribute('data-lon', lon);
+
+        currentObjective = om;
+
+        updateCurrentObjective();
+    }
+
+    function updateCurrentObjective() {
+        if (currentObjective) {
+            const dst = dstToHuman(calculateDistance(currentPos.lat, currentPos.lon, currentObjective.dataset.lat, currentObjective.dataset.lon));
+            const dx = currentObjective.getAttribute('x') - currentPos.x;
+            const dy = currentObjective.getAttribute('y') - currentPos.y;
+
+            const tb = document.getElementById('true-bearing')
+            tb.setAttribute('x', currentPos.x);
+            tb.setAttribute('y', currentPos.y);
+
+//        const dx = om.getAttribute('x') - currentPos.x;
+//        const dy = om.getAttribute('y') - currentPos.y;
+
+        const tbl = document.getElementById('true-bearing-line');
+
+        tbl.setAttribute('x2', dx);
+        tbl.setAttribute('y2', dy);
+
+
+
+            trueBearing = Math.round(XYtoDegrees(dx, dy * -1));
+
+            message(`${currentObjective.textContent} <br/> ${dst} &mdash;  ${trueBearing}&deg;`);
+        }
+    }
+
+    function dstToHuman(metres) {
+        var dst;
+        if (metres >= 1000) {
+            dst = (metres / 1000).toFixed(2) + 'km';
+        } else {
+            dst = Math.round(metres) + 'm';
+        }
+        return dst;
     }
 
     function addPoint(position, force) {
@@ -742,15 +795,7 @@ window.onload = function(event) {
 
         const [lat, lon] = toLatLon(currentPos.x + Math.round(vb.width * distanceRadiusFraction), currentPos.y);
 
-        var dst = calculateDistance(currentPos.lat, currentPos.lon, lat, lon);
-
-        if (dst >= 1000) {
-            dst = (dst / 1000).toFixed(2) + 'km';
-        } else {
-            dst = dst.toFixed() + 'm';
-        }
-
-        document.getElementById('point-target-dst').textContent = dst;
+        document.getElementById('point-target-dst').textContent = dstToHuman(calculateDistance(currentPos.lat, currentPos.lon, lat, lon));
 
         const dbox = document.getElementById('point-target-dst-box');
         const bbox = document.getElementById('point-target-dst').getBBox();
