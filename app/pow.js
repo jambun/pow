@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.2.2';
+const VERSION = 'v1.2.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -448,52 +448,40 @@ window.onload = function(event) {
 
         if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
 
-        // FIXME: put all this inside an svg element so that no-zoom doesn't shift the position
-        var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        mark.style.opacity = "0.7";
-        mark.setAttribute("cx", currentPos.x);
-        mark.setAttribute("cy", currentPos.y);
-        mark.setAttribute("r", 6);
-        mark.setAttribute("stroke", "blue");
-        mark.setAttribute("stroke-width", "0");
-        mark.setAttribute("fill", "blue");
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.classList.add('no-stroke-zoom');
+        line.setAttribute("data-stroke", "6");
+        line.style.opacity = "0.3";
+        line.setAttribute("x1", lastPos.x || currentPos.x);
+        line.setAttribute("y1", lastPos.y || currentPos.y);
+        line.setAttribute("x2", currentPos.x);
+        line.setAttribute("y2", currentPos.y);
+        line.setAttribute("stroke", "blue");
+        line.style.strokeWidth = "6";
 
         if (position) {
-            mark.classList.add('position-mark');
-            mark.classList.add('no-zoom');
-            mark.setAttribute('data-lat', position.coords.latitude);
-            mark.setAttribute('data-lon', position.coords.longitude);
-            mark.setAttribute('data-ele', position.coords.altitude);
-            mark.setAttribute('data-spd', position.coords.speed);
-            mark.setAttribute('data-acc', position.coords.accuracy);
-            mark.setAttribute('data-eac', position.coords.altitudeAccuracy);
-            mark.setAttribute('data-spd', position.coords.speed);
-            mark.setAttribute('data-hdg', position.coords.heading);
-            mark.setAttribute('data-tim', position.timestamp);
+            line.classList.add('position-mark');
+            line.setAttribute('data-lat', position.coords.latitude);
+            line.setAttribute('data-lon', position.coords.longitude);
+            line.setAttribute('data-ele', position.coords.altitude);
+            line.setAttribute('data-spd', position.coords.speed);
+            line.setAttribute('data-acc', position.coords.accuracy);
+            line.setAttribute('data-eac', position.coords.altitudeAccuracy);
+            line.setAttribute('data-spd', position.coords.speed);
+            line.setAttribute('data-hdg', position.coords.heading);
+            line.setAttribute('data-tim', position.timestamp);
         }
 
         if (lastPos.x) {
-            var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.classList.add('no-zoom');
-            line.style.opacity = "0.5";
-            line.setAttribute("x1", lastPos.x);
-            line.setAttribute("x2", currentPos.x);
-            line.setAttribute("y1", lastPos.y);
-            line.setAttribute("y2", currentPos.y);
-            line.setAttribute("stroke", "blue");
-            line.setAttribute("stroke-width", "3");
-
             const dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
             mark.setAttribute('data-dst', dst);
             trackDistance += dst;
             if (currentPos.ele && lastPos.ele && currentPos.ele > lastPos.ele) {
                 trackClimb += currentPos.ele - lastPos.ele;
             }
-
-            pm.insertBefore(line, document.getElementById("target"));
         }
 
-        pm.insertBefore(mark, document.getElementById("target"));
+        pm.insertBefore(line, document.getElementById("target"));
     };
 
     wrap = document.getElementById("plotmap-wrapper");
