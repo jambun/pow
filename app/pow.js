@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.2.3';
+const VERSION = 'v1.2.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -374,13 +374,25 @@ window.onload = function(event) {
     }
 
     function addObjectiveMark(label) {
-        const omTemplate = document.getElementsByClassName('objective-mark')[0];
+        const omTemplate = document.getElementById('objective-template');
         const om = omTemplate.cloneNode(true);
+        om.removeAttribute('id');
+        om.classList.add('objective-mark');
 
         om.setAttribute('x', vb.position().x);
         om.setAttribute('y', vb.position().y);
         om.getElementsByClassName('objective-text')[0].textContent = label;
         om.style.display = 'inherit';
+
+        om.onclick = function(e) {
+            currentObjective = this;
+            updateCurrentObjective();
+        };
+
+        om.addEventListener('touchend', function(e) {
+            currentObjective = this;
+            updateCurrentObjective();
+        });
 
         pm.insertBefore(om, omTemplate.nextSibling);
 
@@ -548,6 +560,7 @@ window.onload = function(event) {
 
         openEntryForm('Add a marker', addObjectiveMark);
     };
+
 
     // FIXME: not currently used since addObjectiveMark
     function addMarker(label) {
