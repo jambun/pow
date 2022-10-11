@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.2.4';
+const VERSION = 'v1.2.10';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -22,6 +22,9 @@ const registerServiceWorker = async () => {
 
 registerServiceWorker();
 
+// this is fine and all but can't write it, so yeah
+//    const trackFile = new File(["POWWWWW"], "pow_track.txt", {type: "text/plain"});
+
 window.onload = function(event) {
 
     function init() {
@@ -36,7 +39,6 @@ window.onload = function(event) {
 
         getDirection();
     };
-
 
     const url_params = new URLSearchParams(window.location.search);
 
@@ -89,7 +91,7 @@ window.onload = function(event) {
     var magnetic_declination = 0.0;
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
-    magnetic_declination = 12.75;
+//    magnetic_declination = 12.75;
 
 
     function message(s) {
@@ -107,9 +109,9 @@ window.onload = function(event) {
         if (event.webkitCompassHeading) {
             direction = event.webkitCompassHeading;
         } else {
-            direction = event.alpha;
+            direction = 360 - event.alpha;
         }
-//        message(direction.toFixed());
+//        message(direction.toFixed() + ' : ' + event.absolute);
         const dirr = toRadians(direction + magnetic_declination);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
@@ -131,10 +133,9 @@ window.onload = function(event) {
             if (bdiff > 180) { bdiff = 180 - bdiff % 180; }
 
             if (bdiff < 5) {
-                //message(Math.round(bdiff));
+                window.navigator.vibrate(200);
             }
         }
-
     }
 
 
@@ -153,8 +154,13 @@ window.onload = function(event) {
                })
                .catch(console.error)
        } else {
-           document.getElementById('point-target-direction').style.display = 'none';
-           document.getElementById('point-target-bearing').style.display = 'none';
+           // android chrome only sadly
+           if (!directionInitialized) {
+               window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+               directionInitialized = true;
+           }
+//           document.getElementById('point-target-direction').style.display = 'none';
+//           document.getElementById('point-target-bearing').style.display = 'none';
        }
     }
 
@@ -289,23 +295,30 @@ window.onload = function(event) {
 
         const first = lastPos.x == 0;
 
-        if (!first) {
+        if (currentPos.x) {
             lastPos.x = currentPos.x;
             lastPos.y = currentPos.y;
             lastPos.lat = currentPos.lat;
             lastPos.lon = currentPos.lon;
+            lastPos.ele = currentPos.ele;
         }
 
         currentPos.x = xy[0];
         currentPos.y = xy[1];
         currentPos.lat = lat;
         currentPos.lon = lon;
-
         if (position) {
-            if (!first) {
+            currentPos.ele = position.coords.altitude;
+        }
+
+        if (!lastPos.x) {
+            lastPos.x = currentPos.x;
+            lastPos.y = currentPos.y;
+            lastPos.lat = currentPos.lat;
+            lastPos.lon = currentPos.lon;
+            if (position) {
                 lastPos.ele = currentPos.ele;
             }
-            currentPos.ele = position.coords.altitude;
         }
 
         loadTiles(currentPos.x, currentPos.y);
@@ -461,18 +474,18 @@ window.onload = function(event) {
         if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
 
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.classList.add('position-mark');
         line.classList.add('no-stroke-zoom');
-        line.setAttribute("data-stroke", "6");
-        line.style.opacity = "0.3";
+        line.setAttribute("data-stroke", "12");
+        line.style.opacity = "0.6";
         line.setAttribute("x1", lastPos.x || currentPos.x);
         line.setAttribute("y1", lastPos.y || currentPos.y);
         line.setAttribute("x2", currentPos.x);
         line.setAttribute("y2", currentPos.y);
         line.setAttribute("stroke", "blue");
-        line.style.strokeWidth = "6";
-
+        line.style.strokeWidth = "12";
         if (position) {
-            line.classList.add('position-mark');
+//        message(`${lastPos.x}:${lastPos.y} - ${currentPos.x}:${currentPos.y}`);
             line.setAttribute('data-lat', position.coords.latitude);
             line.setAttribute('data-lon', position.coords.longitude);
             line.setAttribute('data-ele', position.coords.altitude);
@@ -486,7 +499,7 @@ window.onload = function(event) {
 
         if (lastPos.x) {
             const dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
-            mark.setAttribute('data-dst', dst);
+            line.setAttribute('data-dst', dst);
             trackDistance += dst;
             if (currentPos.ele && lastPos.ele && currentPos.ele > lastPos.ele) {
                 trackClimb += currentPos.ele - lastPos.ele;
@@ -572,6 +585,17 @@ window.onload = function(event) {
         }
     };
 
+
+    document.getElementById("file-selector").onchange = function(e) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            message(evt.target.result);
+        };
+        reader.readAsText(this.files[0]);
+
+
+//        message(this.files[0]);
+    };
 
     document.getElementById("entry-input").onkeydown = function(e) {
         if (e.key == 'Enter') {
