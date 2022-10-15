@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.2.10';
+const VERSION = 'v1.3.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -345,6 +345,8 @@ window.onload = function(event) {
 
         if (!panning) { centreOnPos(); }
 
+        if (first && tracking) { addObjectiveMark('Start'); }
+
         updateCurrentObjective();
 
         addPoint(position, first);
@@ -379,6 +381,10 @@ window.onload = function(event) {
 
 
     async function track() {
+        // FIXME: do more init like remove old position-marks and old start objective
+        //        and this is a dodgy way to signal a new track
+        lastPos.x = 0;
+
         while(true) {
             if (!tracking) { break; }
             navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
@@ -392,8 +398,6 @@ window.onload = function(event) {
         om.removeAttribute('id');
         om.classList.add('objective-mark');
 
-        om.setAttribute('x', vb.position().x);
-        om.setAttribute('y', vb.position().y);
         om.getElementsByClassName('objective-text')[0].textContent = label;
         om.style.display = 'inherit';
 
@@ -407,25 +411,37 @@ window.onload = function(event) {
             updateCurrentObjective();
         });
 
+        if (panning || !currentPos) {
+            om.setAttribute('x', vb.position().x);
+            om.setAttribute('y', vb.position().y);
+
+            const dx = om.getAttribute('x') - currentPos.x;
+            const dy = om.getAttribute('y') - currentPos.y;
+
+            const [lat, lon] = toLatLon(om.getAttribute('x'), om.getAttribute('y'));
+
+            om.setAttribute('data-lat', lat);
+            om.setAttribute('data-lon', lon);
+        } else {
+            om.setAttribute('x', currentPos.x);
+            om.setAttribute('y', currentPos.y);
+
+            om.setAttribute('data-lat', currentPos.lat);
+            om.setAttribute('data-lon', currentPos.lon);
+            om.setAttribute('data-ele', currentPos.ele);
+        }
+
         pm.insertBefore(om, omTemplate.nextSibling);
 
-        const dx = om.getAttribute('x') - currentPos.x;
-        const dy = om.getAttribute('y') - currentPos.y;
+        // const tbl = document.getElementById('true-bearing-line');
 
-        const tbl = document.getElementById('true-bearing-line');
+        // tbl.setAttribute('x2', dx);
+        // tbl.setAttribute('y2', dy);
 
-        tbl.setAttribute('x2', dx);
-        tbl.setAttribute('y2', dy);
-
-        const tb = document.getElementById('true-bearing')
-        tb.setAttribute('x', currentPos.x);
-        tb.setAttribute('y', currentPos.y);
-        tb.style.display = 'inherit';
-
-        const [lat, lon] = toLatLon(om.getAttribute('x'), om.getAttribute('y'));
-
-        om.setAttribute('data-lat', lat);
-        om.setAttribute('data-lon', lon);
+        // const tb = document.getElementById('true-bearing')
+        // tb.setAttribute('x', currentPos.x);
+        // tb.setAttribute('y', currentPos.y);
+        // tb.style.display = 'inherit';
 
         currentObjective = om;
 
@@ -441,20 +457,26 @@ window.onload = function(event) {
             const tb = document.getElementById('true-bearing')
             tb.setAttribute('x', currentPos.x);
             tb.setAttribute('y', currentPos.y);
+            tb.style.display = 'inherit';
 
-//        const dx = om.getAttribute('x') - currentPos.x;
-//        const dy = om.getAttribute('y') - currentPos.y;
+            const tbl = document.getElementById('true-bearing-line');
 
-        const tbl = document.getElementById('true-bearing-line');
-
-        tbl.setAttribute('x2', dx);
-        tbl.setAttribute('y2', dy);
-
-
+            tbl.setAttribute('x2', dx);
+            tbl.setAttribute('y2', dy);
 
             trueBearing = Math.round(XYtoDegrees(dx, dy * -1));
 
-            message(`${currentObjective.textContent} <br/> ${dst} &mdash;  ${trueBearing}&deg;`);
+            var ed = '';
+            if (currentObjective.dataset.ele) {
+                ed = currentPos.ele - currentObjective.dataset.ele;
+                ed = Math.round(ed).toString();
+                if (!ed.startsWith("-")) {
+                    ed = "+" + ed;
+                }
+                ed = "  " + ed;
+            }
+
+            message(`${currentObjective.textContent} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`);
         }
     }
 
@@ -485,7 +507,6 @@ window.onload = function(event) {
         line.setAttribute("stroke", "blue");
         line.style.strokeWidth = "12";
         if (position) {
-//        message(`${lastPos.x}:${lastPos.y} - ${currentPos.x}:${currentPos.y}`);
             line.setAttribute('data-lat', position.coords.latitude);
             line.setAttribute('data-lon', position.coords.longitude);
             line.setAttribute('data-ele', position.coords.altitude);
