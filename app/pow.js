@@ -433,16 +433,6 @@ window.onload = function(event) {
 
         pm.insertBefore(om, omTemplate.nextSibling);
 
-        // const tbl = document.getElementById('true-bearing-line');
-
-        // tbl.setAttribute('x2', dx);
-        // tbl.setAttribute('y2', dy);
-
-        // const tb = document.getElementById('true-bearing')
-        // tb.setAttribute('x', currentPos.x);
-        // tb.setAttribute('y', currentPos.y);
-        // tb.style.display = 'inherit';
-
         currentObjective = om;
 
         updateCurrentObjective();
@@ -468,7 +458,7 @@ window.onload = function(event) {
 
             var ed = '';
             if (currentObjective.dataset.ele) {
-                ed = currentPos.ele - currentObjective.dataset.ele;
+                ed = currentObjective.dataset.ele - currentPos.ele;
                 ed = Math.round(ed).toString();
                 if (!ed.startsWith("-")) {
                     ed = "+" + ed;
