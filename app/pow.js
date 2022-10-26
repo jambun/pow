@@ -789,6 +789,7 @@ window.onload = function(event) {
 
     document.getElementById("pan-button").onclick = function(e) {
         if (panning) {
+            document.getElementById("track-button").removeAttribute('disabled');
             panning = false;
             document.getElementById('pan-target').style.display = 'none';
             this.style.color = 'white';
@@ -796,6 +797,7 @@ window.onload = function(event) {
             lastPanY = 0;
             centreOnPos();
         } else {
+            document.getElementById("track-button").setAttribute('disabled', 'disabled');
             panning = true;
             centrePanTarget();
             document.getElementById('pan-target').style.display = 'inherit';
