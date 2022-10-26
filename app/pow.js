@@ -380,12 +380,26 @@ window.onload = function(event) {
     }
 
 
-    async function track() {
-        // FIXME: do more init like remove old position-marks and old start objective
-        //        and this is a dodgy way to signal a new track
+    function clearTrack() {
         lastPos.x = 0;
 
-        while(true) {
+        for (const mark of document.getElementsByClassName('position-mark')) {
+            mark.remove();
+        }
+
+        for (const mark of document.getElementsByClassName('objective-mark')) {
+            mark.remove();
+        }
+
+        currentObjective = null;
+        updateCurrentObjective();
+    }
+
+
+    async function track() {
+        clearTrack();
+
+        while (true) {
             if (!tracking) { break; }
             navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
             await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
