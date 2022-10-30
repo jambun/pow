@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.3.1';
+const VERSION = 'v1.3.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -76,6 +76,7 @@ window.onload = function(event) {
     var vb;
     var tracking = false;
     var trackingSampleRate = 5000; // ms
+    var recording = false;
 
     var lastZoomBarY = 0;
 
@@ -295,7 +296,7 @@ window.onload = function(event) {
 
         const first = lastPos.x == 0;
 
-        if (currentPos.x) {
+        if (recording && currentPos.x) {
             lastPos.x = currentPos.x;
             lastPos.y = currentPos.y;
             lastPos.lat = currentPos.lat;
@@ -311,7 +312,7 @@ window.onload = function(event) {
             currentPos.ele = position.coords.altitude;
         }
 
-        if (!lastPos.x) {
+        if (recording && !lastPos.x) {
             lastPos.x = currentPos.x;
             lastPos.y = currentPos.y;
             lastPos.lat = currentPos.lat;
@@ -321,7 +322,7 @@ window.onload = function(event) {
             }
         }
 
-        loadTiles(currentPos.x, currentPos.y);
+        if (!panning) { loadTiles(currentPos.x, currentPos.y); }
 
         document.getElementById('target').setAttribute('x', currentPos.x);
         document.getElementById('target').setAttribute('y', currentPos.y);
@@ -345,11 +346,11 @@ window.onload = function(event) {
 
         if (!panning) { centreOnPos(); }
 
-        if (first && tracking) { addObjectiveMark('Start'); }
+        if (first && recording) { addObjectiveMark('Start'); }
 
         updateCurrentObjective();
 
-        addPoint(position, first);
+        if (recording) { addPoint(position, first); }
     };
 
     function errPos(err) { console.log(err)};
@@ -773,18 +774,44 @@ window.onload = function(event) {
         }
     }
 
+    document.getElementById("status-button").onclick = function(e) {
+        const tp = document.getElementById("track-pane");
+        if (tp.style.display == 'none') {
+            tp.style.display = 'inherit';
+        } else {
+            tp.style.display = 'none';
+        }
+    };
+
     document.getElementById("track-button").onclick = function(e) {
         if (tracking) {
             tracking = false;
             lastPos.x = 0;
             lastPos.y = 0;
             this.style.color = 'white';
-            download();
+            document.getElementById("tracking-status").style.color = 'white';;
         } else {
             tracking = true;
             this.style.color = 'lime';
+            document.getElementById("tracking-status").style.color = 'lime';;
             track();
         }
+    };
+
+    document.getElementById("record-button").onclick = function(e) {
+        if (recording) {
+            recording = false;
+            this.style.color = 'white';
+            document.getElementById("recording-status").style.color = 'white';;
+        } else {
+            this.style.color = 'lime';
+            document.getElementById("recording-status").style.color = 'lime';;
+            recording = true;
+        }
+    };
+
+    document.getElementById("download-button").onclick = function(e) {
+        download();
     };
 
     document.getElementById("pan-button").onclick = function(e) {
