@@ -346,11 +346,11 @@ window.onload = function(event) {
 
         if (!panning) { centreOnPos(); }
 
+        if (recording) { addPoint(position, first); }
+
         if (first && recording) { addObjectiveMark('Start'); }
 
         updateCurrentObjective();
-
-        if (recording) { addPoint(position, first); }
     };
 
     function errPos(err) { console.log(err)};
@@ -444,6 +444,9 @@ window.onload = function(event) {
             om.setAttribute('data-lat', currentPos.lat);
             om.setAttribute('data-lon', currentPos.lon);
             om.setAttribute('data-ele', currentPos.ele);
+
+            const pms = document.getElementsByClassName('position-mark');
+            pms[pms.length - 1].setAttribute('data-tag', label);
         }
 
         pm.insertBefore(om, omTemplate.nextSibling);
