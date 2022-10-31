@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.3.3';
+const VERSION = 'v1.4.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -96,8 +96,8 @@ window.onload = function(event) {
 
 
     function message(s) {
-        document.getElementById('entry-bar').style.opacity = '0.9';
-        document.getElementById('entry-bar').innerHTML = s;
+        document.getElementById('message-bar').style.opacity = '0.8';
+        document.getElementById('message-bar').innerHTML = s;
     }
 
 
@@ -593,17 +593,6 @@ window.onload = function(event) {
     });
 
 
-    const eb = document.getElementById("entry-bar");
-
-    eb.onclick = function(e) {
-        // calling getDirection here just as a way of getting permission
-        // apparently it has to be in a click or touchend handler
-        getDirection();
-
-        openEntryForm('Add a marker', addObjectiveMark);
-    };
-
-
     // FIXME: not currently used since addObjectiveMark
     function addMarker(label) {
         if (tracking && !panning) {
@@ -834,6 +823,15 @@ window.onload = function(event) {
             this.style.color = 'lime';
         }
     };
+
+    document.getElementById("add-point-button").onclick = function(e) {
+        // calling getDirection here just as a way of getting permission
+        // apparently it has to be in a click or touchend handler
+        getDirection();
+
+        openEntryForm('Add a marker', addObjectiveMark);
+    };
+
 
     function wrapAspect() {
         return wrap.clientWidth / wrap.clientHeight;
