@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.4.0';
+const VERSION = 'v1.4.1';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -36,6 +36,8 @@ window.onload = function(event) {
 
         vb.load();
         vb.mark_origin();
+
+        showMessage('home');
 
         getDirection();
     };
@@ -94,10 +96,26 @@ window.onload = function(event) {
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
 
+    const messages = {'home': `pow ${VERSION}`};
 
-    function message(s) {
-        document.getElementById('message-bar').style.opacity = '0.8';
-        document.getElementById('message-bar').innerHTML = s;
+
+    function showMessage(page) {
+        const mb = document.getElementById('message-bar');
+        mb.innerHTML = messages[page];
+        mb.setAttribute('data-page', page);
+    }
+
+    function showNextMessage() {
+        // jjj
+        const pages = Object.keys(messages);
+        var ix = pages.indexOf(document.getElementById('message-bar').dataset.page) + 1;
+        if (ix >= pages.length) { ix = 0; }
+        showMessage(pages[ix]);
+    }
+
+    function message(page, s, show) {
+        messages[page] = s;
+        if (show) { showMessage(page); }
     }
 
 
@@ -112,7 +130,7 @@ window.onload = function(event) {
         } else {
             direction = 360 - event.alpha;
         }
-//        message(direction.toFixed() + ' : ' + event.absolute);
+//        message('compass', direction.toFixed() + ' : ' + event.absolute);
         const dirr = toRadians(direction + magnetic_declination);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
@@ -484,7 +502,7 @@ window.onload = function(event) {
                 ed = "  " + ed;
             }
 
-            message(`${currentObjective.textContent} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`);
+            message('objective', `${currentObjective.textContent} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
         }
     }
 
@@ -506,14 +524,14 @@ window.onload = function(event) {
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.classList.add('position-mark');
         line.classList.add('no-stroke-zoom');
-        line.setAttribute("data-stroke", "12");
+        line.setAttribute("data-stroke", "8");
         line.style.opacity = "0.6";
         line.setAttribute("x1", lastPos.x || currentPos.x);
         line.setAttribute("y1", lastPos.y || currentPos.y);
         line.setAttribute("x2", currentPos.x);
         line.setAttribute("y2", currentPos.y);
         line.setAttribute("stroke", "blue");
-        line.style.strokeWidth = "12";
+        line.style.strokeWidth = "8";
         if (position) {
             line.setAttribute('data-lat', position.coords.latitude);
             line.setAttribute('data-lon', position.coords.longitude);
@@ -607,12 +625,12 @@ window.onload = function(event) {
     document.getElementById("file-selector").onchange = function(e) {
         const reader = new FileReader();
         reader.onload = (evt) => {
-            message(evt.target.result);
+            message('file', evt.target.result);
         };
         reader.readAsText(this.files[0]);
 
 
-//        message(this.files[0]);
+//        message('file', this.files[0]);
     };
 
     document.getElementById("entry-input").onkeydown = function(e) {
@@ -832,6 +850,10 @@ window.onload = function(event) {
         openEntryForm('Add a marker', addObjectiveMark);
     };
 
+
+    document.getElementById("message-bar").onclick = function(e) {
+        showNextMessage();
+    };
 
     function wrapAspect() {
         return wrap.clientWidth / wrap.clientHeight;
