@@ -106,7 +106,6 @@ window.onload = function(event) {
     }
 
     function showNextMessage() {
-        // jjj
         const pages = Object.keys(messages);
         var ix = pages.indexOf(document.getElementById('message-bar').dataset.page) + 1;
         if (ix >= pages.length) { ix = 0; }
@@ -783,6 +782,17 @@ window.onload = function(event) {
             return {x: Math.round(this.left + this.width / 2), y: Math.round(this.top + this.height / 2)};
         }
     }
+
+    document.getElementById("more-button").onclick = function(e) {
+        const mp = document.getElementById("more-pane");
+        if (mp.style.display == 'none') {
+            mp.style.display = 'inherit';
+            this.style.color = 'lime';
+        } else {
+            mp.style.display = 'none';
+            this.style.color = 'white';
+        }
+    };
 
     document.getElementById("status-button").onclick = function(e) {
         const tp = document.getElementById("track-pane");
