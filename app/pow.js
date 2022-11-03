@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.4.1';
+const VERSION = 'v1.4.2';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -96,13 +96,19 @@ window.onload = function(event) {
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
 
-    const messages = {'home': `pow ${VERSION}`};
+    const messages = {'home': `POW ${VERSION}`};
 
 
     function showMessage(page) {
         const mb = document.getElementById('message-bar');
         mb.innerHTML = messages[page];
         mb.setAttribute('data-page', page);
+
+        // display matching more info page
+        for (const elt of document.getElementsByClassName('more-page')) {
+	          elt.style.display = 'none';
+        }
+        document.getElementById(`${page}-pane`).style.display = 'inherit';
     }
 
     function showNextMessage() {
@@ -467,6 +473,29 @@ window.onload = function(event) {
         }
 
         pm.insertBefore(om, omTemplate.nextSibling);
+
+
+        // also add the more page item
+        const olTemplate = document.getElementById('objective-list-template');
+        const ol = olTemplate.cloneNode(true);
+        ol.removeAttribute('id');
+        ol.classList.add('objective-list-item');
+
+        ol.innerHTML = label;
+        ol.style.removeProperty('display');
+
+        ol.onclick = function(e) {
+            currentObjective = om;
+            updateCurrentObjective();
+        };
+
+        ol.addEventListener('touchend', function(e) {
+            currentObjective = om;
+            updateCurrentObjective();
+        });
+
+        document.getElementById('objective-list').insertBefore(ol, olTemplate);
+
 
         currentObjective = om;
 

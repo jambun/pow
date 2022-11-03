@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=117"></script>
+    <script type="application/javascript" src="pow.js?t=14217"></script>
   </head>
 
   <body style="margin:0px;overflow:hidden;">
@@ -142,8 +142,20 @@
       </button>
 
       <div id="more-pane" title="More info"
-           style="position:absolute;opacity:0.8;top:240px;left:20px;right:20px;bottom:240px;border-radius:20px;background-color:#333;color:#fff;font-size:60;text-align:center;padding-top:20px;display:none;">
-        &nbsp; boo
+           style="position:absolute;opacity:0.8;top:240px;left:20px;right:20px;bottom:240px;border-radius:20px;background-color:#333;color:#fff;font-size:60;padding:40px;display:none;">
+
+        <div id="home-pane" class="more-page" style="display:none;">
+          <h3>Plotting Our Walks</h3>
+          <p>Might put some help here or something</p>
+        </div>
+
+        <div id="objective-pane" class="more-page" style="display:none;">
+          <h3>Objectives</h3>
+          <ul id="objective-list">
+            <li id="objective-list-template" style="display:none;user-select:none;-webkit-touch-callout:none;-webkit-user-select:none;"></li>
+          </ul>
+        </div>
+
       </div>
 
       <div id="message-bar" title="Messages"
