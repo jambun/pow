@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.4.2';
+const VERSION = 'v1.4.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -439,6 +439,9 @@ window.onload = function(event) {
         om.getElementsByClassName('objective-text')[0].textContent = label;
         om.style.display = 'inherit';
 
+        om.setAttribute('data-time', new Date().toLocaleTimeString());
+        om.setAttribute('data-stamp', Date.now());
+
         om.onclick = function(e) {
             currentObjective = this;
             updateCurrentObjective();
@@ -481,7 +484,7 @@ window.onload = function(event) {
         ol.removeAttribute('id');
         ol.classList.add('objective-list-item');
 
-        ol.innerHTML = label;
+        ol.innerHTML = label + ' &mdash; ' + om.dataset.time;
         ol.style.removeProperty('display');
 
         ol.onclick = function(e) {
@@ -530,7 +533,10 @@ window.onload = function(event) {
                 ed = "  " + ed;
             }
 
-            message('objective', `${currentObjective.textContent} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
+            const ms_diff = Date.now() - currentObjective.dataset.stamp;
+            const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
+
+            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
         }
     }
 
