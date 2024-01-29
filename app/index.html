@@ -1,7 +1,35 @@
 <html>
   <head>
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=14218"></script>
+    <script type="application/javascript" src="pow.js?t=14222"></script>
+
+    <style>
+
+      #objective-list-template {
+          display: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+      }
+
+      .objective-list-item {
+          font-size: 80px;
+          border: 6px solid white;
+          border-radius: 12px;
+          padding: 12px;
+          margin-bottom: 12px;
+      }
+
+      .current-objective {
+          border-color: orange !important;
+      }
+
+      .objective-divider {
+          border: 4px solid orange;
+          margin: 2px 12px 2px 12px;
+      }
+
+    </style>
   </head>
 
   <body style="margin:0px;overflow:hidden;">
@@ -45,8 +73,8 @@
                style="z-index:0;opacity:1;"/>
 
         <svg x="100" y="100" id="true-bearing" style="display:none;overflow:visible;">
-          <g id="true-bearing-group" class="no-stroke-zoom" data-stroke="6" style="stroke:cyan;opacity:0.6;stroke-width:6;">
-            <line id="true-bearing-line" x1="0" y1="0" x2="0" y2="0" style="">
+          <g id="true-bearing-group" class="no-stroke-zoom" data-stroke="6" style="stroke:orange;opacity:0.6;stroke-width:6;">
+            <line id="true-bearing-line" x1="0" y1="0" x2="0" y2="0">
           </g>
         </svg>
 
@@ -151,8 +179,9 @@
 
         <div id="objective-pane" class="more-page" style="display:none;">
           <h3>Objectives</h3>
-          <ul id="objective-list">
-            <li id="objective-list-template" style="display:none;user-select:none;-webkit-touch-callout:none;-webkit-user-select:none;"></li>
+          <ul id="objective-list" style="list-style-type:none">
+            <li id="objective-list-template"
+                class="current-objective"></li>
           </ul>
         </div>
 

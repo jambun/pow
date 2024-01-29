@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.4.3';
+const VERSION = 'v1.4.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -484,24 +484,26 @@ window.onload = function(event) {
         ol.removeAttribute('id');
         ol.classList.add('objective-list-item');
 
-        ol.innerHTML = label + ' &mdash; ' + om.dataset.time;
-        ol.style.removeProperty('display');
+        ol.innerHTML = label + ' &mdash; ' + om.dataset.time.substring(0, om.dataset.time.length - 6);
+        document.getElementById('objective-list').insertBefore(ol, olTemplate);
 
         ol.onclick = function(e) {
-            currentObjective = om;
-            updateCurrentObjective();
+            changeCurrentObjective(om, ol);
         };
 
         ol.addEventListener('touchend', function(e) {
-            currentObjective = om;
-            updateCurrentObjective();
+            changeCurrentObjective(om, ol);
         });
 
-        document.getElementById('objective-list').insertBefore(ol, olTemplate);
+        changeCurrentObjective(om, ol);
+    }
 
-
-        currentObjective = om;
-
+    function changeCurrentObjective(objMark, objList) {
+        for (const oli of document.querySelectorAll('.objective-list-item')) {
+            oli.classList.remove('current-objective');
+        }
+        objList.classList.add('current-objective');
+        currentObjective = objMark;
         updateCurrentObjective();
     }
 
@@ -536,7 +538,7 @@ window.onload = function(event) {
             const ms_diff = Date.now() - currentObjective.dataset.stamp;
             const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
 
-            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <br/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
+            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <hr class="objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
         }
     }
 
