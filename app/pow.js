@@ -599,6 +599,8 @@ window.onload = function(event) {
             const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
 
             message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <hr class="objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
+        } else {
+            document.getElementById('true-bearing').style.display = 'none';
         }
     }
 
