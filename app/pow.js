@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.4';
+const VERSION = 'v1.5.5';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -357,10 +357,9 @@ window.onload = function(event) {
 
     function setPos(lat, lon, position = false) {
         const first = lastPos.x == 0;
+        const [posx, posy] = coords(lat, lon);
 
-        if (!first && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
-
-        var xy = coords(lat, lon);
+        if (!first && Math.abs(currentPos.x - posx) < jitterThreshholdPx && Math.abs(currentPos.y - posy) < jitterThreshholdPx) { return; }
 
         if (recording && currentPos.x) {
             lastPos.x = currentPos.x;
@@ -371,8 +370,8 @@ window.onload = function(event) {
             updateFlag('lastPos', lastPos);
         }
 
-        currentPos.x = xy[0];
-        currentPos.y = xy[1];
+        currentPos.x = posx;
+        currentPos.y = posy;
         currentPos.lat = lat;
         currentPos.lon = lon;
         if (position) {
