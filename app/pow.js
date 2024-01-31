@@ -342,9 +342,11 @@ window.onload = function(event) {
     };
 
     function setPos(lat, lon, position = false) {
-        var xy = coords(lat, lon);
-
         const first = lastPos.x == 0;
+
+        if (!first && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
+
+        var xy = coords(lat, lon);
 
         if (recording && currentPos.x) {
             lastPos.x = currentPos.x;
@@ -397,7 +399,7 @@ window.onload = function(event) {
 
         if (!panning) { centreOnPos(); }
 
-        if (recording) { addPoint(position, first); }
+        if (recording) { addPoint(position); }
 
         if (first && recording) { addObjectiveMark('Start'); }
 
@@ -456,7 +458,7 @@ window.onload = function(event) {
             lastPos = defaultLastPos();
         }
 
-        if (flags.hasOwnProperty('currentObjectiveKey')) {
+        if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
             changeCurrentObjective(flags.currentObjectiveKey);
         }
 
@@ -475,6 +477,8 @@ window.onload = function(event) {
 
     function clearState() {
         localStorage.clear();
+
+        flags = defaultFlags();
 
         document.querySelector('#track-group').innerHTML = '';
         document.querySelector('#objectives-group').innerHTML = '';
@@ -608,10 +612,8 @@ window.onload = function(event) {
         return dst;
     }
 
-    function addPoint(position, force) {
+    function addPoint(position) {
         if (!tracking) { return; }
-
-        if (!force && Math.abs(currentPos.x - lastPos.x) < jitterThreshholdPx && Math.abs(currentPos.y - lastPos.y) < jitterThreshholdPx) { return; }
 
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.classList.add('position-mark');
