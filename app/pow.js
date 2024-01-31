@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.4.4';
+const VERSION = 'v1.5.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -37,7 +37,9 @@ window.onload = function(event) {
         vb.load();
         vb.mark_origin();
 
-        showMessage('home');
+//        showMessage('home');
+
+        loadState();
 
         getDirection();
     };
@@ -62,13 +64,19 @@ window.onload = function(event) {
     var direction;
     var directionInitialized = false;
     var currentPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
-    var lastPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
+
+    function defaultLastPos() {
+        return {x: 0, y: 0, lat: 0, lon: 0, ele: 0};
+    }
+
+    var lastPos = defaultLastPos();
+
     var trackDistance = 0.0;
     var trackClimb = 0.0;
     var distRadius;
     const distanceRadiusFraction = 1/3;
 
-    var currentObjective;
+    var currentObjectiveKey;
     var trueBearing;
 
     var jitterThreshholdPx = 2;
@@ -96,13 +104,31 @@ window.onload = function(event) {
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
 
-    const messages = {'home': `POW ${VERSION}`};
+    function defaultMessages() {
+        return {
+            home: `POW ${VERSION}`
+        };
+    }
 
+    var messages = defaultMessages();
+
+    function defaultFlags() {
+        return {
+            page: 'home',
+            tracking: false,
+            recording: false,
+            lastPos: defaultLastPos(),
+            currentObjectiveKey: null
+        };
+    }
+
+    var flags = defaultFlags();
 
     function showMessage(page) {
         const mb = document.getElementById('message-bar');
         mb.innerHTML = messages[page];
         mb.setAttribute('data-page', page);
+        updateFlag('page', page);
 
         // display matching more info page
         for (const elt of document.getElementsByClassName('more-page')) {
@@ -120,6 +146,7 @@ window.onload = function(event) {
 
     function message(page, s, show) {
         messages[page] = s;
+        localStorage.setItem('messages', JSON.stringify(messages));
         if (show) { showMessage(page); }
     }
 
@@ -325,6 +352,7 @@ window.onload = function(event) {
             lastPos.lat = currentPos.lat;
             lastPos.lon = currentPos.lon;
             lastPos.ele = currentPos.ele;
+            updateFlag('lastPos', lastPos);
         }
 
         currentPos.x = xy[0];
@@ -403,25 +431,66 @@ window.onload = function(event) {
         loadTiles();
     }
 
+    function updateFlag(key, value) {
+        flags[key] = value;
+        localStorage.setItem('flags', JSON.stringify(flags));
+    }
 
-    function clearTrack() {
-        lastPos.x = 0;
+    function loadState() {
+        document.querySelector('#track-group').innerHTML = localStorage.getItem('track');
+        document.querySelector('#objectives-group').innerHTML = localStorage.getItem('objectives');
+        document.querySelector('#objective-list').innerHTML = localStorage.getItem('objective-list');
+        messages = localStorage.getItem('messages') ? JSON.parse(localStorage.getItem('messages')) : defaultMessages();
 
-        for (const mark of document.getElementsByClassName('position-mark')) {
-            mark.remove();
+        flags = localStorage.getItem('flags') ? JSON.parse(localStorage.getItem('flags')) : defaultFlags();
+
+        if (flags.hasOwnProperty('page') && messages.hasOwnProperty(flags.page)) {
+            showMessage(flags.page);
+        } else {
+            showMessage('home');
         }
 
-        for (const mark of document.getElementsByClassName('objective-mark')) {
-            mark.remove();
+        if (flags.hasOwnProperty('lastPos')) {
+            lastPos = flags.lastPos;
+        } else {
+            lastPos = defaultLastPos();
         }
 
-        currentObjective = null;
+        if (flags.hasOwnProperty('currentObjectiveKey')) {
+            changeCurrentObjective(flags.currentObjectiveKey);
+        }
+
+        if (flags.hasOwnProperty('tracking')) {
+            if (flags.tracking !== tracking) {
+                toggleTracking(false);
+            }
+        }
+
+        if (flags.hasOwnProperty('recording')) {
+            if (flags.recording !== recording) {
+                document.getElementById("record-button").click();
+            }
+        }
+    }
+
+    function clearState() {
+        localStorage.clear();
+
+        document.querySelector('#track-group').innerHTML = '';
+        document.querySelector('#objectives-group').innerHTML = '';
+        document.querySelector('#objective-list').innerHTML = '';
+
+        messages = defaultMessages();
+        showMessage('home');
+
+        lastPos = defaultLastPos();
+        currentObjectiveKey = null;
         updateCurrentObjective();
     }
 
 
-    async function track() {
-        clearTrack();
+    async function track(clear = true) {
+        if (clear) { clearState(); }
 
         while (true) {
             if (!tracking) { break; }
@@ -441,16 +510,7 @@ window.onload = function(event) {
 
         om.setAttribute('data-time', new Date().toLocaleTimeString());
         om.setAttribute('data-stamp', Date.now());
-
-        om.onclick = function(e) {
-            currentObjective = this;
-            updateCurrentObjective();
-        };
-
-        om.addEventListener('touchend', function(e) {
-            currentObjective = this;
-            updateCurrentObjective();
-        });
+        om.setAttribute('data-key', label + om.dataset.stamp);
 
         if (panning || !currentPos) {
             om.setAttribute('x', vb.position().x);
@@ -475,40 +535,36 @@ window.onload = function(event) {
             pms[pms.length - 1].setAttribute('data-tag', label);
         }
 
-        pm.insertBefore(om, omTemplate.nextSibling);
-
+        const og = document.querySelector('#objectives-group');
+        og.appendChild(om);
+        localStorage.setItem('objectives', og.innerHTML);
 
         // also add the more page item
-        const olTemplate = document.getElementById('objective-list-template');
-        const ol = olTemplate.cloneNode(true);
-        ol.removeAttribute('id');
+        const ol = document.createElement('li');
         ol.classList.add('objective-list-item');
+        ol.setAttribute('data-key', om.dataset.key);
 
         ol.innerHTML = label + ' &mdash; ' + om.dataset.time.substring(0, om.dataset.time.length - 6);
-        document.getElementById('objective-list').insertBefore(ol, olTemplate);
+        const objList = document.getElementById('objective-list');
+        objList.appendChild(ol);
+        localStorage.setItem('objective-list', objList.innerHTML);
 
-        ol.onclick = function(e) {
-            changeCurrentObjective(om, ol);
-        };
-
-        ol.addEventListener('touchend', function(e) {
-            changeCurrentObjective(om, ol);
-        });
-
-        changeCurrentObjective(om, ol);
+        changeCurrentObjective(om.dataset.key);
     }
 
-    function changeCurrentObjective(objMark, objList) {
+    function changeCurrentObjective(objKey) {
         for (const oli of document.querySelectorAll('.objective-list-item')) {
             oli.classList.remove('current-objective');
         }
-        objList.classList.add('current-objective');
-        currentObjective = objMark;
+        document.querySelector(`.objective-list-item[data-key=${objKey}]`).classList.add('current-objective');
+        currentObjectiveKey = objKey;
+        updateFlag('currentObjectiveKey', currentObjectiveKey);
         updateCurrentObjective();
     }
 
     function updateCurrentObjective() {
-        if (currentObjective) {
+        if (currentObjectiveKey) {
+            const currentObjective = document.querySelector(`.objective-mark[data-key=${currentObjectiveKey}]`);
             const dst = dstToHuman(calculateDistance(currentPos.lat, currentPos.lon, currentObjective.dataset.lat, currentObjective.dataset.lon));
             const dx = currentObjective.getAttribute('x') - currentPos.x;
             const dy = currentObjective.getAttribute('y') - currentPos.y;
@@ -589,7 +645,10 @@ window.onload = function(event) {
             }
         }
 
-        pm.insertBefore(line, document.getElementById("target"));
+        const tg = document.querySelector('#track-group');
+        tg.appendChild(line);
+
+        localStorage.setItem('track', tg.innerHTML);
     };
 
     wrap = document.getElementById("plotmap-wrapper");
@@ -840,19 +899,24 @@ window.onload = function(event) {
         }
     };
 
-    document.getElementById("track-button").onclick = function(e) {
+    function toggleTracking(clear = true) {
+        const but = document.getElementById("track-button");
         if (tracking) {
             tracking = false;
-            lastPos.x = 0;
-            lastPos.y = 0;
-            this.style.color = 'white';
+            lastPos = defaultLastPos();
+            but.style.color = 'white';
             document.getElementById("tracking-status").style.color = 'white';;
         } else {
             tracking = true;
-            this.style.color = 'lime';
+            but.style.color = 'lime';
             document.getElementById("tracking-status").style.color = 'lime';;
-            track();
+            track(clear);
         }
+        updateFlag('tracking', tracking);
+    }
+
+    document.getElementById("track-button").onclick = function(e) {
+        toggleTracking();
     };
 
     document.getElementById("record-button").onclick = function(e) {
@@ -865,10 +929,15 @@ window.onload = function(event) {
             document.getElementById("recording-status").style.color = 'lime';;
             recording = true;
         }
+        updateFlag('recording', recording);
     };
 
     document.getElementById("download-button").onclick = function(e) {
         download();
+    };
+
+    document.getElementById("clear-button").onclick = function(e) {
+        clearState();
     };
 
     document.getElementById("pan-button").onclick = function(e) {
@@ -1016,6 +1085,16 @@ window.onload = function(event) {
         return earthRadiusM * c;
     }
 
+    function handleTouch(event) {
+        if (event.target.classList.contains('objective-list-item')) {
+            changeCurrentObjective(event.target.dataset.key);
+        } else if (event.target.parentElement.classList.contains('objective-group')) {
+            changeCurrentObjective(event.target.parentElement.parentElement.dataset.key);
+        }
+    }
+
+//    window.addEventListener('click', handleTouch, true);
+    window.addEventListener('touchend', handleTouch, true);
 
     init();
 };

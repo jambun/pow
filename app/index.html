@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=14222"></script>
+    <script type="application/javascript" src="pow.js?t=14225"></script>
 
     <style>
 
@@ -90,6 +90,11 @@
           </g>
         </svg>
 
+        <g id="objectives-group">
+        </g>
+
+        <g id="track-group">
+        </g>
 
         <svg x="100" y="100" id="target" style="overflow:visible;">
           <g id="target-group" class="no-zoom" style="">
@@ -157,6 +162,11 @@
             D
           </button>
 
+          <button type="button" id="clear-button" title="Clear track"
+                  style="position:absolute;font-size:150;bottom:900px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
+            C
+          </button>
+
       </div>
 
       <div id="zoom-bar" title="Zoom"
@@ -180,8 +190,6 @@
         <div id="objective-pane" class="more-page" style="display:none;">
           <h3>Objectives</h3>
           <ul id="objective-list" style="list-style-type:none">
-            <li id="objective-list-template"
-                class="current-objective"></li>
           </ul>
         </div>
 
