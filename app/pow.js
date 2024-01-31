@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.3';
+const VERSION = 'v1.5.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -470,6 +470,9 @@ window.onload = function(event) {
         document.querySelector('#objectives-group').innerHTML = localStorage.getItem('objectives');
         document.querySelector('#objective-list').innerHTML = localStorage.getItem('objective-list');
         messages = localStorage.getItem('messages') ? JSON.parse(localStorage.getItem('messages')) : defaultMessages();
+
+        // keep the version fresh
+        messages.home = defaultMessages().home;
 
         // not currently storing panning info
         // so if a reload happens while panning
