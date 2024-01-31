@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=14230"></script>
+    <script type="application/javascript" src="pow.js?t=14231"></script>
 
     <style>
 
@@ -24,9 +24,21 @@
           border-color: orange !important;
       }
 
-      .objective-divider {
-          border: 4px solid orange;
+      .message-divider {
+          border: 4px solid white;
           margin: 2px 12px 2px 12px;
+      }
+
+      .objective-divider {
+          border-color: orange;
+      }
+
+      .recording-divider {
+          border-color: blue;
+      }
+
+      .panning-divider {
+          border-color: red;
       }
 
     </style>
@@ -195,7 +207,13 @@
 
         <div id="panning-pane" class="more-page" style="display:none;">
           <h3>Panning</h3>
-          <p>Not much to say really</p>
+          <p>Showing distance and bearing</p>
+          <p>Provide a way to calibrate the compass by pointing at a landmark with the pan target</p>
+        </div>
+
+        <div id="recording-pane" class="more-page" style="display:none;">
+          <h3>Recording</h3>
+          <p>Showing total recording distance and climb</p>
         </div>
 
       </div>

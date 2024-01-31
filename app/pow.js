@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.5';
+const VERSION = 'v1.5.6';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -158,7 +158,7 @@ window.onload = function(event) {
     }
 
     function removeMessage(page) {
-        if (document.getElementById('message-bar').dataset.page == 'panning') {
+        if (document.getElementById('message-bar').dataset.page == page) {
             showPrevMessage();
         }
         delete messages[page];
@@ -414,9 +414,12 @@ window.onload = function(event) {
 
         if (recording) { addPoint(position); }
 
-        if (first && recording) { addObjectiveMark('Start'); }
-
-        updateCurrentObjective();
+        if (first && recording) {
+            addObjectiveMark('Start');
+            showMessage('objective');
+        } else {
+            updateCurrentObjective();
+        }
     };
 
     function errPos(err) { console.log(err)};
@@ -447,7 +450,7 @@ window.onload = function(event) {
 
         trueBearing = Math.round(XYtoDegrees(dx, dy * -1));
 
-        message('panning', `Panning <br/> ${dst} &mdash; ${trueBearing}&deg;`, true);
+        message('panning', `Panning <hr class="message-divider panning-divider"/> ${dst} &mdash; ${trueBearing}&deg;`, true);
     }
 
 
@@ -620,7 +623,7 @@ window.onload = function(event) {
             trueBearing = Math.round(XYtoDegrees(dx, dy * -1));
 
             var ed = '';
-            if (currentObjective.dataset.ele) {
+            if (currentObjective.dataset.ele && currentPos.ele) {
                 ed = currentObjective.dataset.ele - currentPos.ele;
                 ed = Math.round(ed).toString();
                 if (!ed.startsWith("-")) {
@@ -632,7 +635,7 @@ window.onload = function(event) {
             const ms_diff = Date.now() - currentObjective.dataset.stamp;
             const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
 
-            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <hr class="objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`, true);
+            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <hr class="message-divider objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`);
         } else {
             document.getElementById('true-bearing').style.display = 'none';
         }
@@ -687,6 +690,8 @@ window.onload = function(event) {
         tg.appendChild(line);
 
         localStorage.setItem('track', tg.innerHTML);
+
+        message('recording', `Recording <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
     };
 
     wrap = document.getElementById("plotmap-wrapper");
