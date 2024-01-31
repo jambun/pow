@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.1';
+const VERSION = 'v1.5.2';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -144,10 +144,24 @@ window.onload = function(event) {
         showMessage(pages[ix]);
     }
 
+    function showPrevMessage() {
+        const pages = Object.keys(messages);
+        var ix = pages.indexOf(document.getElementById('message-bar').dataset.page) - 1;
+        if (ix < 0) { ix = pages.length - 1; }
+        showMessage(pages[ix]);
+    }
+
     function message(page, s, show) {
         messages[page] = s;
         localStorage.setItem('messages', JSON.stringify(messages));
         if (show) { showMessage(page); }
+    }
+
+    function removeMessage(page) {
+        if (document.getElementById('message-bar').dataset.page == 'panning') {
+            showPrevMessage();
+        }
+        delete messages[page];
     }
 
 
@@ -420,8 +434,21 @@ window.onload = function(event) {
 
     function centrePanTarget() {
         const pt = document.getElementById('pan-target');
-        pt.setAttribute('x', vb.position().x);
-        pt.setAttribute('y', vb.position().y);
+        const px = vb.position().x;
+        const py = vb.position().y;
+
+        pt.setAttribute('x', px);
+        pt.setAttribute('y', py);
+
+        const [plat, plon] = toLatLon(px, py);
+        const dst = dstToHuman(calculateDistance(currentPos.lat, currentPos.lon, plat, plon));
+
+        const dx = px - currentPos.x;
+        const dy = py - currentPos.y;
+
+        trueBearing = Math.round(XYtoDegrees(dx, dy * -1));
+
+        message('panning', `Panning <br/> ${dst} &mdash; ${trueBearing}&deg;`, true);
     }
 
 
@@ -953,6 +980,7 @@ window.onload = function(event) {
             lastPanX = 0;
             lastPanY = 0;
             centreOnPos();
+            removeMessage('panning');
         } else {
             document.getElementById("track-button").setAttribute('disabled', 'disabled');
             panning = true;
