@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.2';
+const VERSION = 'v1.5.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -471,9 +471,14 @@ window.onload = function(event) {
         document.querySelector('#objective-list').innerHTML = localStorage.getItem('objective-list');
         messages = localStorage.getItem('messages') ? JSON.parse(localStorage.getItem('messages')) : defaultMessages();
 
+        // not currently storing panning info
+        // so if a reload happens while panning
+        // there will be a message page that should be removed
+        delete messages.panning;
+
         flags = localStorage.getItem('flags') ? JSON.parse(localStorage.getItem('flags')) : defaultFlags();
 
-        if (flags.hasOwnProperty('page') && messages.hasOwnProperty(flags.page)) {
+        if (flags.hasOwnProperty('page') && messages.hasOwnProperty(flags.page) && flags.page !== 'panning') {
             showMessage(flags.page);
         } else {
             showMessage('home');
