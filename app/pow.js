@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.6';
+const VERSION = 'v1.5.7';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -124,11 +124,30 @@ window.onload = function(event) {
 
     var flags = defaultFlags();
 
+    function updateMessagePageGuide() {
+        const pages = Object.keys(messages);
+        const pageix = pages.indexOf(document.getElementById('message-pane').dataset.page);
+        const mpg = document.getElementById('message-page-guide');
+        var pills = ' ';
+
+        for (let ix = 0; ix < pages.length; ix++) {
+            if (ix == pageix) {
+                pills += '&#9679; ';
+            } else {
+                pills += '&#9675; ';
+            }
+        }
+
+        mpg.innerHTML = pills;
+    }
+
     function showMessage(page) {
-        const mb = document.getElementById('message-bar');
+        const mb = document.getElementById('message-pane');
         mb.innerHTML = messages[page];
         mb.setAttribute('data-page', page);
         updateFlag('page', page);
+
+        updateMessagePageGuide();
 
         // display matching more info page
         for (const elt of document.getElementsByClassName('more-page')) {
@@ -139,14 +158,14 @@ window.onload = function(event) {
 
     function showNextMessage() {
         const pages = Object.keys(messages);
-        var ix = pages.indexOf(document.getElementById('message-bar').dataset.page) + 1;
+        var ix = pages.indexOf(document.getElementById('message-pane').dataset.page) + 1;
         if (ix >= pages.length) { ix = 0; }
         showMessage(pages[ix]);
     }
 
     function showPrevMessage() {
         const pages = Object.keys(messages);
-        var ix = pages.indexOf(document.getElementById('message-bar').dataset.page) - 1;
+        var ix = pages.indexOf(document.getElementById('message-pane').dataset.page) - 1;
         if (ix < 0) { ix = pages.length - 1; }
         showMessage(pages[ix]);
     }
@@ -158,10 +177,12 @@ window.onload = function(event) {
     }
 
     function removeMessage(page) {
-        if (document.getElementById('message-bar').dataset.page == page) {
+        if (document.getElementById('message-pane').dataset.page == page) {
             showPrevMessage();
         }
         delete messages[page];
+
+        updateMessagePageGuide();
     }
 
 

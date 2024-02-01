@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=14231"></script>
+    <script type="application/javascript" src="pow.js?t=14232"></script>
 
     <style>
 
@@ -22,6 +22,29 @@
 
       .current-objective {
           border-color: orange !important;
+      }
+
+      #message-bar {
+          position: absolute;
+          opacity: 0.8;
+          top: 20px;
+          left: 240px;
+          right: 20px;
+          height: 180px;
+          border-radius: 20px;
+          background-color: #333;
+          color: #fff;
+          font-size: 60;
+          text-align: center;
+          padding-top: 20px;
+      }
+
+      #message-page-guide {
+          position: absolute;
+          bottom: 0px;
+          width: 100%;
+          text-align: center;
+          font-size: 40px;
       }
 
       .message-divider {
@@ -218,9 +241,11 @@
 
       </div>
 
-      <div id="message-bar" title="Messages"
-           style="position:absolute;opacity:0.8;top:20px;left:240px;right:20px;height:180px;border-radius:20px;background-color:#333;color:#fff;font-size:60;text-align:center;padding-top:20px;">
-        &nbsp;
+      <div id="message-bar" title="Messages">
+
+        <div id="message-pane">&nbsp;</div>
+
+        <div id="message-page-guide">&#9679; &#9675; &#9675; &#9675; &#9675;</div>
       </div>
 
       <div id="entry-pane"
