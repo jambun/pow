@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.8';
+const VERSION = 'v1.5.9';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -472,7 +472,9 @@ window.onload = function(event) {
         const bearing = Math.round(XYtoDegrees(dx, dy * -1));
         var bearingOffset = '';
         if (direction) {
-            bearingOffset = `&mdash; ${bearing - Math.round(direction)}&deg;`;
+            var bd = bearing - Math.round(direction);
+            if (bd > 0) { bd = `+${bd}`; }
+            bearingOffset = `&mdash; ${bd}&deg;`;
         }
         message('panning', `Panning ${bearingOffset} <hr class="message-divider panning-divider"/> ${dst} &mdash; ${bearing}&deg;`, true);
     }
