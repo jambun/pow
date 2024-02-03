@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.5.9';
+const VERSION = 'v1.6.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -661,7 +661,9 @@ window.onload = function(event) {
             const ms_diff = Date.now() - currentObjective.dataset.stamp;
             const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
 
-            message('objective', `${currentObjective.textContent} &mdash; ${time_diff} <hr class="message-divider objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`);
+            message('objective',
+                    `${currentObjective.textContent} &mdash; ${time_diff} <hr class="message-divider objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`,
+                    flags.page == 'objective');
         } else {
             document.getElementById('true-bearing').style.display = 'none';
         }
