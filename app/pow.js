@@ -577,7 +577,7 @@ window.onload = function(event) {
 
         om.setAttribute('data-time', new Date().toLocaleTimeString());
         om.setAttribute('data-stamp', Date.now());
-        om.setAttribute('data-key', label + om.dataset.stamp);
+        om.setAttribute('data-key', label.replace(' ', '-') + om.dataset.stamp);
 
         if (panning || !currentPos) {
             om.setAttribute('x', vb.position().x);
