@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.6.4';
+const VERSION = 'v1.6.7';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -141,6 +141,10 @@ window.onload = function(event) {
         mpg.innerHTML = pills;
     }
 
+    function currentMessagePage() {
+        return document.getElementById('message-pane').dataset.page;
+    }
+
     function showMessage(page) {
         const mb = document.getElementById('message-pane');
         mb.innerHTML = messages[page];
@@ -158,14 +162,14 @@ window.onload = function(event) {
 
     function showNextMessage() {
         const pages = Object.keys(messages);
-        var ix = pages.indexOf(document.getElementById('message-pane').dataset.page) + 1;
+        var ix = pages.indexOf(currentMessagePage()) + 1;
         if (ix >= pages.length) { ix = 0; }
         showMessage(pages[ix]);
     }
 
     function showPrevMessage() {
         const pages = Object.keys(messages);
-        var ix = pages.indexOf(document.getElementById('message-pane').dataset.page) - 1;
+        var ix = pages.indexOf(currentMessagePage()) - 1;
         if (ix < 0) { ix = pages.length - 1; }
         showMessage(pages[ix]);
     }
@@ -173,11 +177,11 @@ window.onload = function(event) {
     function message(page, s, show) {
         messages[page] = s;
         localStorage.setItem('messages', JSON.stringify(messages));
-        if (show) { showMessage(page); }
+        if (show || currentMessagePage() == page) { showMessage(page); }
     }
 
     function removeMessage(page) {
-        if (document.getElementById('message-pane').dataset.page == page) {
+        if (currentMessagePage() == page) {
             showPrevMessage();
         }
         delete messages[page];
@@ -745,7 +749,7 @@ window.onload = function(event) {
 
         localStorage.setItem('track', tg.innerHTML);
 
-        message('recording', `Recording <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
+        message('recording', `Recording &mdash; ${document.querySelectorAll('.position-mark').length} <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
     };
 
     wrap = document.getElementById("plotmap-wrapper");
