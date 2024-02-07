@@ -1,10 +1,11 @@
-const version = 'v8';
+const version = 'v9';
 
 const netFirstResources = [
     "/pow",
     "/pow/",
     "/pow/index.html",
-    "/pow/pow.js"
+    "/pow/pow.js",
+    "/pow/manifest.json"
 ];
 
 const addResourcesToCache = async (resources) => {

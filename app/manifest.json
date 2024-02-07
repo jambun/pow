@@ -1,0 +1,15 @@
+{
+    "name": "POW",
+    "short_name": "POW",
+    "description": "Plotting our walks",
+    "display": "standalone",
+    "background_color": "#000",
+    "start_url": ".",
+    // "icons": [
+    //     {
+    //         "src": "icons/512.png",
+    //         "type": "image/png",
+    //         "sizes": "512x512"
+    //     }
+    // ]
+}
