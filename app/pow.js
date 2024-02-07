@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.6.2';
+const VERSION = 'v1.6.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -612,6 +612,15 @@ window.onload = function(event) {
         ol.setAttribute('data-key', om.dataset.key);
 
         ol.innerHTML = label + ' &mdash; ' + om.dataset.time.substring(0, om.dataset.time.length - 6);
+
+        // add a delete button
+        const btn = document.createElement('button');
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('title', 'Delete Objective');
+        btn.classList.add('objective-delete-button');
+        btn.innerText = 'X';
+
+        ol.appendChild(btn);
         const objList = document.getElementById('objective-list');
         objList.appendChild(ol);
         localStorage.setItem('objective-list', objList.innerHTML);
@@ -619,11 +628,27 @@ window.onload = function(event) {
         changeCurrentObjective(om.dataset.key);
     }
 
+    function deleteObjective(objKey) {
+        if (objKey == currentObjectiveKey) {
+            changeCurrentObjective(null);
+        }
+
+        document.querySelector(`.objective-mark[data-key=${objKey}]`).remove();
+        const og = document.querySelector('#objectives-group');
+        localStorage.setItem('objectives', og.innerHTML);
+
+        document.querySelector(`.objective-list-item[data-key=${objKey}]`).remove();
+        const objList = document.getElementById('objective-list');
+        localStorage.setItem('objective-list', objList.innerHTML);
+    }
+
     function changeCurrentObjective(objKey) {
         for (const oli of document.querySelectorAll('.objective-list-item')) {
             oli.classList.remove('current-objective');
         }
-        document.querySelector(`.objective-list-item[data-key=${objKey}]`).classList.add('current-objective');
+        if (objKey !== null) {
+            document.querySelector(`.objective-list-item[data-key=${objKey}]`).classList.add('current-objective');
+        }
         currentObjectiveKey = objKey;
         updateFlag('currentObjectiveKey', currentObjectiveKey);
         updateCurrentObjective();
@@ -666,6 +691,7 @@ window.onload = function(event) {
                     flags.page == 'objective');
         } else {
             document.getElementById('true-bearing').style.display = 'none';
+            message('objective', 'No currrent objective', true);
         }
     }
 
@@ -1162,6 +1188,8 @@ window.onload = function(event) {
             changeCurrentObjective(event.target.dataset.key);
         } else if (event.target.parentElement.classList.contains('objective-group')) {
             changeCurrentObjective(event.target.parentElement.parentElement.dataset.key);
+        } else if (event.target.classList.contains('objective-delete-button')) {
+            deleteObjective(event.target.parentElement.dataset.key);
         }
     }
 
