@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.7.0';
+const VERSION = 'v1.7.1';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -882,9 +882,9 @@ window.onload = function(event) {
     });
 
     pm.addEventListener('touchmove', function(e) {
-        if (!panning) { return; };
-
         e.preventDefault();
+
+        if (!panning) { return; };
 
         if (e.targetTouches.length > 1) {
             const t1 = e.targetTouches.item(0);
