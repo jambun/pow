@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.6.8';
+const VERSION = 'v1.6.9';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -746,6 +746,9 @@ window.onload = function(event) {
 
         const tg = document.querySelector('#track-group');
         tg.appendChild(line);
+
+        // this call to get the new point scaled correctly
+        zoomTarget();
 
         localStorage.setItem('track', tg.innerHTML);
 
