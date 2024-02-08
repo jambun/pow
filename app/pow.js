@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.6.9';
+const VERSION = 'v1.7.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -63,13 +63,13 @@ window.onload = function(event) {
     var currentTile;
     var direction;
     var directionInitialized = false;
-    var currentPos = {'x': 0, 'y': 0, 'lat': 0, 'lon': 0, 'ele': 0};
 
-    function defaultLastPos() {
+    function defaultPos() {
         return {x: 0, y: 0, lat: 0, lon: 0, ele: 0};
     }
 
-    var lastPos = defaultLastPos();
+    var currentPos = defaultPos();
+    var lastPos = defaultPos();
 
     var trackDistance = 0.0;
     var trackClimb = 0.0;
@@ -117,7 +117,8 @@ window.onload = function(event) {
             page: 'home',
             tracking: false,
             recording: false,
-            lastPos: defaultLastPos(),
+            currentPos: defaultPos(),
+            lastPos: defaultPos(),
             currentObjectiveKey: null
         };
     }
@@ -402,6 +403,7 @@ window.onload = function(event) {
         if (position) {
             currentPos.ele = position.coords.altitude;
         }
+        updateFlag('currentPos', currentPos);
 
         if (recording && !lastPos.x) {
             lastPos.x = currentPos.x;
@@ -411,6 +413,7 @@ window.onload = function(event) {
             if (position) {
                 lastPos.ele = currentPos.ele;
             }
+            updateFlag('lastPos', lastPos);
         }
 
         if (!panning) { loadTiles(currentPos.x, currentPos.y); }
@@ -522,7 +525,7 @@ window.onload = function(event) {
         if (flags.hasOwnProperty('lastPos')) {
             lastPos = flags.lastPos;
         } else {
-            lastPos = defaultLastPos();
+            lastPos = defaultPos();
         }
 
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
@@ -554,7 +557,7 @@ window.onload = function(event) {
         messages = defaultMessages();
         showMessage('home');
 
-        lastPos = defaultLastPos();
+        lastPos = defaultPos();
         currentObjectiveKey = null;
         updateCurrentObjective();
     }
@@ -1007,7 +1010,7 @@ window.onload = function(event) {
         const but = document.getElementById("track-button");
         if (tracking) {
             tracking = false;
-            lastPos = defaultLastPos();
+            lastPos = defaultPos();
             but.style.color = 'white';
             document.getElementById("tracking-status").style.color = 'white';;
         } else {
