@@ -75,6 +75,88 @@
           border-color: red;
       }
 
+      .control-button {
+          position: absolute;
+          font-size: 150;
+          height: 200px;
+          width: 200px;
+          text-align: center;
+          border-radius: 20px;
+          padding: 2px;
+          background-color:#333;
+          color: white;
+          opacity: 0.7;
+      }
+
+      #add-point-button {
+          bottom: 20px;
+          right: 460px;
+      }
+
+      #pan-button {
+          bottom: 20px;
+          right: 240px;
+      }
+
+      #status-button {
+          bottom: 20px;
+          right: 20px;
+      }
+
+      #track-button {
+          bottom: 240px;
+          right: 20px;
+      }
+
+      #record-button {
+          bottom: 460px;
+          right: 20px;
+      }
+
+      #download-button {
+          bottom: 680px;
+          right: 20px;
+      }
+
+      #clear-button {
+          bottom: 900px;
+          right: 20px;
+      }
+
+      #more-button {
+          top: 20px;
+          left: 20px;
+      }
+
+      #zoom-bar {
+          position: absolute;
+          opacity: 0.3;
+          bottom: 120px;
+          left: 20px;
+          width: 100px;
+          height: 800px;
+          border-radius: 20px;
+          background-color: #333;
+      }
+
+      #version-bug {
+          position: absolute;
+          opacity: 0.8;
+          bottom: 20px;
+          left: 20px;
+          height: 80px;
+          width: 200px;
+          border-radius: 8px;
+          font-size: 50;
+          padding-top: 6px;
+          background-color: #999;
+          color: #fff;
+          text-align: center;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+      }
+
     </style>
   </head>
 
@@ -177,53 +259,27 @@
     </div>
 
     <div id="controls-pane">
-      <button type="button" id="add-point-button" title="Add point"
-              style="position:absolute;font-size:150;bottom:20px;right:460px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-        A
-      </button>
+      <button type="button" id="add-point-button" title="Add point" class="control-button">A</button>
 
-      <button type="button" id="pan-button" title="Pan"
-              style="position:absolute;font-size:150;bottom:20px;right:240px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-        P
-      </button>
+      <button type="button" id="pan-button" title="Pan" class="control-button">P</button>
 
-      <button type="button" id="status-button" title="Toggle track pane"
-              style="position:absolute;font-size:150;bottom:20px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
+      <button type="button" id="status-button" title="Toggle track pane" class="control-button">
         <span id="tracking-status">T</span><span id="recording-status">R</span>
       </button>
 
       <div id="track-pane" style="display:none;">
-          <button type="button" id="track-button" title="Toggle tracking"
-                  style="position:absolute;font-size:150;bottom:240px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-            T
-          </button>
+          <button type="button" id="track-button" title="Toggle tracking" class="control-button">T</button>
 
-          <button type="button" id="record-button" title="Toggle recording"
-                  style="position:absolute;font-size:150;bottom:460px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-            R
-          </button>
+          <button type="button" id="record-button" title="Toggle recording" class="control-button">R</button>
 
-          <button type="button" id="download-button" title="Download track"
-                  style="position:absolute;font-size:150;bottom:680px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-            D
-          </button>
+          <button type="button" id="download-button" title="Download track" class="control-button">D</button>
 
-          <button type="button" id="clear-button" title="Clear track"
-                  style="position:absolute;font-size:150;bottom:900px;right:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-            C
-          </button>
-
+          <button type="button" id="clear-button" title="Clear track" class="control-button">C</button>
       </div>
 
-      <div id="zoom-bar" title="Zoom"
-           style="position:absolute;opacity:0.3;bottom:120px;left:20px;width:100px;height:800px;border-radius:20px;background-color:#333">
-        &nbsp;
-      </div>
+      <div id="zoom-bar" title="Zoom">&nbsp;</div>
 
-      <button type="button" id="more-button" title="Toggle more info"
-              style="position:absolute;font-size:150;top:20px;left:20px;height:200px;width:200px;text-align:center;border-radius:20px;padding:2px;background-color:#333;color:white;opacity:0.7;">
-        &mldr;
-      </button>
+      <button type="button" id="more-button" title="Toggle more info" class="control-button">&mldr;</button>
 
       <div id="more-pane" title="More info"
            style="position:absolute;opacity:0.8;top:240px;left:20px;right:20px;bottom:240px;border-radius:20px;background-color:#333;color:#fff;font-size:60;padding:40px;display:none;overflow-y:scroll;">
@@ -276,9 +332,7 @@
       </div>
     </div>
 
-    <div id="version-bug" title="version"
-         style="position:absolute;opacity:0.8;bottom:20px;left:20px;height:80px;width:200px;border-radius:8px;font-size:50;padding-top:6px;background-color:#999;color:#fff;text-align:center;user-select:none;-webkit-touch-callout:none;-webkit-user-select:none;">
-    </div>
+    <div id="version-bug" title="version"></div>
   </body>
 </html>
 
