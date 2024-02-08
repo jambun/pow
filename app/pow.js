@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.7.1';
+const VERSION = 'v1.7.5';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -1205,6 +1205,12 @@ window.onload = function(event) {
 
 //    window.addEventListener('click', handleTouch, true);
     window.addEventListener('touchend', handleTouch, true);
+
+    document.getElementById("plotmap").ontouchend = function(e) {
+        if (!directionInitialized) {
+            getDirection();
+        }
+    }
 
     init();
 };
