@@ -1,11 +1,12 @@
-const version = 'v9';
+const version = 'v11';
 
 const netFirstResources = [
     "/pow",
     "/pow/",
     "/pow/index.html",
     "/pow/pow.js",
-    "/pow/manifest.json"
+    "/pow/manifest.json",
+    "/pow/apple-touch-icon.png"
 ];
 
 const addResourcesToCache = async (resources) => {

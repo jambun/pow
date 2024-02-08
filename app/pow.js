@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.6.7';
+const VERSION = 'v1.6.8';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
