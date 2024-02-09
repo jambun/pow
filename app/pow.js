@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.7.6';
+const VERSION = 'v1.7.7';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -526,6 +526,12 @@ window.onload = function(event) {
             lastPos = flags.lastPos;
         } else {
             lastPos = defaultPos();
+        }
+
+        if (flags.hasOwnProperty('currentPos')) {
+            currentPos = flags.currentPos;
+        } else {
+            currentPos = defaultPos();
         }
 
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
