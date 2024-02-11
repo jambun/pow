@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.7.7';
+const VERSION = 'v1.7.8';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -32,14 +32,10 @@ window.onload = function(event) {
 
         buildTileMatrix();
 
-        findOriginTile();
+        loadState();
 
         vb.load();
         vb.mark_origin();
-
-//        showMessage('home');
-
-        loadState();
 
         getDirection();
     };
@@ -114,6 +110,7 @@ window.onload = function(event) {
 
     function defaultFlags() {
         return {
+            originTile: null,
             page: 'home',
             tracking: false,
             recording: false,
@@ -534,6 +531,14 @@ window.onload = function(event) {
             currentPos = defaultPos();
         }
 
+        if (flags.hasOwnProperty('originTile') && flags.originTile) {
+            originTile = flags.originTile;
+            navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
+            zoom();
+        } else {
+            findOriginTile();
+        }
+
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
             changeCurrentObjective(flags.currentObjectiveKey);
         }
@@ -563,6 +568,8 @@ window.onload = function(event) {
         messages = defaultMessages();
         showMessage('home');
 
+        originTile = null;
+        findOriginTile();
         lastPos = defaultPos();
         currentObjectiveKey = null;
         updateCurrentObjective();
@@ -717,6 +724,10 @@ window.onload = function(event) {
         return dst;
     }
 
+    function pointCount() {
+        document.querySelectorAll('.position-mark').length
+    }
+
     function addPoint(position) {
         if (!tracking) { return; }
 
@@ -760,7 +771,7 @@ window.onload = function(event) {
 
         localStorage.setItem('track', tg.innerHTML);
 
-        message('recording', `Recording &mdash; ${document.querySelectorAll('.position-mark').length} <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
+        message('recording', `Recording &mdash; ${pointCount()} <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
     };
 
     wrap = document.getElementById("plotmap-wrapper");
@@ -1169,16 +1180,18 @@ window.onload = function(event) {
 
     function gotPosForOrigin(pos) {
         originTile = findTile(pos.coords.latitude, pos.coords.longitude);
+        updateFlag('originTile', originTile);
         setPos(pos.coords.latitude, pos.coords.longitude, pos);
         zoom();
     };
 
 
     function findOriginTile() {
-        if (originTile) { return originTile; }
+        if (originTile) { return; }
 
         if (url_params.has('lat') && url_params.has('lon')) {
             originTile = findTile(Number(url_params.get('lat')), Number(url_params.get('lon')));
+            updateFlag('originTile', originTile);
             setPos(Number(url_params.get('lat')), Number(url_params.get('lon')));
             zoom();
         } else {
