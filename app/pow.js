@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.8.1';
+const VERSION = 'v1.8.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -99,6 +99,8 @@ window.onload = function(event) {
 
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
+
+    var haveSetPos = false;
 
     function defaultMessages() {
         return {
@@ -382,7 +384,9 @@ window.onload = function(event) {
         const first = lastPos.x == 0;
         const [posx, posy] = coords(lat, lon);
 
-        if (!first && Math.abs(currentPos.x - posx) < jitterThreshholdPx && Math.abs(currentPos.y - posy) < jitterThreshholdPx) { return; }
+        if (haveSetPos && !first && Math.abs(currentPos.x - posx) < jitterThreshholdPx && Math.abs(currentPos.y - posy) < jitterThreshholdPx) { return; }
+
+        haveSetPos = true;
 
         if (recording && currentPos.x) {
             lastPos.x = currentPos.x;
@@ -539,13 +543,15 @@ window.onload = function(event) {
             findOriginTile();
         }
 
+        while (!originTile) { ; }
+
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
             changeCurrentObjective(flags.currentObjectiveKey);
         }
 
         if (flags.hasOwnProperty('tracking')) {
             if (flags.tracking !== tracking) {
-                toggleTracking(false);
+                toggleTracking();
             }
         }
 
@@ -576,9 +582,7 @@ window.onload = function(event) {
     }
 
 
-    async function track(clear = true) {
-        if (clear) { clearState(); }
-
+    async function track() {
         while (tracking) {
             navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
             await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
@@ -1022,18 +1026,18 @@ window.onload = function(event) {
         }
     };
 
-    function toggleTracking(clear = true) {
+    function toggleTracking() {
         const but = document.getElementById("track-button");
         if (tracking) {
             tracking = false;
             lastPos = defaultPos();
             but.style.color = 'white';
-            document.getElementById("tracking-status").style.color = 'white';;
+            document.getElementById("tracking-status").style.color = 'white';
         } else {
             tracking = true;
             but.style.color = 'lime';
-            document.getElementById("tracking-status").style.color = 'lime';;
-            track(clear);
+            document.getElementById("tracking-status").style.color = 'lime';
+            track();
         }
         updateFlag('tracking', tracking);
     }
