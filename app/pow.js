@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.7.8';
+const VERSION = 'v1.7.9';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -725,7 +725,7 @@ window.onload = function(event) {
     }
 
     function pointCount() {
-        document.querySelectorAll('.position-mark').length || 0;
+        return document.querySelectorAll('.position-mark').length;
     }
 
     function addPoint(position) {
