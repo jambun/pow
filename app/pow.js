@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.8.0';
+const VERSION = 'v1.8.1';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -1046,11 +1046,12 @@ window.onload = function(event) {
         if (recording) {
             recording = false;
             this.style.color = 'white';
-            document.getElementById("recording-status").style.color = 'white';;
+            document.getElementById("recording-status").style.color = 'white';
         } else {
             this.style.color = 'lime';
-            document.getElementById("recording-status").style.color = 'lime';;
+            document.getElementById("recording-status").style.color = 'lime';
             recording = true;
+            navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
         }
         updateFlag('recording', recording);
     };
