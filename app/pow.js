@@ -710,7 +710,7 @@ window.onload = function(event) {
                     flags.page == 'objective');
         } else {
             document.getElementById('true-bearing').style.display = 'none';
-            message('objective', 'No currrent objective', true);
+            message('objective', 'No currrent objective');
         }
     }
 
@@ -725,7 +725,7 @@ window.onload = function(event) {
     }
 
     function pointCount() {
-        document.querySelectorAll('.position-mark').length
+        document.querySelectorAll('.position-mark').length || 0;
     }
 
     function addPoint(position) {
