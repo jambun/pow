@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.8.3';
+const VERSION = 'v1.8.5';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -116,6 +116,8 @@ window.onload = function(event) {
             page: 'home',
             tracking: false,
             recording: false,
+            trackDistance: 0.0,
+            trackClimb: 0.0,
             currentPos: defaultPos(),
             lastPos: defaultPos(),
             currentObjectiveKey: null
@@ -535,6 +537,14 @@ window.onload = function(event) {
             currentPos = defaultPos();
         }
 
+        if (flags.hasOwnProperty('trackDistance')) {
+            trackDistance = flags.trackDistance;
+        }
+
+        if (flags.hasOwnProperty('trackClimb')) {
+            trackClimb = flags.trackClimb;
+        }
+
         if (flags.hasOwnProperty('originTile') && flags.originTile) {
             originTile = flags.originTile;
             navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
@@ -543,6 +553,8 @@ window.onload = function(event) {
             findOriginTile();
         }
 
+        // worrying about race condition ...
+        // ... replaced by worry about infinite looping ;)
         while (!originTile) { ; }
 
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
@@ -578,6 +590,8 @@ window.onload = function(event) {
         findOriginTile();
         lastPos = defaultPos();
         currentObjectiveKey = null;
+        trackDistance = 0.0;
+        trackClimb = 0.0;
         updateCurrentObjective();
     }
 
@@ -762,8 +776,10 @@ window.onload = function(event) {
             const dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
             line.setAttribute('data-dst', dst);
             trackDistance += dst;
+            updateFlag('trackDistance', trackDistance);
             if (currentPos.ele && lastPos.ele && currentPos.ele > lastPos.ele) {
                 trackClimb += currentPos.ele - lastPos.ele;
+                updateFlag('trackClimb', trackClimb);
             }
         }
 
