@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.8.5';
+const VERSION = 'v1.8.6';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -597,8 +597,12 @@ window.onload = function(event) {
 
 
     async function track() {
+        var lastTS = Date.now();
         while (tracking) {
-            navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
+            if (Date.now() - lastTS < trackingSampleRate * 3) {
+                navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
+            }
+            lastTS = Date.now();
             await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
         }
     }
