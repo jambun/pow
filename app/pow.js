@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.9.0';
+const VERSION = 'v1.9.1';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -552,7 +552,7 @@ window.onload = function(event) {
 
         if (flags.hasOwnProperty('originTile') && flags.originTile) {
             originTile = flags.originTile;
-            navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
+            navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
             zoom();
         } else {
             findOriginTile();
