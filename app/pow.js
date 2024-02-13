@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.8.6';
+const VERSION = 'v1.9.0';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -383,6 +383,11 @@ window.onload = function(event) {
     };
 
     function setPos(lat, lon, position = false) {
+        const splash = document.querySelector('#load-splash');
+        if (splash.style.display !== 'none') {
+            splash.classList.add('fade-out');
+        }
+
         const first = lastPos.x == 0;
         const [posx, posy] = coords(lat, lon);
 
@@ -1212,7 +1217,10 @@ window.onload = function(event) {
 
 
     function findOriginTile() {
-        if (originTile) { return; }
+        if (originTile) { 
+            navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
+            return;
+        }
 
         if (url_params.has('lat') && url_params.has('lon')) {
             originTile = findTile(Number(url_params.get('lat')), Number(url_params.get('lon')));
@@ -1243,6 +1251,8 @@ window.onload = function(event) {
             changeCurrentObjective(event.target.parentElement.parentElement.dataset.key);
         } else if (event.target.classList.contains('objective-delete-button')) {
             deleteObjective(event.target.parentElement.dataset.key);
+        } else if (event.target.id == 'load-splash') {
+            event.target.style.display = 'none';
         }
     }
 

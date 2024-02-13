@@ -5,9 +5,43 @@
     <link rel="apple-touch-startup-image" media="screen and (width: 375px) and (height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash.png" />
 
     <script type="application/javascript" src="nsw25k.js"></script>
-    <script type="application/javascript" src="pow.js?t=14271"></script>
+    <script type="application/javascript" src="pow.js?t=14277"></script>
 
     <style>
+
+      .fade-out {
+          -webkit-animation: fadeout 1s;
+          animation-fill-mode: forwards;
+      }
+
+      @keyframes fadeout {
+          from {
+              opacity: 1;
+          }
+          to {
+              opacity: 0;
+              display: none;
+          }
+      }
+
+
+      #load-splash {
+          position: fixed;
+          background: yellow;
+          top: 0px;
+          left: 0px;
+          width: 100%;
+          height: 100%;
+      }
+
+      .splash-banner {
+          color: blue;
+          font-family: arial;
+          font-weight: bold;
+          font-size: 240px;
+          text-align: center;
+          margin-top: 600px;
+      }
 
       #objective-list-template {
           display: none;
@@ -336,6 +370,11 @@
     </div>
 
     <div id="version-bug" title="version"></div>
+
+    <div id="load-splash" width="100%" height="100%">
+      <div class="splash-banner">POW</div>
+    </div>
+
   </body>
 </html>
 
