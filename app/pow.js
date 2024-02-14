@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.9.1';
+const VERSION = 'v1.9.2';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -24,6 +24,11 @@ registerServiceWorker();
 
 // this is fine and all but can't write it, so yeah
 //    const trackFile = new File(["POWWWWW"], "pow_track.txt", {type: "text/plain"});
+
+var idb;
+getDB().then(function(result) {
+    idb = result;
+});
 
 window.onload = function(event) {
 
@@ -1267,3 +1272,39 @@ window.onload = function(event) {
 
     init();
 };
+
+
+// indexeddb stuff
+async function getDB() {
+    return await new Promise(function(resolve, reject) {
+
+        const openReq = indexedDB.open("powDB", 1);
+
+        openReq.onerror = (event) => {
+            console.error(event);
+            message('error', 'Failed to open DB');
+            reject(event);
+        };
+
+        openReq.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        openReq.onupgradeneeded = (event) => {
+            for (let ix = event.oldVersion; ix < event.newVersion; ix++) {
+                migrations[ix](event.target.result);
+            }
+        };
+
+        const migrations =
+              [
+                  function(db) {
+                      db.createObjectStore('flags', { keyPath: 'name' });
+                  },
+                  function(db) {
+                      // db.createObjectStore('moo', { keyPath: 'name' });
+                  }
+              ];
+    });
+}
+
