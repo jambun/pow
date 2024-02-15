@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.9.4';
+const VERSION = 'v2.0.1';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -49,7 +49,7 @@ window.onload = function(event) {
 
     const posOpts = {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 10000,
         maximumAge: 0
     };
 
@@ -71,6 +71,7 @@ window.onload = function(event) {
 
     var currentPos = defaultPos();
     var lastPos = defaultPos();
+    var lastTS = 0;
 
     var trackDistance = 0.0;
     var trackClimb = 0.0;
@@ -86,7 +87,7 @@ window.onload = function(event) {
     var wrap;
     var vb;
     var tracking = false;
-    var trackingSampleRate = 5000; // ms
+    var trackingSampleRate = 3000; // ms
     var recording = false;
 
     var lastZoomBarY = 0;
@@ -387,6 +388,12 @@ window.onload = function(event) {
         setPos(pos.coords.latitude, pos.coords.longitude, pos);
     };
 
+    function gotWatchedPos(pos) {
+        if (Date.now() - lastTS > trackingSampleRate) {
+            setPos(pos.coords.latitude, pos.coords.longitude, pos);
+        }
+    };
+
     function setPos(lat, lon, position = false) {
         const splash = document.querySelector('#load-splash');
         if (splash.style.display !== 'none') {
@@ -404,6 +411,7 @@ window.onload = function(event) {
         if (haveSetPos && !first && Math.abs(currentPos.x - posx) < jitterThreshholdPx && Math.abs(currentPos.y - posy) < jitterThreshholdPx) { return; }
 
         haveSetPos = true;
+        lastTS = Date.now();
 
         if (recording && currentPos.x) {
             lastPos.x = currentPos.x;
@@ -468,7 +476,10 @@ window.onload = function(event) {
         }
     };
 
-    function errPos(err) { console.log(err)};
+    function errPos(err) {
+        message('error', 'Error: ' + err.message, true);
+        console.log(err);
+    }
 
     function centreOnPos(pos = false) {
         pos ||= currentPos;
@@ -531,6 +542,9 @@ window.onload = function(event) {
         // so if a reload happens while panning
         // there will be a message page that should be removed
         delete messages.panning;
+
+        // also zap error page
+        delete messages.error;
 
         flags = localStorage.getItem('flags') ? JSON.parse(localStorage.getItem('flags')) : defaultFlags();
 
@@ -604,21 +618,24 @@ window.onload = function(event) {
         originTile = null;
         findOriginTile();
         lastPos = defaultPos();
+        lastTS = 0;
         currentObjectiveKey = null;
         trackDistance = 0.0;
         trackClimb = 0.0;
         updateCurrentObjective();
     }
 
+    function stopTrack() {
+        if (tracking) {
+            navigator.geolocation.clearWatch(tracking);
+            tracking = false;
+        }
+    }
 
-    async function track() {
-        var lastTS = Date.now();
-        while (tracking) {
-            if (Date.now() - lastTS < trackingSampleRate * 3) {
-                navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
-            }
-            lastTS = Date.now();
-            await new Promise(resolve => setTimeout(resolve, trackingSampleRate));
+    function startTrack() {
+        if (!tracking) {
+            lastTS = Date.now() - trackingSampleRate;
+            tracking = navigator.geolocation.watchPosition(gotWatchedPos, errPos, posOpts);
         }
     }
 
@@ -1053,15 +1070,14 @@ window.onload = function(event) {
     function toggleTracking() {
         const but = document.getElementById("track-button");
         if (tracking) {
-            tracking = false;
+            stopTrack();
             lastPos = defaultPos();
             but.style.color = 'white';
             document.getElementById("tracking-status").style.color = 'white';
         } else {
-            tracking = true;
+            startTrack();
             but.style.color = 'lime';
             document.getElementById("tracking-status").style.color = 'lime';
-            track();
         }
         updateFlag('tracking', tracking);
     }
