@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.9.3';
+const VERSION = 'v1.9.4';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -866,17 +866,6 @@ window.onload = function(event) {
     vbug.addEventListener('touchcancel', function(e) {
         document.getElementById('controls-pane').style.display = 'inherit';
     });
-
-
-    // FIXME: not currently used since addObjectiveMark
-    function addMarker(label) {
-        if (tracking && !panning) {
-            const pms = document.getElementsByClassName('position-mark');
-            const pm = pms[pms.length - 1];
-            pm.setAttribute('data-tag', label);
-            alert('Added mark with label ' + label);
-        }
-    };
 
 
     document.getElementById("file-selector").onchange = function(e) {
