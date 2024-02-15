@@ -1,4 +1,4 @@
-const version = 'v12';
+const version = 'v13';
 
 const netFirstResources = [
     "/pow",
@@ -116,8 +116,10 @@ self.addEventListener('install', (event) => {
       "/pow/",
       "/pow/index.html",
       "/pow/pow.js",
-      "/pow/nsw25k.js",
+      "/pow/manifest.json",
+      "/pow/apple-touch-icon.png",
 
+      "/pow/nsw25k.js",
       "/pow/maps/NSW_25k_Coast_South_10_4.jpg",
       "/pow/maps/NSW_25k_Coast_South_12_13.jpg",
       "/pow/maps/NSW_25k_Coast_South_13_16.jpg",
@@ -220,7 +222,8 @@ self.addEventListener('install', (event) => {
       "/pow/maps/NSW_25k_Coast_South_23_14.jpg",
       "/pow/maps/NSW_25k_Coast_South_24_12.jpg",
       "/pow/maps/NSW_25k_Coast_South_24_13.jpg",
-      "/pow/maps/NSW_25k_Coast_South_24_14.jpg"
+      "/pow/maps/NSW_25k_Coast_South_24_14.jpg",
+      "/pow/maps/blank.jpg"
     ])
   );
 });

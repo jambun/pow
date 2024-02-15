@@ -1,5 +1,5 @@
 
-const VERSION = 'v2.0.2';
+const VERSION = 'v2.0.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -297,7 +297,7 @@ window.onload = function(event) {
 
                 maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * tileSize * -1);
                 maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * tileSize * -1);
-                maptile.setAttribute('xlink:href', maps_url + '/' + tmd.filename);
+                maptile.setAttribute('href', maps_url + '/' + tmd.filename);
 
                 tmdix++;
             }
