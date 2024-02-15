@@ -1,5 +1,5 @@
 
-const VERSION = 'v1.9.2';
+const VERSION = 'v1.9.3';
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -391,6 +391,11 @@ window.onload = function(event) {
         const splash = document.querySelector('#load-splash');
         if (splash.style.display !== 'none') {
             splash.classList.add('fade-out');
+        }
+
+        // ignore inaccurate (non-GPS) positions - wifi, cell towers etc
+        if (haveSetPos && position && position.coords.accuracy > 10) {
+            return;
         }
 
         const first = lastPos.x == 0;
