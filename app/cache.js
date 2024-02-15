@@ -1,4 +1,4 @@
-const version = 'v11';
+const version = 'v12';
 
 const netFirstResources = [
     "/pow",
@@ -211,7 +211,16 @@ self.addEventListener('install', (event) => {
       "/pow/maps/NSW_25k_Coast_South_19_10.jpg",
       "/pow/maps/NSW_25k_Coast_South_17_11.jpg",
       "/pow/maps/NSW_25k_Coast_South_18_11.jpg",
-      "/pow/maps/NSW_25k_Coast_South_19_11.jpg"
+      "/pow/maps/NSW_25k_Coast_South_19_11.jpg",
+      "/pow/maps/NSW_25k_Coast_South_22_12.jpg",
+      "/pow/maps/NSW_25k_Coast_South_22_13.jpg",
+      "/pow/maps/NSW_25k_Coast_South_22_14.jpg",
+      "/pow/maps/NSW_25k_Coast_South_23_12.jpg",
+      "/pow/maps/NSW_25k_Coast_South_23_13.jpg",
+      "/pow/maps/NSW_25k_Coast_South_23_14.jpg",
+      "/pow/maps/NSW_25k_Coast_South_24_12.jpg",
+      "/pow/maps/NSW_25k_Coast_South_24_13.jpg",
+      "/pow/maps/NSW_25k_Coast_South_24_14.jpg"
     ])
   );
 });
