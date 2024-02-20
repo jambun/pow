@@ -1,12 +1,12 @@
 const version = 'v14';
 
 const netFirstResources = [
-    "pow",
-    "pow/",
-    "pow/index.html",
-    "pow/pow.js",
-    "pow/manifest.json",
-    "pow/apple-touch-icon.png"
+    "/pow",
+    "/pow/",
+    "/pow/index.html",
+    "/pow/pow.js",
+    "/pow/manifest.json",
+    "/pow/apple-touch-icon.png"
 ];
 
 const addResourcesToCache = async (resources) => {
@@ -228,8 +228,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-
-    if (!event.request.url.startsWith("https://hudmol.com/pow") || netFirstResources.includes(event.request.url.split(/hudmol.com/)[1])) {
+    if (!event.request.url.startsWith("https://hudmol.com/pow") || netFirstResources.includes(event.request.url.split("hudmol.com")[1])) {
         event.respondWith(
             networkFirst({
                 request: event.request,
