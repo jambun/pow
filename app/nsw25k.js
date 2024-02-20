@@ -1,4 +1,4 @@
-metadata = [
+const tileData = [
     {
         "tilex": 8,
         "tiley": 1,
@@ -16800,4 +16800,3 @@ metadata = [
         }
     }
 ];
-

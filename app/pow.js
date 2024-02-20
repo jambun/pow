@@ -1,26 +1,24 @@
+const VERSION = 'v2.1.0';
 
-const VERSION = 'v2.0.3';
-
-const registerServiceWorker = async () => {
-  if ("serviceWorker" in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register("/pow/cache.js", {
-        scope: "/pow/",
-      });
-      if (registration.installing) {
-        console.log("Service worker installing");
-      } else if (registration.waiting) {
-        console.log("Service worker installed");
-      } else if (registration.active) {
-        console.log("Service worker active");
-      }
-    } catch (error) {
-      console.error(`Registration failed with ${error}`);
+function registerServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        // Register a service worker hosted at the root of the
+        // site using the default scope.
+        navigator.serviceWorker.register("/pow/cache.js").then(
+            (registration) => {
+                console.log("Service worker registration succeeded:", registration);
+            },
+            (error) => {
+                console.error(`Service worker registration failed: ${error}`);
+            },
+        );
+    } else {
+        console.error("Service workers are not supported.");
     }
-  }
-};
+}
 
 registerServiceWorker();
+
 
 // this is fine and all but can't write it, so yeah
 //    const trackFile = new File(["POWWWWW"], "pow_track.txt", {type: "text/plain"});
@@ -30,9 +28,10 @@ getDB().then(function(result) {
     idb = result;
 });
 
-window.onload = function(event) {
 
-    function init() {
+window.onload = (event) => {
+
+    function initializePow() {
         document.getElementById('version-bug').textContent = VERSION;
 
         buildTileMatrix();
@@ -227,7 +226,7 @@ window.onload = function(event) {
         bearingLine.setAttribute('y2', Math.round(yvec * lineLength + currentPos.y));
 
         if (trueBearing) {
-            const bdiff = Math.abs(direction - trueBearing);
+            var bdiff = Math.abs(direction - trueBearing);
             if (bdiff > 180) { bdiff = 180 - bdiff % 180; }
 
             if (bdiff < 5) {
@@ -275,7 +274,7 @@ window.onload = function(event) {
         const tilex = originTile.tilex + Math.round(centerX / tileSize);
         const tiley = originTile.tiley + Math.round(centerY / tileSize);
 
-        for (const tilemd of metadata) {
+        for (const tilemd of tileData) {
             if (tilex == tilemd.tilex && tiley == tilemd.tiley) {
                 currentTile = tilemd;
             }
@@ -284,7 +283,7 @@ window.onload = function(event) {
         if (lastTile !== currentTile) {
             tiles = [];
             // remember the tile we're in and the eight surrounding it
-            for (const tilemd of metadata) {
+            for (const tilemd of tileData) {
                 if (Math.abs(tilemd.tilex - currentTile.tilex) <= 1 && Math.abs(tilemd.tiley - currentTile.tiley) <= 1) {
                     tiles.push(tilemd);
                 }
@@ -309,7 +308,7 @@ window.onload = function(event) {
     };
 
     function buildTileMatrix() {
-        for (const tilemd of metadata) {
+        for (const tilemd of tileData) {
             tileMatrix[tilemd.tilex] ||= Array();
             tileMatrix[tilemd.tilex][tilemd.tiley] = tilemd;
         }
@@ -329,7 +328,7 @@ window.onload = function(event) {
 
 
     function findTile(lat, lon) {
-        for (const tilemd of metadata) {
+        for (const tilemd of tileData) {
             var min_lon = Math.min(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
             var max_lon = Math.max(tilemd.topleft.long, tilemd.topright.long, tilemd.bottomleft.long, tilemd.bottomright.long);
             var min_lat = Math.min(tilemd.topleft.lat, tilemd.topright.lat, tilemd.bottomleft.lat, tilemd.bottomright.lat);
@@ -1267,6 +1266,7 @@ window.onload = function(event) {
         } else if (event.target.classList.contains('objective-delete-button')) {
             deleteObjective(event.target.parentElement.dataset.key);
         } else if (event.target.id == 'load-splash') {
+            findOriginTile();
             event.target.style.display = 'none';
         }
     }
@@ -1280,7 +1280,7 @@ window.onload = function(event) {
         }
     }
 
-    init();
+    initializePow();
 };
 
 
