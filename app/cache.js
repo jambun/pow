@@ -1,12 +1,12 @@
-const version = 'v13';
+const version = 'v14';
 
 const netFirstResources = [
-    "/pow",
-    "/pow/",
-    "/pow/index.html",
-    "/pow/pow.js",
-    "/pow/manifest.json",
-    "/pow/apple-touch-icon.png"
+    "pow",
+    "pow/",
+    "pow/index.html",
+    "pow/pow.js",
+    "pow/manifest.json",
+    "pow/apple-touch-icon.png"
 ];
 
 const addResourcesToCache = async (resources) => {
@@ -21,7 +21,7 @@ const putInCache = async (request, response) => {
 
 
 const networkFirst = async ({ request, fallbackUrl }) => {
-    console.log('network first for ' + request.url)
+    console.log('network first for: ' + request.url)
     try {
         const responseFromNetwork = await fetch(request);
         putInCache(request, responseFromNetwork.clone());
@@ -118,7 +118,7 @@ self.addEventListener('install', (event) => {
       "/pow/pow.js",
       "/pow/manifest.json",
       "/pow/apple-touch-icon.png",
-
+      "/pow/blank.jpg",
       "/pow/nsw25k.js",
       "/pow/maps/NSW_25k_Coast_South_10_4.jpg",
       "/pow/maps/NSW_25k_Coast_South_12_13.jpg",
@@ -222,28 +222,25 @@ self.addEventListener('install', (event) => {
       "/pow/maps/NSW_25k_Coast_South_23_14.jpg",
       "/pow/maps/NSW_25k_Coast_South_24_12.jpg",
       "/pow/maps/NSW_25k_Coast_South_24_13.jpg",
-      "/pow/maps/NSW_25k_Coast_South_24_14.jpg",
-      "/pow/maps/blank.jpg"
+      "/pow/maps/NSW_25k_Coast_South_24_14.jpg"
     ])
   );
 });
 
 self.addEventListener('fetch', (event) => {
 
-//console.log(event.request);
-
-    if (netFirstResources.includes(event.request.url.split(/hudmol.com/)[1])) {
+    if (!event.request.url.startsWith("https://hudmol.com/pow") || netFirstResources.includes(event.request.url.split(/hudmol.com/)[1])) {
         event.respondWith(
             networkFirst({
                 request: event.request,
-                fallbackUrl: '/pow',
+                fallbackUrl: '/pow/',
             }))
     } else {
         event.respondWith(
             cacheFirst({
                 request: event.request,
                 //      preloadResponsePromise: event.preloadResponse,
-                fallbackUrl: '/pow',
+                fallbackUrl: '/pow/',
             }))
     }
 });
