@@ -1,4 +1,4 @@
-const VERSION = 'v2.1.1';
+const VERSION = 'v2.1.3';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -580,10 +580,6 @@ window.onload = (event) => {
         } else {
             findOriginTile();
         }
-
-        // worrying about race condition ...
-        // ... replaced by worry about infinite looping ;)
-        while (!originTile) { ; }
 
         if (flags.hasOwnProperty('currentObjectiveKey') && flags.currentObjectiveKey) {
             changeCurrentObjective(flags.currentObjectiveKey);
@@ -1222,16 +1218,31 @@ window.onload = (event) => {
     }
 
 
-    function gotPosForOrigin(pos) {
-        originTile = findTile(pos.coords.latitude, pos.coords.longitude);
-        updateFlag('originTile', originTile);
-        setPos(pos.coords.latitude, pos.coords.longitude, pos);
-        zoom();
-    };
+// can't claim to understand how this works
+// but the upshot is that getOriginPosition returns pos
+// gotPosForOrigin never gets called - hence commented out
+// and its contents are in the try block below
 
+//    function gotPosForOrigin(pos) {
+        // originTile = findTile(pos.coords.latitude, pos.coords.longitude);
+        // updateFlag('originTile', originTile);
+        // setPos(pos.coords.latitude, pos.coords.longitude, pos);
+        // zoom();
+//    };
 
-    function findOriginTile() {
-        if (originTile) { 
+//    function errPosForOrigin(err) {
+//    }
+
+    function getOriginPosition() {
+        return new Promise((gotPosForOrigin, errPosForOrigin) => 
+            navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPosForOrigin, posOpts)
+        );
+    }
+
+    async function findOriginTile() {
+        if (originTile) {
+            console.log('already got originTile');
+            console.log(originTile);
             navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
             return;
         }
@@ -1242,7 +1253,17 @@ window.onload = (event) => {
             setPos(Number(url_params.get('lat')), Number(url_params.get('lon')));
             zoom();
         } else {
-            navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
+            try {
+                const pos = await getOriginPosition();
+                originTile = findTile(pos.coords.latitude, pos.coords.longitude);
+                updateFlag('originTile', originTile);
+                setPos(pos.coords.latitude, pos.coords.longitude, pos);
+                zoom();
+            } catch (err) {
+                message('error', err.message, true);
+            }
+// the old way
+//            navigator.geolocation.getCurrentPosition(gotPosForOrigin, errPos, posOpts);
         }
     };
 
