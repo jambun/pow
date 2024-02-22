@@ -153,6 +153,22 @@
     left: 20px;
 }
 
+#more-pane {
+    display: none;
+    position: absolute;
+    overflow-y: scroll;
+    opacity: 0.8;
+    top: 240px;
+    left: 20px;
+    right: 20px;
+    bottom: 260px;
+    border-radius: 20px;
+    background-color: #333;
+    color: #fff;
+    font-size: 60;
+    padding: 40px;
+}
+
 #zoom-bar {
     position: absolute;
     opacity: 0.3;
