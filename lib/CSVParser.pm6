@@ -45,9 +45,13 @@ class CSVParser {
 
             my $first = @cells.first;
 
-            if ($first eq 'Waypoints' || $first eq 'Track') {
+            if ($first eq 'Waypoints') {
                 $section = $first;
                 @!headers = get_line($fh);
+                next;
+            } elsif ($first eq 'Date(GMT)') {
+                $section = 'Track';
+                @!headers = @cells;
                 next;
             }
 
