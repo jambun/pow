@@ -1,4 +1,4 @@
-const VERSION = 'v2.1.3';
+const VERSION = 'v2.2.0';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
