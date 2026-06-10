@@ -1,4 +1,4 @@
-const VERSION = 'v2.2.0';
+const VERSION = 'v2.2.1';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -618,6 +618,7 @@ window.onload = (event) => {
         trackDistance = 0.0;
         trackClimb = 0.0;
         updateCurrentObjective();
+        panning = false;
     }
 
     function stopTrack() {
