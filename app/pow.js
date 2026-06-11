@@ -1,4 +1,4 @@
-const VERSION = 'v2.2.2';
+const VERSION = 'v2.2.3';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -512,6 +512,9 @@ window.onload = (event) => {
             bearingOffset = `&mdash; ${bd}&deg;`;
         }
         message('panning', `Panning ${bearingOffset} <hr class="message-divider panning-divider"/> ${dst} &mdash; ${bearing}&deg;`, true);
+
+        document.querySelector('#panning-lat').innerHTML = plat;
+        document.querySelector('#panning-lon').innerHTML = plon;
     }
 
 
