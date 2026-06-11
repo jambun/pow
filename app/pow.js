@@ -1,4 +1,4 @@
-const VERSION = 'v2.2.1';
+const VERSION = 'v2.2.2';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -646,7 +646,7 @@ window.onload = (event) => {
 
         om.setAttribute('data-time', new Date().toLocaleTimeString());
         om.setAttribute('data-stamp', Date.now());
-        om.setAttribute('data-key', label.replace(' ', '-') + om.dataset.stamp);
+        om.setAttribute('data-key', 'OM' + label.replace(' ', '-') + om.dataset.stamp);
 
         if (panning || !currentPos) {
             om.setAttribute('x', vb.position().x);
