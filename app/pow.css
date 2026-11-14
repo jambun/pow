@@ -1,3 +1,7 @@
+body {
+    background: black;
+}
+
 .fade-out {
     -webkit-animation: fadeout 1s;
     animation-fill-mode: forwards;
@@ -63,7 +67,7 @@
 #message-bar {
     position: absolute;
     opacity: 0.8;
-    top: 20px;
+    top: 30px;
     left: 240px;
     right: 20px;
     height: 180px;
@@ -149,7 +153,7 @@
 }
 
 #more-button {
-    top: 20px;
+    top: 30px;
     left: 20px;
 }
 
