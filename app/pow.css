@@ -119,37 +119,44 @@ body {
 
 #add-point-button {
     bottom: 40px;
-    right: 460px;
+    right: 470px;
+}
+
+#compass-button {
+    height: 100px;
+    bottom: 260px;
+    right: 250px;
+    font-size: 50;
 }
 
 #pan-button {
     bottom: 40px;
-    right: 240px;
+    right: 250px;
 }
 
 #status-button {
     bottom: 40px;
-    right: 20px;
+    right: 30px;
 }
 
 #track-button {
     bottom: 260px;
-    right: 20px;
+    right: 30px;
 }
 
 #record-button {
     bottom: 480px;
-    right: 20px;
+    right: 30px;
 }
 
 #download-button {
     bottom: 700px;
-    right: 20px;
+    right: 30px;
 }
 
 #clear-button {
     bottom: 920px;
-    right: 20px;
+    right: 30px;
 }
 
 #more-button {
@@ -177,10 +184,11 @@ body {
     position: absolute;
     opacity: 0.3;
     bottom: 140px;
-    left: 20px;
-    width: 100px;
+    left: 30px;
+    width: 120px;
     height: 800px;
     border-radius: 20px;
+    border: 1px solid white;
     background-color: #333;
 }
 
@@ -188,7 +196,7 @@ body {
     position: absolute;
     opacity: 0.8;
     bottom: 40px;
-    left: 20px;
+    left: 30px;
     height: 80px;
     width: 200px;
     border-radius: 8px;

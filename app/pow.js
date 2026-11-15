@@ -1,4 +1,4 @@
-const VERSION = 'v2.2.10';
+const VERSION = 'v2.3.1';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -105,6 +105,8 @@ window.onload = (event) => {
     // https://www.magnetic-declination.com/Australia/Sydney/124736.html
 //    magnetic_declination = 12.75;
 
+    var compassCalibration = 0.0;
+
     var haveSetPos = false;
 
     function defaultMessages() {
@@ -209,12 +211,12 @@ window.onload = (event) => {
             direction = 360 - event.alpha;
         }
 //        message('compass', direction.toFixed() + ' : ' + event.absolute);
-        const dirr = toRadians(direction + magnetic_declination);
+        const dirr = toRadians(direction + magnetic_declination + compassCalibration);
         const xvec = Math.sin(dirr);
         const yvec = Math.cos(dirr) * -1;
         const rad = 33;
         const scaledRad = rad * vb.width / homeWidth;
-        const lineLength = 1000 * vb.width / homeWidth;
+        const lineLength = 2000 * vb.width / homeWidth;
 
         document.getElementById('point-target-direction').setAttribute('cx', Math.round(xvec * rad));
         document.getElementById('point-target-direction').setAttribute('cy', Math.round(yvec * rad));
@@ -505,6 +507,8 @@ window.onload = (event) => {
         const dy = py - currentPos.y;
 
         const bearing = Math.round(XYtoDegrees(dx, dy * -1));
+        pt.setAttribute('data-bearing', bearing);
+
         var bearingOffset = '';
         if (direction) {
             var bd = bearing - Math.round(direction);
@@ -1106,6 +1110,28 @@ window.onload = (event) => {
 
     document.getElementById("clear-button").onclick = function(e) {
         clearState();
+    };
+
+    document.getElementById("compass-button").onclick = function(e) {
+        compassCalibration = 0.0;
+        this.style.display = 'none';
+    };
+
+    document.getElementById("pan-target").onclick = function(e) {
+        if (direction && this.dataset.bearing) {
+            var bd = this.dataset.bearing - direction;
+            compassCalibration = bd;
+            var cb = document.getElementById("compass-button");
+            if (compassCalibration == 0) {
+                cb.style.display = 'none';
+                cb.innerHTML = '+0&deg;';
+            } else {
+                bd = Math.round(bd);
+                if (bd > 0) { bd = `+${bd}`; }
+                cb.innerHTML = `${bd}&deg;`;
+                cb.style.display = 'inherit';
+            }
+        }
     };
 
     document.getElementById("pan-button").onclick = function(e) {
