@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.2';
+const VERSION = 'v2.3.3';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -842,7 +842,7 @@ window.onload = (event) => {
     zb.addEventListener('touchstart', function(e) {
         e.preventDefault();
         this.style.opacity = 0.6;
-        lastZoomBarY = targetTouches.item(0).pageY;
+        lastZoomBarY = e.targetTouches.item(0).pageY;
     });
 
     zb.addEventListener('touchend', function(e) {
