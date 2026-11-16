@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.7';
+const VERSION = 'v2.3.8';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -662,7 +662,9 @@ window.onload = (event) => {
 
             om.setAttribute('data-lat', lat);
             om.setAttribute('data-lon', lon);
-            om.setAttribute('data-ele', ele);
+            if (ele) {
+                om.setAttribute('data-ele', ele);
+            }
         } else if (panning || !currentPos) {
             om.setAttribute('x', vb.position().x);
             om.setAttribute('y', vb.position().y);
@@ -683,7 +685,9 @@ window.onload = (event) => {
             om.setAttribute('data-ele', currentPos.ele);
 
             const pms = document.getElementsByClassName('position-mark');
-            pms[pms.length - 1].setAttribute('data-tag', label);
+            if (pms.length > 0) {
+                pms[pms.length - 1].setAttribute('data-tag', label);
+            }
         }
 
         const og = document.querySelector('#objectives-group');
