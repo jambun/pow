@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.6';
+const VERSION = 'v2.3.7';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -642,7 +642,7 @@ window.onload = (event) => {
         }
     }
 
-    function addObjectiveMark(label) {
+    function addObjectiveMark(label, lat, lon, ele) {
         const omTemplate = document.getElementById('objective-template');
         const om = omTemplate.cloneNode(true);
         om.removeAttribute('id');
@@ -655,7 +655,15 @@ window.onload = (event) => {
         om.setAttribute('data-stamp', Date.now());
         om.setAttribute('data-key', 'OM' + label.replace(' ', '-') + om.dataset.stamp);
 
-        if (panning || !currentPos) {
+        if (lat && lon) {
+            const [x, y] = coords(lat, lon);
+            om.setAttribute('x', x);
+            om.setAttribute('y', y);
+
+            om.setAttribute('data-lat', lat);
+            om.setAttribute('data-lon', lon);
+            om.setAttribute('data-ele', ele);
+        } else if (panning || !currentPos) {
             om.setAttribute('x', vb.position().x);
             om.setAttribute('y', vb.position().y);
 
@@ -1164,6 +1172,23 @@ window.onload = (event) => {
 
         openEntryForm('Add a marker', addObjectiveMark);
     };
+
+    document.getElementById("preload-button").onclick = function(e) {
+        preload();
+    };
+
+    async function preload() {
+        try {
+            const response = await fetch("preload.json");
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+            const data = await response.json();
+            for (const obj of data.objectives) {
+                addObjectiveMark(obj.label, obj.lat, obj.lon);
+            }
+        } catch (error) {
+            console.error("Failed to load URL:", error);
+        }
+    }
 
 
     document.getElementById("message-bar").onclick = function(e) {

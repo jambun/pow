@@ -159,6 +159,15 @@ body {
     right: 30px;
 }
 
+#preload-button {
+    display: block;
+    margin: 0 auto;
+    height: 100px;
+    width: 300px;
+    font-size: 50;
+    background-color:#000;
+}
+
 #more-button {
     top: 30px;
     left: 20px;
