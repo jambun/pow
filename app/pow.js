@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.8';
+const VERSION = 'v2.3.10';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -642,7 +642,11 @@ window.onload = (event) => {
         }
     }
 
-    function addObjectiveMark(label, lat, lon, ele) {
+    function addObjectiveMark(labelOrObject) {
+        var label;
+        if (labelOrObject) {
+            label = typeof labelOrObject === 'string' ? labelOrObject : labelOrObject.label;
+        }
         const omTemplate = document.getElementById('objective-template');
         const om = omTemplate.cloneNode(true);
         om.removeAttribute('id');
@@ -655,39 +659,42 @@ window.onload = (event) => {
         om.setAttribute('data-stamp', Date.now());
         om.setAttribute('data-key', 'OM' + label.replace(' ', '-') + om.dataset.stamp);
 
-        if (lat && lon) {
-            const [x, y] = coords(lat, lon);
+        if (labelOrObject == null || typeof labelOrObject === 'string') {
+            if (panning || !currentPos) {
+                om.setAttribute('x', vb.position().x);
+                om.setAttribute('y', vb.position().y);
+
+                const dx = om.getAttribute('x') - currentPos.x;
+                const dy = om.getAttribute('y') - currentPos.y;
+
+                const [lat, lon] = toLatLon(om.getAttribute('x'), om.getAttribute('y'));
+
+                om.setAttribute('data-lat', lat);
+                om.setAttribute('data-lon', lon);
+            } else {
+                om.setAttribute('x', currentPos.x);
+                om.setAttribute('y', currentPos.y);
+
+                om.setAttribute('data-lat', currentPos.lat);
+                om.setAttribute('data-lon', currentPos.lon);
+                om.setAttribute('data-ele', currentPos.ele);
+
+                const pms = document.getElementsByClassName('position-mark');
+                if (pms.length > 0) {
+                    pms[pms.length - 1].setAttribute('data-tag', label);
+                }
+            }
+        } else {
+            const [x, y] = coords(labelOrObject.lat, labelOrObject.lon);
             om.setAttribute('x', x);
             om.setAttribute('y', y);
 
-            om.setAttribute('data-lat', lat);
-            om.setAttribute('data-lon', lon);
-            if (ele) {
-                om.setAttribute('data-ele', ele);
+            om.setAttribute('data-lat', labelOrObject.lat);
+            om.setAttribute('data-lon', labelOrObject.lon);
+            if (labelOrObject.ele) {
+                om.setAttribute('data-ele', labelOrObject.ele);
             }
-        } else if (panning || !currentPos) {
-            om.setAttribute('x', vb.position().x);
-            om.setAttribute('y', vb.position().y);
 
-            const dx = om.getAttribute('x') - currentPos.x;
-            const dy = om.getAttribute('y') - currentPos.y;
-
-            const [lat, lon] = toLatLon(om.getAttribute('x'), om.getAttribute('y'));
-
-            om.setAttribute('data-lat', lat);
-            om.setAttribute('data-lon', lon);
-        } else {
-            om.setAttribute('x', currentPos.x);
-            om.setAttribute('y', currentPos.y);
-
-            om.setAttribute('data-lat', currentPos.lat);
-            om.setAttribute('data-lon', currentPos.lon);
-            om.setAttribute('data-ele', currentPos.ele);
-
-            const pms = document.getElementsByClassName('position-mark');
-            if (pms.length > 0) {
-                pms[pms.length - 1].setAttribute('data-tag', label);
-            }
         }
 
         const og = document.querySelector('#objectives-group');
@@ -1187,7 +1194,7 @@ window.onload = (event) => {
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const data = await response.json();
             for (const obj of data.objectives) {
-                addObjectiveMark(obj.label, obj.lat, obj.lon);
+                addObjectiveMark(obj);
             }
         } catch (error) {
             console.error("Failed to load URL:", error);
