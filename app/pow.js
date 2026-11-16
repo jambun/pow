@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.1';
+const VERSION = 'v2.3.2';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -1051,23 +1051,27 @@ window.onload = (event) => {
         }
     }
 
+    function visible(ele) {
+        return window.getComputedStyle(ele)['display'] !== 'none';
+    }
+
     document.getElementById("more-button").onclick = function(e) {
         const mp = document.getElementById("more-pane");
-        if (mp.style.display == 'none') {
-            mp.style.display = 'inherit';
-            this.style.color = 'lime';
-        } else {
+        if (visible(mp)) {
             mp.style.display = 'none';
             this.style.color = 'white';
+        } else {
+            mp.style.display = 'inherit';
+            this.style.color = 'lime';
         }
     };
 
     document.getElementById("status-button").onclick = function(e) {
         const tp = document.getElementById("track-pane");
-        if (tp.style.display == 'none') {
-            tp.style.display = 'inherit';
-        } else {
+        if (visible(tp)) {
             tp.style.display = 'none';
+        } else {
+            tp.style.display = 'inherit';
         }
     };
 
@@ -1272,8 +1276,6 @@ window.onload = (event) => {
 
     async function findOriginTile() {
         if (originTile) {
-            console.log('already got originTile');
-            console.log(originTile);
             navigator.geolocation.getCurrentPosition(gotPos, errPos, posOpts);
             return;
         }
