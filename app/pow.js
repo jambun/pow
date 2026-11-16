@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.5';
+const VERSION = 'v2.3.6';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -863,7 +863,7 @@ window.onload = (event) => {
         const touch = e.changedTouches.item(0);
 
         deltaY = touch.pageY - lastZoomBarY;
-        factor = 1 - (Math.log10(Math.abs(deltaY)) + 1) / 100;
+        factor = 1 - (Math.log(Math.abs(deltaY)) + 1) / 100;
 
         if (deltaY > 0) {
             zoom(factor);
