@@ -219,3 +219,6 @@ body {
     -webkit-user-select: none;
 }
 
+.tilename {
+    font-size: 100px;
+}

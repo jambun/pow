@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.10';
+const VERSION = 'v2.3.11';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -299,6 +299,22 @@ window.onload = (event) => {
                 maptile.setAttribute('x', (originTile.tilex - tmd.tilex) * tileSize * -1);
                 maptile.setAttribute('y', (originTile.tiley - tmd.tiley) * tileSize * -1);
                 maptile.setAttribute('href', maps_url + '/' + tmd.filename);
+                maptile.dataset.tilename = tmd.filename;
+
+                maptile.addEventListener('error', function handleError() {
+                    this.removeEventListener('error', handleError);
+                    this.setAttribute('href', '/pow/blank.jpg');
+
+                    if (!document.getElementById(this.dataset.tilename)) {
+                        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        label.id = this.dataset.tilename;
+                        label.textContent = this.dataset.tilename;
+                        label.setAttribute('x', parseInt(this.getAttribute('x')) + 400);
+                        label.setAttribute('y', parseInt(this.getAttribute('y')) + 950);
+                        label.classList.add('tilename');
+                        pm.appendChild(label);
+                    }
+                });
 
                 tmdix++;
             }
