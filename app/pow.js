@@ -204,10 +204,30 @@ window.onload = (event) => {
     // HELPME: math brainmelt
     function XYtoDegrees(dx, dy) { return (Math.atan2(dy, dx) / Math.PI * 180  - 450) % 360 * -1 }
 
+    // a failed attempt to get a reasonable compass heading on android
+    // function getCompassHeading(alpha, beta, gamma) {
+    //     const degToRad = Math.PI / 180;
+    //     const _x = beta ? beta * degToRad : 0;
+    //     const _y = gamma ? gamma * degToRad : 0;
+    //     const _z = alpha ? alpha * degToRad : 0;
+
+    //     const cX = Math.cos(_x), cY = Math.cos(_y), cZ = Math.cos(_z);
+    //     const sX = Math.sin(_x), sY = Math.sin(_y), sZ = Math.sin(_z);
+
+    //     // Calculate Vx and Vy components of the device's -Z axis (camera direction) or Y axis (top edge)
+    //     const Vx = -cZ * sY - sZ * sX * cY;
+    //     const Vy = -sZ * sY + cZ * sX * cY;
+
+    //     let heading = Math.atan2(Vx, Vy) * (180 / Math.PI);
+    //     if (heading < 0) heading += 360;
+    //     return heading;
+    // }
+
     function handleOrientation(event) {
         if (event.webkitCompassHeading) {
             direction = event.webkitCompassHeading;
         } else {
+//            direction = getCompassHeading(event.alpha, event.beta, event.gamma);
             direction = 360 - event.alpha;
         }
 //        message('compass', direction.toFixed() + ' : ' + event.absolute);
