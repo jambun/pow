@@ -1,4 +1,4 @@
-const version = 'v57';
+const version = 'v58';
 
 const netFirstResources = [
     "/pow",
@@ -250,6 +250,11 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    if (url.hostname == '127.0.0.1') {
+        return;
+    }
+
     if (!event.request.url.startsWith("https://hudmol.com/pow") || netFirstResources.includes(event.request.url.split("hudmol.com")[1])) {
         event.respondWith(
             networkFirst({

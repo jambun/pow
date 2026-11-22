@@ -1,4 +1,4 @@
-const VERSION = 'v2.3.12';
+const VERSION = 'v3.0.0';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -437,12 +437,13 @@ window.onload = (event) => {
             splash.classList.add('fade-out');
         }
 
+        const first = lastPos.x == 0;
+
         // ignore inaccurate (non-GPS) positions - wifi, cell towers etc
-        if (haveSetPos && position && position.coords.accuracy > 10) {
+        if (!first && haveSetPos && position && position.coords.accuracy > 10) {
             return;
         }
 
-        const first = lastPos.x == 0;
         const [posx, posy] = coords(lat, lon);
 
         if (haveSetPos && !first && Math.abs(currentPos.x - posx) < jitterThreshholdPx && Math.abs(currentPos.y - posy) < jitterThreshholdPx) { return; }
@@ -503,7 +504,20 @@ window.onload = (event) => {
 
         if (!panning) { centreOnPos(); }
 
-        if (recording) { addPoint(position); }
+        if (recording) {
+            if (first) {
+                addPoint(position);
+            } else {
+                const positions = getRecentLoggedPositions();
+                if (positions.length == 0) {
+                    addPoint(position);
+                } else {
+                    for (const pos of positions) {
+                        addPoint(pos);
+                    }
+                }
+            }
+        }
 
         if (first && recording) {
             addObjectiveMark('Start');
@@ -653,15 +667,20 @@ window.onload = (event) => {
         messages = defaultMessages();
         showMessage('home');
 
-        originTile = null;
-        findOriginTile();
+        haveSetPos = false;
+        currentPos = defaultPos();
         lastPos = defaultPos();
+        trueBearing = null;
+
+        panning = false;
         lastTS = 0;
         currentObjectiveKey = null;
         trackDistance = 0.0;
         trackClimb = 0.0;
+
+        originTile = null;
+        findOriginTile();
         updateCurrentObjective();
-        panning = false;
     }
 
     function stopTrack() {
@@ -838,6 +857,24 @@ window.onload = (event) => {
 
     function pointCount() {
         return document.querySelectorAll('.position-mark').length;
+    }
+
+    async function getRecentLoggedPositions() {
+        try {
+            const lastPosition = document.querySelector('#track-group .position-mark:last-of-type');
+
+            if (lastPosition != null) {
+                const response = await fetch('http://127.0.0.1:8888/locations?since=' + lastPosition.dataset.tim);
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+                return await response.json();
+            }
+        } catch (error) {
+            message('error', error, true);
+        }
+
+        return [];
     }
 
     function addPoint(position) {
