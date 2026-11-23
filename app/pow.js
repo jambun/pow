@@ -1,4 +1,4 @@
-const VERSION = 'v3.0.0';
+const VERSION = 'v3.0.1';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -440,7 +440,7 @@ window.onload = (event) => {
         const first = lastPos.x == 0;
 
         // ignore inaccurate (non-GPS) positions - wifi, cell towers etc
-        if (!first && haveSetPos && position && position.coords.accuracy > 10) {
+        if (!first && haveSetPos && position && position.coords.accuracy > 20) {
             return;
         }
 
@@ -508,14 +508,13 @@ window.onload = (event) => {
             if (first) {
                 addPoint(position);
             } else {
-                const positions = getRecentLoggedPositions();
-                if (positions.length == 0) {
-                    addPoint(position);
-                } else {
-                    for (const pos of positions) {
-                        addPoint(pos);
-                    }
-                }
+                getRecentLoggedPositions()
+                    .then(loggedPositions => {
+                        for (const pos of loggedPositions) {
+                            addPoint(pos);
+                        }
+                    })
+                    .catch(error => { addPoint(position); });
             }
         }
 
@@ -859,22 +858,25 @@ window.onload = (event) => {
         return document.querySelectorAll('.position-mark').length;
     }
 
-    async function getRecentLoggedPositions() {
+    async function queryLoggerEndpoint(since) {
         try {
-            const lastPosition = document.querySelector('#track-group .position-mark:last-of-type');
-
-            if (lastPosition != null) {
-                const response = await fetch('http://127.0.0.1:8888/locations?since=' + lastPosition.dataset.tim);
-
-                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-
-                return await response.json();
-            }
+            const response = await fetch('http://127.0.0.1:8888/locations?since=' + since);
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+            return await response.json();
         } catch (error) {
-            message('error', error, true);
+            // ignore, rethrow, probably don't need this catch
+            throw error;
         }
+    }
 
-        return [];
+    function getRecentLoggedPositions() {
+        const lastPosition = document.querySelector('#track-group .position-mark:last-of-type');
+
+        if (lastPosition == null) {
+            throw new Error('no last position');
+        } else {
+            return queryLoggerEndpoint(lastPosition.dataset.tim);
+        }
     }
 
     function addPoint(position) {
