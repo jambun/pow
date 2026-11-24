@@ -15,11 +15,11 @@ class PowParser {
         $!markers = $markers;
         $!track = Track.new;
 
-        @!expected_headers = <tim lat lon ele>;
+        @!expected_headers = <tim lat lon ele acc eac dst tag>;
 
         my $title = $file;
         $title = $title.split('/')[*-1];
-        $title.= subst(/.csv$/, '');
+        $title.= subst(/'.pow' $/, '');
         $title ~~ s:g/(<[A .. Z]>)/ $0/;
 #        $title ~~ s:g/(<[A .. Z]>)/ $0/;
         $!track.title = $title.trim;
@@ -48,15 +48,24 @@ class PowParser {
 
             my $time = DateTime.new(%line{'tim'}.Rat / 1000);
 
+            if %line<tag> {
+                my %p = name => %line<tag>,
+                        lat => %line<lat>.Rat,
+                        lon => %line<lon>.Rat,
+                        ele => %line<ele>,
+	                      time => $time;
+
+                $!markers.add(%p);
+            }
+
             if (!$last_time || $time.posix >= $last_time.posix + $point_secs) {
 
                 my %p = lat => %line<lat>.Rat,
-                lon => %line<lon>.Rat,
-                ele => %line{'ele'},
-	              time => $time;
-
-                dst_err => %line{'acc'},
-                ele_err => %line{'ela'},
+                        lon => %line<lon>.Rat,
+                        ele => %line<ele>,
+	                      time => $time,
+                        dst_err => %line<acc>,
+                        ele_err => %line<ela>;
 
                 $!track.add_point(%p);
 
