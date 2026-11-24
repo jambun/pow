@@ -1,4 +1,4 @@
-const VERSION = 'v3.0.1';
+const VERSION = 'v3.0.2';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -423,13 +423,21 @@ window.onload = (event) => {
 
     function gotPos(pos) {
         setPos(pos.coords.latitude, pos.coords.longitude, pos);
-    };
+    }
 
     function gotWatchedPos(pos) {
         if (Date.now() - lastTS > trackingSampleRate) {
-            setPos(pos.coords.latitude, pos.coords.longitude, pos);
+            getRecentLoggedPositions()
+                .then(loggedPositions => {
+                    for (const logPos of loggedPositions) {
+                        setPos(logPos.coords.latitude, logPos.coords.longitude, logPos);
+                    }
+                })
+                .catch(error => {
+                    setPos(pos.coords.latitude, pos.coords.longitude, pos);
+                });
         }
-    };
+    }
 
     function setPos(lat, lon, position = false) {
         const splash = document.querySelector('#load-splash');
@@ -504,19 +512,7 @@ window.onload = (event) => {
 
         if (!panning) { centreOnPos(); }
 
-        if (recording) {
-            if (first) {
-                addPoint(position);
-            } else {
-                getRecentLoggedPositions()
-                    .then(loggedPositions => {
-                        for (const pos of loggedPositions) {
-                            addPoint(pos);
-                        }
-                    })
-                    .catch(error => { addPoint(position); });
-            }
-        }
+        if (recording) { addPoint(position); }
 
         if (first && recording) {
             addObjectiveMark('Start');
