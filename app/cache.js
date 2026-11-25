@@ -1,4 +1,4 @@
-const version = 'v60';
+const version = 'v61';
 
 const netFirstResources = [
     "/pow",

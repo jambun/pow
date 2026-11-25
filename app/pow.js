@@ -1,4 +1,4 @@
-const VERSION = 'v3.0.2';
+const VERSION = 'v3.1.0';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -20,19 +20,18 @@ function registerServiceWorker() {
 registerServiceWorker();
 
 
-// this is fine and all but can't write it, so yeah
-//    const trackFile = new File(["POWWWWW"], "pow_track.txt", {type: "text/plain"});
-
-var idb;
-getDB().then(function(result) {
-    idb = result;
-});
-
+const promisedDB = getDB();
 
 window.onload = (event) => {
 
-    function initializePow() {
+    let idb;
+
+    async function initializePow() {
         document.getElementById('version-bug').textContent = VERSION;
+
+        idb = await promisedDB;
+
+        console.log(idb.objectStoreNames);
 
         buildTileMatrix();
 
@@ -581,7 +580,16 @@ window.onload = (event) => {
     }
 
     function loadState() {
-        document.querySelector('#track-group').innerHTML = localStorage.getItem('track');
+        getAllPoints().then((points) => {
+            const pointString = points.map((point, _) => {
+                const xy = coords(point.lat, point.lon);
+                return xy.join(',');
+            }).join(' ');
+
+            const currentTrack = document.querySelector('#current-track');
+            currentTrack.setAttribute('points', pointString);
+        });
+
         document.querySelector('#objectives-group').innerHTML = localStorage.getItem('objectives');
         document.querySelector('#objective-list').innerHTML = localStorage.getItem('objective-list');
         messages = localStorage.getItem('messages') ? JSON.parse(localStorage.getItem('messages')) : defaultMessages();
@@ -651,11 +659,16 @@ window.onload = (event) => {
     }
 
     function clearState() {
+        const txn = idb.transaction('points', 'readwrite');
+        const pointStore = txn.objectStore('points');
+        const clearRequest = pointStore.clear();
+        clearRequest.onerror = (e) => { message('error', e, true); };
+
         localStorage.clear();
 
         flags = defaultFlags();
 
-        document.querySelector('#track-group').innerHTML = '';
+        document.querySelector('#current-track').points.clear();
         document.querySelector('#objectives-group').innerHTML = '';
         document.querySelector('#objective-list').innerHTML = '';
 
@@ -729,10 +742,7 @@ window.onload = (event) => {
                 om.setAttribute('data-lon', currentPos.lon);
                 om.setAttribute('data-ele', currentPos.ele);
 
-                const pms = document.getElementsByClassName('position-mark');
-                if (pms.length > 0) {
-                    pms[pms.length - 1].setAttribute('data-tag', label);
-                }
+                tagLastPosition(label);
             }
         } else {
             const [x, y] = coords(labelOrObject.lat, labelOrObject.lon);
@@ -850,8 +860,18 @@ window.onload = (event) => {
         return dst;
     }
 
-    function pointCount() {
-        return document.querySelectorAll('.position-mark').length;
+    function requestPromise(request) {
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function pointCount() {
+        const txn = idb.transaction('points', 'readwrite');
+        const pointStore = txn.objectStore('points');
+        const points = await requestPromise(pointStore.count());
+        return points;
     }
 
     async function queryLoggerEndpoint(since) {
@@ -865,45 +885,36 @@ window.onload = (event) => {
         }
     }
 
-    function getRecentLoggedPositions() {
-        const lastPosition = document.querySelector('#track-group .position-mark:last-of-type');
-
-        if (lastPosition == null) {
-            throw new Error('no last position');
-        } else {
-            return queryLoggerEndpoint(lastPosition.dataset.tim);
-        }
+    async function lastPosition(mode = 'readonly') {
+        const txn = idb.transaction('points', mode);
+        const pointStore = txn.objectStore('points');
+        return requestPromise(pointStore.openCursor(null, 'prev'));
     }
 
-    function addPoint(position) {
+    function tagLastPosition(tag) {
+        lastPosition('readwrite').then((position) => {
+            const updated = { ...position.value, tag: tag };
+            position.update(updated);
+        });
+    }
+
+    function getRecentLoggedPositions() {
+        return lastPosition().then((position) => {
+            if (position == null) {
+                // throw new Error('no last position');
+            } else {
+                return queryLoggerEndpoint(position.value.tim);
+            }
+        });
+    }
+
+    async function addPoint(position) {
         if (!tracking) { return; }
 
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.classList.add('position-mark');
-        line.classList.add('no-stroke-zoom');
-        line.setAttribute("data-stroke", "8");
-        line.style.opacity = "0.6";
-        line.setAttribute("x1", lastPos.x || currentPos.x);
-        line.setAttribute("y1", lastPos.y || currentPos.y);
-        line.setAttribute("x2", currentPos.x);
-        line.setAttribute("y2", currentPos.y);
-        line.setAttribute("stroke", "blue");
-        line.style.strokeWidth = "8";
-        if (position) {
-            line.setAttribute('data-lat', position.coords.latitude);
-            line.setAttribute('data-lon', position.coords.longitude);
-            line.setAttribute('data-ele', position.coords.altitude);
-            line.setAttribute('data-spd', position.coords.speed);
-            line.setAttribute('data-acc', position.coords.accuracy);
-            line.setAttribute('data-eac', position.coords.altitudeAccuracy);
-            line.setAttribute('data-spd', position.coords.speed);
-            line.setAttribute('data-hdg', position.coords.heading);
-            line.setAttribute('data-tim', position.timestamp);
-        }
+        let dst;
 
         if (lastPos.x) {
-            const dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
-            line.setAttribute('data-dst', dst);
+            dst = calculateDistance(lastPos.lat, lastPos.lon, currentPos.lat, currentPos.lon);
             trackDistance += dst;
             updateFlag('trackDistance', trackDistance);
             if (currentPos.ele && lastPos.ele && currentPos.ele > lastPos.ele) {
@@ -912,15 +923,39 @@ window.onload = (event) => {
             }
         }
 
-        const tg = document.querySelector('#track-group');
-        tg.appendChild(line);
+        const currentTrack = document.querySelector('#current-track');
+        const newPoint = pm.createSVGPoint();
+        newPoint.x = currentPos.x;
+        newPoint.y = currentPos.y;
+        currentTrack.points.appendItem(newPoint);
+
+        if (position) {
+            const txn = idb.transaction('points', 'readwrite');
+            const pointStore = txn.objectStore('points');
+            pointStore.add({
+                tim: position.timestamp,
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                ele: position.coords.altitude,
+                spd: position.coords.speed,
+                hdg: position.coords.heading,
+                acc: position.coords.accuracy,
+                eac: position.coords.altitudeAccuracy,
+                dst: dst
+            });
+
+            txn.onerror = (e) => {
+                message('error', e, true);
+            }
+        }
 
         // this call to get the new point scaled correctly
         zoomTarget();
 
-        localStorage.setItem('track', tg.innerHTML);
+        // FIXME: regenerate track from pointstore when loading state
+//        localStorage.setItem('track', tg.innerHTML);
 
-        message('recording', `Recording &mdash; ${pointCount()} <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
+        message('recording', `Recording &mdash; ${await pointCount()} <hr class="message-divider recording-divider"/> ${dstToHuman(trackDistance)} &mdash; ${dstToHuman(trackClimb)}`);
     };
 
     wrap = document.getElementById("plotmap-wrapper");
@@ -1330,33 +1365,41 @@ window.onload = (event) => {
         dbox.setAttribute('height', bbox.height);
     }
 
+    function getAllPoints() {
+        const txn = idb.transaction('points', 'readonly');
+        const pointStore = txn.objectStore('points');
+        return requestPromise(pointStore.getAll());
+    }
+
     function download() {
-        var data = "tim,lat,lon,ele,acc,eac,dst,tag\n";
+        getAllPoints().then((points) => {
+            var data = "tim,lat,lon,ele,acc,eac,dst,tag\n";
 
-        for (const mark of document.getElementsByClassName('position-mark')) {
-            data += [mark.dataset.tim,
-                     mark.dataset.lat,
-                     mark.dataset.lon,
-                     mark.dataset.ele,
-                     mark.dataset.acc,
-                     mark.dataset.eac,
-                     mark.dataset.dst,
-                     mark.dataset.tag].join(',') + "\n";
-        }
+            for (const point of points) {
+                data += [point.tim,
+                         point.lat,
+                         point.lon,
+                         point.ele,
+                         point.acc,
+                         point.eac,
+                         point.dst,
+                         point.tag].join(',') + "\n";
+            }
 
-        var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
-        var link = document.createElement("a");
+            var blob = new Blob([data], {type: 'text/csv;charset=utf-8;'});
+            var link = document.createElement("a");
 
-        const d = new Date();
-        const filename = 'pow_' + d.toISOString().split('T')[0] + '.pow';
+            const d = new Date();
+            const filename = 'pow_' + d.toISOString().split('T')[0] + '.pow';
 
-        var url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     }
 
 
@@ -1447,9 +1490,9 @@ window.onload = (event) => {
 
 // indexeddb stuff
 async function getDB() {
-    return await new Promise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
 
-        const openReq = indexedDB.open("powDB", 1);
+        const openReq = indexedDB.open("powDB", 2);
 
         openReq.onerror = (event) => {
             console.error(event);
@@ -1473,9 +1516,9 @@ async function getDB() {
                       db.createObjectStore('flags', { keyPath: 'name' });
                   },
                   function(db) {
-                      // db.createObjectStore('moo', { keyPath: 'name' });
+                      const pointsStore = db.createObjectStore('points', { keyPath: 'id', autoIncrement: true });
+                      pointsStore.createIndex('timestamp', 'tim');
                   }
               ];
     });
 }
-

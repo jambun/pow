@@ -35,6 +35,12 @@ body {
     margin-top: 600px;
 }
 
+#current-track {
+    stroke: blue;
+    stroke-width: 8;
+    data-stroke: 8;
+}
+
 #objective-list-template {
     display: none;
     user-select: none;
