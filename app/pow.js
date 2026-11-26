@@ -1,4 +1,4 @@
-const VERSION = 'v3.1.1';
+const VERSION = 'v3.1.2';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -241,10 +241,10 @@ window.onload = (event) => {
         document.getElementById('point-target-direction').setAttribute('cy', Math.round(yvec * rad));
 
         const bearingLine = document.getElementById('point-target-bearing');
-        bearingLine.setAttribute('x1', Math.round(xvec * scaledRad + currentPos.x));
-        bearingLine.setAttribute('y1', Math.round(yvec * scaledRad + currentPos.y));
-        bearingLine.setAttribute('x2', Math.round(xvec * lineLength + currentPos.x));
-        bearingLine.setAttribute('y2', Math.round(yvec * lineLength + currentPos.y));
+        bearingLine.setAttribute('x1', xvec * scaledRad + currentPos.x);
+        bearingLine.setAttribute('y1', yvec * scaledRad + currentPos.y);
+        bearingLine.setAttribute('x2', xvec * lineLength + currentPos.x);
+        bearingLine.setAttribute('y2', yvec * lineLength + currentPos.y);
 
         if (trueBearing) {
             var bdiff = Math.abs(direction - trueBearing);
