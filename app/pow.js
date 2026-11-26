@@ -1,4 +1,4 @@
-const VERSION = 'v3.1.3';
+const VERSION = 'v3.1.4';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -237,8 +237,8 @@ window.onload = (event) => {
         const scaledRad = rad * vb.width / homeWidth;
         const lineLength = 2000 * vb.width / homeWidth;
 
-        document.getElementById('point-target-direction').setAttribute('cx', Math.round(xvec * rad));
-        document.getElementById('point-target-direction').setAttribute('cy', Math.round(yvec * rad));
+        document.getElementById('point-target-direction').setAttribute('cx', xvec * rad);
+        document.getElementById('point-target-direction').setAttribute('cy', yvec * rad);
 
         const bearingLine = document.getElementById('point-target-bearing');
         bearingLine.setAttribute('x1', xvec * scaledRad + currentPos.x);
