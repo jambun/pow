@@ -1,4 +1,4 @@
-const VERSION = 'v3.1.4';
+const VERSION = 'v3.1.5';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -1184,7 +1184,8 @@ window.onload = (event) => {
             this.load();
         },
         position: function() {
-            return {x: Math.round(this.left + this.width / 2), y: Math.round(this.top + this.height / 2)};
+//            return {x: Math.round(this.left + this.width / 2), y: Math.round(this.top + this.height / 2)};
+            return {x: this.left + this.width / 2, y: this.top + this.height / 2};
         }
     }
 
