@@ -1,4 +1,4 @@
-const VERSION = 'v3.1.0';
+const VERSION = 'v3.1.1';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -766,7 +766,7 @@ window.onload = (event) => {
         ol.classList.add('objective-list-item');
         ol.setAttribute('data-key', om.dataset.key);
 
-        ol.innerHTML = label + ' &mdash; ' + om.dataset.time.substring(0, om.dataset.time.length - 6);
+        ol.innerHTML = label + ' &mdash; ' + om.dataset.time.replace(/:\d\d(\s+AM|PM)?$/, '');
 
         // add a delete button
         const btn = document.createElement('button');
@@ -839,7 +839,7 @@ window.onload = (event) => {
             }
 
             const ms_diff = Date.now() - currentObjective.dataset.stamp;
-            const time_diff = new Date(ms_diff).toUTCString().match("..:..")[0].replace(':', 'h ').replace('00h ', '').replace(/^0/, '') + 'm';
+            const time_diff = new Date(ms_diff).toISOString().slice(11, 16).replace(/^0+/, '');
 
             message('objective',
                     `${currentObjective.textContent} &mdash; ${time_diff} <hr class="message-divider objective-divider"/> ${dst}${ed} &mdash; ${trueBearing}&deg;`,
