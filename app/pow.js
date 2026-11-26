@@ -1,4 +1,4 @@
-const VERSION = 'v3.1.2';
+const VERSION = 'v3.1.3';
 
 function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -579,16 +579,28 @@ window.onload = (event) => {
         localStorage.setItem('flags', JSON.stringify(flags));
     }
 
-    function loadState() {
-        getAllPoints().then((points) => {
-            const pointString = points.map((point, _) => {
-                const xy = coords(point.lat, point.lon);
-                return xy.join(',');
-            }).join(' ');
+    async function loadTrack() {
+        const points = await getAllPoints();
+        const pointString = points.map((point, _) => {
+            const xy = coords(point.lat, point.lon);
+            return xy.join(',');
+        }).join(' ');
 
-            const currentTrack = document.querySelector('#current-track');
-            currentTrack.setAttribute('points', pointString);
-        });
+        const currentTrack = document.querySelector('#current-track');
+        currentTrack.setAttribute('points', pointString);
+    }
+
+    function loadState() {
+        loadTrack();
+        // getAllPoints().then((points) => {
+        //     const pointString = points.map((point, _) => {
+        //         const xy = coords(point.lat, point.lon);
+        //         return xy.join(',');
+        //     }).join(' ');
+
+        //     const currentTrack = document.querySelector('#current-track');
+        //     currentTrack.setAttribute('points', pointString);
+        // });
 
         document.querySelector('#objectives-group').innerHTML = localStorage.getItem('objectives');
         document.querySelector('#objective-list').innerHTML = localStorage.getItem('objective-list');
